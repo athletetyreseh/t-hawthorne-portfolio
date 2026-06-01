@@ -117,11 +117,22 @@ textarea {
 .brand-photo {
   width: 42px;
   height: 42px;
+  max-width: 42px;
+  max-height: 42px;
+  flex: 0 0 42px;
   object-fit: cover;
   object-position: center;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius);
   background: var(--charcoal);
+}
+
+.site-header img.brand-photo {
+  display: block;
+  width: 42px !important;
+  height: 42px !important;
+  max-width: 42px !important;
+  max-height: 42px !important;
 }
 
 .brand-mark strong,
@@ -220,12 +231,18 @@ textarea {
 
 .hero-id img {
   width: 100%;
+  max-width: 360px;
   aspect-ratio: 4 / 3.3;
   object-fit: cover;
   object-position: center;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--charcoal);
+}
+
+.hero-photo {
+  display: block;
+  position: static;
 }
 
 .hero-id span {
@@ -995,6 +1012,16 @@ code {
   .brand-photo {
     width: 38px;
     height: 38px;
+    max-width: 38px;
+    max-height: 38px;
+    flex-basis: 38px;
+  }
+
+  .site-header img.brand-photo {
+    width: 38px !important;
+    height: 38px !important;
+    max-width: 38px !important;
+    max-height: 38px !important;
   }
 
   .brand-mark strong {
@@ -1011,6 +1038,8 @@ code {
   }
 
   .hero-id img {
+    width: 92px;
+    max-width: 92px;
     aspect-ratio: 1;
   }
 
