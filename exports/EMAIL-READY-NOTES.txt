@@ -1,0 +1,15 @@
+Best option for email:
+Attach `account-manager-presentation-main.pdf`
+
+Why this is the cleanest:
+- It preserves the slide visuals exactly.
+- It opens on almost any computer without broken formatting.
+- It looks more polished for VP review than a Word or Google Doc conversion.
+
+Optional backup:
+Include the Google Slides link in the email body in case they want the live version:
+https://docs.google.com/presentation/d/16g8KoqTY_WgKiuu_SQuvnHeUJhIV7IIuJW_Bd9VnwMU/edit?usp=sharing
+
+Folder items:
+- `account-manager-presentation-main.pdf` = best attachment for the full main presentation
+- `presentation.html` = interactive local version

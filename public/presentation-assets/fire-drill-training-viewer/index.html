@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fire Drill Training Viewer</title>
+  <style>
+    :root { --bg:#081225; --panel:#0f172a; --line:rgba(255,255,255,0.12); --text:#e2e8f0; --muted:#94a3b8; --accent:#60a5fa; }
+    * { box-sizing:border-box; }
+    html, body { margin:0; min-height:100%; font-family: Inter, system-ui, sans-serif; background:linear-gradient(180deg,#020617,#0f172a); color:var(--text); }
+    .viewer { min-height:100vh; display:flex; flex-direction:column; }
+    .viewer-top { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:16px 20px; position:sticky; top:0; z-index:5; background:rgba(2,6,23,0.84); backdrop-filter:blur(14px); border-bottom:1px solid var(--line); }
+    .viewer-title { font-size:14px; letter-spacing:.24em; text-transform:uppercase; color:#bfdbfe; }
+    .viewer-controls { display:flex; align-items:center; gap:10px; }
+    .viewer-btn { border:1px solid var(--line); background:rgba(255,255,255,0.05); color:var(--text); border-radius:999px; padding:10px 14px; cursor:pointer; }
+    .viewer-count { min-width:72px; text-align:center; color:var(--muted); font-size:13px; }
+    .deck-wrap { padding:20px; display:flex; justify-content:center; }
+    .deck-frame { width:min(1200px,100%); aspect-ratio:1.777778; background:#ffffff; border-radius:22px; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,0.45); position:relative; }
+    .deck-slide { position:absolute; inset:0; opacity:0; pointer-events:none; transition:opacity .28s ease; background:#ffffff; }
+    .deck-slide.current { opacity:1; pointer-events:auto; }
+    .slide-canvas { position:relative; width:100%; height:100%; overflow:hidden; }
+    .slide-image { position:absolute; object-fit:contain; }
+    .slide-text { position:absolute; font-weight:700; line-height:1.08; white-space:pre-line; }
+    .slide-text div { margin:0 0 .08em; }
+    .deck-slide[data-slide="1"] { background:#020202; }
+    .deck-slide[data-slide="1"] .slide-canvas {
+      background:
+        radial-gradient(circle at 18% 24%, rgba(249, 165, 27, 0.18), transparent 26%),
+        linear-gradient(135deg, #000000, #0a0a0a 48%, #161616);
+    }
+    .deck-slide[data-slide="1"] .slide-image {
+      filter: drop-shadow(0 18px 36px rgba(0, 0, 0, 0.45));
+    }
+    .cover-title { font-family: Georgia, serif; font-weight:800; letter-spacing:-.04em; }
+    .cover-credit { font-size:28px !important; }
+    .agenda-title { font-size:44px !important; letter-spacing:-.03em; }
+    @media (max-width: 860px) { .viewer-top { padding:12px 14px; } .deck-wrap { padding:10px; } .viewer-title { font-size:11px; letter-spacing:.16em; } .viewer-btn { padding:8px 12px; } }
+  </style>
+</head>
+<body>
+  <main class="viewer">
+    <div class="viewer-top">
+      <div>
+        <div class="viewer-title">Emergency Response Training</div>
+        <div style="margin-top:6px;color:var(--muted);font-size:13px;">Portable HTML viewer generated from the fire drill training deck.</div>
+      </div>
+      <div class="viewer-controls">
+        <button class="viewer-btn" id="prevBtn" aria-label="Previous slide">Prev</button>
+        <div class="viewer-count" id="count">01 / 14</div>
+        <button class="viewer-btn" id="nextBtn" aria-label="Next slide">Next</button>
+      </div>
+    </div>
+    <div class="deck-wrap">
+      <div class="deck-frame" id="deckFrame"><section class="deck-slide current" data-slide="1">
+<div class="slide-canvas">
+<div class="slide-text cover-title" style="left:7.655%;top:14.276%;width:64.055%;height:35.713%;font-size:18.00px;color:#ffffff;"><div>FIRE DRILL</div><div>TRAINING</div></div>
+<div class="slide-text cover-credit" style="left:7.482%;top:49.989%;width:85.036%;height:22.100%;font-size:18.00px;color:#ffffff;"><div>TEMPE_OPERATIONS</div><div>&amp; DATA_CENTER</div></div>
+<div class="slide-text cover-credit" style="left:8.041%;top:70.618%;width:83.917%;height:13.188%;font-size:22.00px;color:#F9A51B;"><div>WELLS FARGO</div></div>
+<div class="slide-text cover-credit" style="left:7.655%;top:81.155%;width:53.691%;height:6.422%;font-size:22.00px;color:#ffffff;"><div>BY: CAPT. HAWTHORNE</div></div>
+<img class="slide-image" src="images/1.png" style="left:56.928%;top:30.039%;width:40.311%;height:63.005%;" alt="Slide 1 image" />
+</div></section><section class="deck-slide" data-slide="2">
+<div class="slide-canvas">
+<img class="slide-image" src="images/1.png" style="left:67.314%;top:42.491%;width:31.877%;height:49.822%;" alt="Slide 2 image" />
+<div class="slide-text agenda-title" style="left:3.409%;top:5.936%;width:93.182%;height:11.134%;font-size:45.20px;color:#111827;"><div>THINGS WE WILL GO_OVER</div></div>
+<div class="slide-text agenda-title" style="left:3.409%;top:17.071%;width:90.000%;height:87.997%;font-size:30.00px;color:#000000;"><div>GUARD POSITIONS &amp; RESPONSIBILITIES</div><div>EMPLOYEE FLOW &amp; EXITS</div><div>ASSEMBLY POINTS</div><div>GATE PROCEDURES (NORTH &amp; SOUTH)</div><div>EMERGENCY SERVICES ARRIVAL</div><div>SITE MAP &amp; LAYOUT</div></div>
+</div></section><section class="deck-slide" data-slide="3">
+<div class="slide-canvas">
+<div class="slide-text" style="left:3.409%;top:5.517%;width:93.182%;height:11.134%;font-size:40.00px;color:#111827;"><div>GUARD ROLES_OVERVIEW</div></div>
+<div class="slide-text" style="left:3.409%;top:22.406%;width:29.636%;height:66.422%;font-size:20.00px;color:#111827;"><div>COLLECTION_GUARD</div></div>
+<div class="slide-text" style="left:35.182%;top:22.406%;width:29.636%;height:66.422%;font-size:20.00px;color:#111827;"><div>TURNSTILE_GUARD</div></div>
+<div class="slide-text" style="left:66.955%;top:22.406%;width:29.636%;height:66.422%;font-size:20.00px;color:#111827;"><div>PERIMETER_GUARD</div></div>
+<img class="slide-image" src="images/2.png" style="left:5.501%;top:43.583%;width:25.451%;height:45.245%;" alt="Slide 3 image" />
+<img class="slide-image" src="images/3.png" style="left:37.275%;top:43.583%;width:25.451%;height:45.245%;" alt="Slide 3 image" />
+<img class="slide-image" src="images/4.png" style="left:69.048%;top:43.583%;width:25.451%;height:45.245%;" alt="Slide 3 image" />
+</div></section><section class="deck-slide" data-slide="4">
+<div class="slide-canvas">
+<div class="slide-text" style="left:2.191%;top:5.378%;width:93.182%;height:11.134%;font-size:44.00px;color:#111827;"><div>COLLECTION_GUARD</div></div>
+<div class="slide-text" style="left:54.209%;top:18.058%;width:45.791%;height:90.353%;font-size:23.00px;color:#111827;"><div>GATHER EMPLOYEES AT ASSEMBLY POINTS</div><div>ENSURE EMPLOYEES ARE 20 FT AWAY FROM BUILDINGS</div><div>KEEP EMPLOYEES OUT OF MAIN ROADWAYS</div><div>AWAIT SUPERVISOR CLEARANCE FOR RE-ENTRY</div></div>
+<img class="slide-image" src="images/5.png" style="left:9.381%;top:21.762%;width:40.619%;height:72.212%;" alt="Slide 4 image" />
+</div></section><section class="deck-slide" data-slide="5">
+<div class="slide-canvas">
+<div class="slide-text" style="left:55.413%;top:18.884%;width:44.587%;height:91.572%;font-size:22.00px;color:#111827;"><div>BREAK DOWN TURNSTILES FOR QUICK EXIT</div><div>VERIFY CREDENTIALS ON RE-ENTRY</div><div>MAINTAIN ORDER WITH LARGE GROUPS</div><div>ASSIST EMERGENCY SERVICES ENTERING BUILDING</div></div>
+<img class="slide-image" src="images/6.png" style="left:9.381%;top:21.762%;width:40.619%;height:72.212%;" alt="Slide 5 image" />
+<div class="slide-text" style="left:3.409%;top:4.390%;width:93.182%;height:11.134%;font-size:44.00px;color:#111827;"><div>TURNSTILE_GUARD</div></div>
+</div></section><section class="deck-slide" data-slide="6">
+<div class="slide-canvas">
+<div class="slide-text" style="left:38.337%;top:22.999%;width:61.663%;height:89.828%;font-size:19.00px;color:#111827;"><div>KEY NUMBER 30 IS USED TO BREAK DOWN THE TURNSTILES</div><div>TURN THE 2ND TO THE BOTTOM KEY FROM RUN TO MAINTENANCE MODE AS SHOW IN THE PICTURE</div><div>THE TURNSTILES THEN HAVE THE ABILITY TO BE COLLAPSED TO ALLOW FLOW</div><div>DURING THE ACTIVE FIRE ALARM THE TURNSTILES AUTOMATICALLY HAVE THE ABILITY TO BE COLLAPSED</div></div>
+<div class="slide-text" style="left:3.409%;top:4.390%;width:93.182%;height:11.134%;font-size:44.00px;color:#111827;"><div>TURNSTILE_BREAKDOWN</div></div>
+<img class="slide-image" src="images/7.png" style="left:4.151%;top:19.049%;width:32.511%;height:77.063%;" alt="Slide 6 image" />
+</div></section><section class="deck-slide" data-slide="7">
+<div class="slide-canvas">
+<div class="slide-text" style="left:3.409%;top:3.604%;width:93.182%;height:11.134%;font-size:45.00px;color:#111827;"><div>PERIMETER_GUARD</div></div>
+<div class="slide-text" style="left:51.699%;top:19.569%;width:48.301%;height:76.594%;font-size:20.00px;color:#111827;"><div>GUIDE EMPLOYEES THAT EXIT EMERGENCY EXITS DURING DRILL</div><div>GUIDE EMPLOYEES TO THE COLLECTION GUARD/ASSEMBLY AREA(S)</div><div>OPEN GATES AND DOORS TO ASSIST EXIT FLOW</div><div>POINT EMERGENCY SERVICES TO GATE ENTRY</div></div>
+<img class="slide-image" src="images/8.png" style="left:6.968%;top:21.760%;width:40.619%;height:72.212%;" alt="Slide 7 image" />
+</div></section><section class="deck-slide" data-slide="8">
+<div class="slide-canvas">
+<div class="slide-text" style="left:2.453%;top:5.395%;width:93.182%;height:11.134%;font-size:45.20px;color:#111827;"><div>PERIMETER_GUARD</div></div>
+<div class="slide-text" style="left:59.955%;top:7.261%;width:40.043%;height:90.761%;font-size:19.00px;color:#111827;"><div>THIS GATE OFF OF ALAMEDA CAN BE OPENED WITH THE MASTER KEY IF NEEDED DURING THE DRILL OR  BEFORE IF WE ARE AWARE OF THE DRILL BEFOREHAND</div><div>THIS GATE NEEDS TO BE LOCKED AGAIN WHEN THE DRILL IS OVER</div><div>PEOPLE DO TEND TO LEAVE OUT THE EMERGENCY EXITS IN THAT AREA</div></div>
+<img class="slide-image" src="images/9.png" style="left:3.409%;top:26.875%;width:56.546%;height:58.283%;" alt="Slide 8 image" />
+</div></section><section class="deck-slide" data-slide="9">
+<div class="slide-canvas">
+<div class="slide-text" style="left:3.409%;top:5.225%;width:93.182%;height:11.134%;font-size:38.00px;color:#111827;"><div>THE START OF THE FIRE_SCENARIO</div></div>
+<div class="slide-text" style="left:47.525%;top:19.579%;width:51.385%;height:72.698%;font-size:18.00px;color:#111827;"><div>AT THE START OF A REAL FIRE OR FIRE DRILL YOU WILL HEAR A LOUD PATTERNED ALARM GOING OFF IN THE AFFECTED LOCATION</div><div>OCCASIONALLY THE LOBBY WILL BE INFORMED FIRST, THEY WILL THEN INFORM THE REST OF THE STAFF TO RESPOND</div><div>THE LOBBY IMMEDIATELY ASSIGNS THE GUARD STAFF THEIR POSITIONS</div><div>GUARD STAFF IS REQUIRED TO STOP WHAT THEY ARE DOING AND RESPOND</div></div>
+<img class="slide-image" src="images/10.png" style="left:1.051%;top:19.579%;width:46.474%;height:69.477%;" alt="Slide 9 image" />
+</div></section><section class="deck-slide" data-slide="10">
+<div class="slide-canvas">
+<div class="slide-text" style="left:3.409%;top:6.924%;width:93.182%;height:11.134%;font-size:38.00px;color:#111827;"><div>NORTH &amp; SOUTH_GATE PROCEDURES</div></div>
+<div class="slide-text" style="left:52.034%;top:19.909%;width:47.966%;height:75.917%;font-size:18.00px;color:#111827;"><div>DURING AN EMERGENCY OR EMERGENCY DRILL NO ENTRY OTHER THAN EMERGENCY SERVICES ARE PERMITTED</div><div>ONE LANE MUST REMAIN FREE FOR  EMERGENCY SERVICES</div><div>CONE OFF BOTH LANES UNTIL THE EMERGENCY SERVICES ARRIVE OR UNTIL THE DRILL COMPLETES</div><div>LOBBY SUPERVISOR MUST NOT REMOTELY OPEN THE NORTH GATE (EXCEPT EMERGENCY SERVICES)</div></div>
+<img class="slide-image" src="images/11.png" style="left:9.381%;top:21.762%;width:40.619%;height:72.212%;" alt="Slide 10 image" />
+</div></section><section class="deck-slide" data-slide="11">
+<div class="slide-canvas">
+<div class="slide-text" style="left:3.409%;top:5.225%;width:93.182%;height:11.134%;font-size:38.00px;color:#111827;"><div>NORTH &amp; SOUTH_GATE PROCEDURES</div></div>
+<div class="slide-text" style="left:53.006%;top:16.359%;width:45.902%;height:75.917%;font-size:18.00px;color:#111827;"><div>LIKE THE EXAMPLE IN THIS IMAGE HAVE ONE LANE CONED OFF AND ONE SIDE READY FOR EMERGENCY PERSONNEL</div><div>CONES SHOULD BE INSIDE OF THE SOUTH GATE GUARD SHACK</div><div>HAVE ANY OTHER VEHICLES LEAVE OR MOVE AWAY FROM THE OPEN LANE</div><div>WAIT FOR SUPERVISION TO GIVE THE CLEAR BEFORE REMOVING THE CONES AND ALLOWING TRAFFIC TO FLOW</div></div>
+<img class="slide-image" src="images/12.png" style="left:2.813%;top:24.079%;width:49.237%;height:63.875%;" alt="Slide 11 image" />
+</div></section><section class="deck-slide" data-slide="12">
+<div class="slide-canvas">
+<div class="slide-text" style="left:3.409%;top:5.225%;width:93.182%;height:11.134%;font-size:38.00px;color:#111827;"><div>EMERGENCY SERVICES_ARRIVAL</div></div>
+<div class="slide-text" style="left:49.216%;top:17.699%;width:52.562%;height:75.917%;font-size:17.00px;color:#111827;"><div>OUR JOB IS TO HELP EMERGENCY PERSONNEL PERFORM THEIR DUTIES AS QUICKLY AS POSSIBLE TO MITIGATE POTENTIAL DAMAGES</div><div>NOTATE TIME OF ARRIVAL</div><div>NOTATE TIME OF DEPARTURE</div><div>THE LOBBY CONTACTS WF SECURITY RESPONSE CENTER (IN REAL SCENARIO)</div><div>INCIDENT REPORT IN REAL (IN REAL SCENARIO)</div><div>NOTATE THE TRUCK(S) NUMBER</div></div>
+<img class="slide-image" src="images/13.png" style="left:4.987%;top:18.563%;width:45.808%;height:78.870%;" alt="Slide 12 image" />
+</div></section><section class="deck-slide" data-slide="13">
+<div class="slide-canvas">
+<div class="slide-text" style="left:3.409%;top:5.225%;width:93.182%;height:11.134%;font-size:38.00px;color:#111827;"><div>EMERGENCY SERVICES_ARRIVAL_(2)</div></div>
+<div class="slide-text" style="left:32.673%;top:22.576%;width:68.225%;height:75.917%;font-size:18.00px;color:#111827;"><div>GIVE THEM AN ACCESS BADGE(S) FROM THE LOBBY (INSIDE OF THE RED EMERGENCY FOLDER)</div><div>THIS FOLDER IS LOCATED IN THE TOP RIGHT PULL OUT DRAWER BEHIND THE SUPERVISOR DESK</div><div>THIS BADGE GETS THEM INTO AREAS OF THE FACILITY THEY NEED TO ACCESS TO PERFORM THEIR DUTIES</div><div>THIS BADGE HAS TO BE RETURNED TO THE RED FOLDER AT THE CONCLUSION OF THE SCENARIO</div><div>THIS BADGE IS TO ONLY BE USED BY EMERGENCY SERVICES</div></div>
+<img class="slide-image" src="images/14.png" style="left:3.409%;top:18.285%;width:28.550%;height:77.715%;" alt="Slide 13 image" />
+</div></section><section class="deck-slide" data-slide="14">
+<div class="slide-canvas">
+<div class="slide-text" style="left:4.242%;top:2.898%;width:93.182%;height:11.134%;font-size:45.20px;color:#111827;"><div>MAP_LAYOUT &amp; BREAKDOWN</div></div>
+<div class="slide-text" style="left:52.940%;top:32.902%;width:43.743%;height:40.554%;font-size:30.00px;color:#111827;"><div>THIS MAP SHOWS YOU THE LAYOUT OF THE SITE &amp; THE ASSEMBLY POINTS</div></div>
+<img class="slide-image" src="images/15.png" style="left:10.829%;top:20.678%;width:37.007%;height:74.562%;" alt="Slide 14 image" />
+</div></section></div>
+    </div>
+  </main>
+  <script>
+    const slides = Array.from(document.querySelectorAll('.deck-slide'));
+    const count = document.getElementById('count');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    let current = 0;
+    function render(index) {
+      current = Math.max(0, Math.min(index, slides.length - 1));
+      slides.forEach((slide, i) => slide.classList.toggle('current', i === current));
+      count.textContent = String(current + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+      prevBtn.disabled = current === 0;
+      nextBtn.disabled = current === slides.length - 1;
+      prevBtn.style.opacity = current === 0 ? '.35' : '1';
+      nextBtn.style.opacity = current === slides.length - 1 ? '.35' : '1';
+    }
+    prevBtn.addEventListener('click', () => render(current - 1));
+    nextBtn.addEventListener('click', () => render(current + 1));
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') render(current - 1);
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); render(current + 1); }
+    });
+    render(0);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Weekly Guard Schedule</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        @keyframes pulsateGlow {
+            0%, 100% { text-shadow: var(--ot-glow-base); }
+            50% { text-shadow: var(--ot-glow-pulsate); }
+        }
+
+        @keyframes jiggle {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px) rotate(-1deg); }
+            75% { transform: translateX(2px) rotate(1deg); }
+        }
+        
+        @keyframes animateBackground {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        :root {
+            /* Light Theme Variables */
+            --primary-color: #3498db;
+            --second_shift-color: #2980b9; --second_shift-color-rgb: 41, 128, 185;
+            --third_shift-color: #e74c3c; --third_shift-color-rgb: 231, 76, 60;
+            --first_shift-color: #2ecc71; --first_shift-color-rgb: 46, 204, 113;
+            --custom_shift-color: #f1c40f; --custom_shift-color-rgb: 241, 196, 15;
+            --sick-color: #ffcccc; --sick-color-rgb: 255, 204, 204;
+            --vacation-color: #e0e0e0; --vacation-color-rgb: 224, 224, 224;
+            --ot-color: #e74c3c;
+            --ot-glow-base: 0 0 2px var(--ot-color), 0 0 4px var(--ot-color);
+            --ot-glow-pulsate: 0 0 3px var(--ot-color), 0 0 6px #ff7675;
+
+            /* Glassmorphism Styles */
+            --background-color: #eef2f7;
+            --glass-bg-color: rgba(255, 255, 255, 0.45);
+            --glass-border-color: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --glass-blur: 10px;
+            
+            --text-color: #2c3e50;
+            --header-text: #ffffff;
+            --button-text-color: #ffffff;
+            --input-border-color: rgba(255, 255, 255, 0.5);
+            --input-bg-color: rgba(255, 255, 255, 0.2);
+            --progress-bg: rgba(255, 255, 255, 0.3);
+
+            --border-radius: 12px;
+            --font-family: 'Orbitron', sans-serif;
+            --table-font-size: 0.95em;
+            --h1-font-size: 2.2em;
+            --h2-font-size: 1.3em;
+            --button-font-size: 1em;
+            --modal-font-size: 1em;
+            --modal-header-font-size: 1.5em;
+            --guard-hours-font-size: 0.85em;
+            --hours-text-font-size: 1.6em;
+            --progress-info-font-size: 1.1em;
+            --row-height: 42px;
+            --shift-row-height: 42px;
+            --progress-height: 28px;
+            --dynamic-font-size: 1em;
+            --icon-size: 1.1em;
+        }
+
+        body.dark-theme {
+            /* Dark Theme Overrides */
+            --primary-color: #5dade2;
+            --second_shift-color: #5dade2; --second_shift-color-rgb: 93, 173, 226;
+            --third_shift-color: #ec7063; --third_shift-color-rgb: 236, 112, 99;
+            --first_shift-color: #58d68d; --first_shift-color-rgb: 88, 214, 141;
+            --custom_shift-color: #f7dc6f; --custom_shift-color-rgb: 247, 220, 111;
+            --sick-color: #5d4037; --sick-color-rgb: 93, 64, 55;
+            --vacation-color: #616161; --vacation-color-rgb: 97, 97, 97;
+            --ot-color: #ff5252;
+            
+            /* Glassmorphism Dark Styles */
+            --background-color: #1a1a2e;
+            --glass-bg-color: rgba(26, 26, 46, 0.35);
+            --glass-border-color: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            --glass-blur: 12px;
+
+            --text-color: #eceff1;
+            --header-text: #eceff1;
+            --button-text-color: #eceff1;
+            --input-border-color: rgba(255, 255, 255, 0.2);
+            --input-bg-color: rgba(255, 255, 255, 0.1);
+            --progress-bg: rgba(255, 255, 255, 0.15);
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 150vmax;
+            height: 150vmax;
+            background: radial-gradient(circle, #ffadad, transparent 30%),
+                        radial-gradient(circle, #ffd6a5, transparent 30%),
+                        radial-gradient(circle, #fdffb6, transparent 30%),
+                        radial-gradient(circle, #caffbf, transparent 30%),
+                        radial-gradient(circle, #9bf6ff, transparent 30%),
+                        radial-gradient(circle, #a0c4ff, transparent 30%),
+                        radial-gradient(circle, #bdb2ff, transparent 30%),
+                        radial-gradient(circle, #ffc6ff, transparent 30%);
+            background-size: 60% 60%, 50% 50%, 40% 40%, 70% 70%, 55% 55%, 45% 45%, 65% 65%, 35% 35%;
+            background-position: 10% 10%, 90% 20%, 20% 80%, 80% 90%, 50% 50%, 30% 30%, 70% 15%, 15% 60%;
+            background-repeat: no-repeat;
+            opacity: 0.2;
+            animation: animateBackground 120s linear infinite;
+            z-index: -1;
+            transition: opacity 0.5s ease;
+        }
+
+        body.dark-theme::before {
+             opacity: 0.3;
+        }
+
+        body { 
+            font-family: var(--font-family); 
+            background-color: var(--background-color); 
+            color: var(--text-color); 
+            margin: 0; 
+            padding: 0; 
+            transition: background-color 0.4s ease, color 0.4s ease;
+            overflow-x: hidden;
+        }
+        
+        .container { 
+            max-width: 1600px; 
+            margin: 25px auto; 
+            padding: 25px; 
+            background: var(--glass-bg-color); 
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border-radius: var(--border-radius); 
+            box-shadow: var(--glass-shadow);
+            border: 1px solid var(--glass-border-color);
+            position: relative; 
+            transition: background-color 0.4s ease, box-shadow 0.4s ease; 
+        }
+        
+        .container.drag-over-active { background: rgba(var(--primary-color), 0.1); outline: 3px dashed var(--primary-color); outline-offset: -12px; }
+        h1 { text-align: center; font-size: var(--h1-font-size); color: var(--text-color); text-shadow: 1px 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        h1 .material-icons-outlined { font-size: 1em; vertical-align: middle; }
+        h2 { text-align: center; font-size: var(--h2-font-size); color: var(--text-color); margin-bottom: 25px; cursor: default; font-weight: 500; }
+        #datePicker { display: block; margin: 0 auto 25px auto; padding: 10px 15px; font-size: 1.05em; border-radius: var(--border-radius); border: 1px solid var(--input-border-color); background-color: var(--input-bg-color); color: var(--text-color); box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1); }
+        body.dark-theme #datePicker::-webkit-calendar-picker-indicator { filter: invert(0.8); }
+
+        .buttons-bar { text-align: center; margin-bottom: 25px; display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
+        .buttons-bar button, .floating-controls button { 
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 22px; 
+            font-size: var(--button-font-size); color: var(--button-text-color); border: 1px solid var(--glass-border-color); 
+            border-radius: var(--border-radius); cursor: pointer; 
+            background: var(--glass-bg-color); backdrop-filter: blur(var(--glass-blur));
+            box-shadow: var(--glass-shadow);
+            transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease; 
+            font-weight: 500; font-family: var(--font-family); position: relative; overflow: hidden; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2); 
+        }
+
+        .buttons-bar button .material-icons-outlined, .floating-controls button .material-icons-outlined { font-size: var(--icon-size); vertical-align: middle; line-height: 1; }
+        .buttons-bar button:hover, .floating-controls button:hover { background: rgba(255,255,255,0.7); color: #000; transform: translateY(-2px) scale(1.02); }
+        body.dark-theme .buttons-bar button:hover, body.dark-theme .floating-controls button:hover { background: rgba(255,255,255,0.2); color: var(--header-text); }
+        .buttons-bar button:active, .floating-controls button:active { transform: translateY(1px) scale(0.98); }
+        #printPngsBtn { display: none; background: linear-gradient(145deg, #2ecc71, #27ae60); }
+        body.dark-theme #printPngsBtn { background: linear-gradient(145deg, #58d68d, #4ccfa0); }
+
+        .hours-container { 
+            max-width: 800px; margin: 25px auto; padding: 20px; 
+            background: var(--glass-bg-color); backdrop-filter: blur(var(--glass-blur));
+            border-radius: var(--border-radius);
+            border: 1px solid var(--glass-border-color);
+            position: relative; 
+        }
+        
+        .hours-text { font-size: var(--hours-text-font-size); margin-bottom: 15px; text-align: center; color: var(--text-color); font-weight: 500; }
+        .progress-bar-container { width: 100%; background-color: var(--progress-bg); border-radius: var(--border-radius); overflow: hidden; position: relative; height: var(--progress-height); margin-bottom: 12px; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.15); }
+        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--progress-fill), lighten(var(--progress-fill), 15%)); transition: width 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); position: absolute; left: 0; top: 0; z-index: 1; border-radius: var(--border-radius) 0 0 var(--border-radius); }
+        .progress-bar-overtime { height: 100%; width: 0%; background: linear-gradient(90deg, var(--ot-color), lighten(var(--ot-color), 15%)); transition: width 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); position: absolute; left: 0; top: 0; z-index: 2; mix-blend-mode: lighten; opacity: 0.9; border-radius: var(--border-radius) 0 0 var(--border-radius); }
+        body.dark-theme .progress-bar-overtime { mix-blend-mode: screen; }
+        .progress-info { text-align: center; font-weight: 500; color: var(--text-color); margin-top: 8px; font-size: var(--progress-info-font-size); display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; }
+        .progress-info .ot-hours { color: var(--ot-color); text-shadow: var(--ot-glow-base); font-weight: 700; animation: pulsateGlow 2.5s infinite ease-in-out; }
+
+        .schedule-table { 
+            width: 100%; border-collapse: separate; border-spacing: 0; 
+            margin-top: 20px;
+            background: transparent;
+            font-size: calc(var(--table-font-size) * var(--dynamic-font-size)); 
+            border-radius: var(--border-radius); 
+            overflow: hidden; 
+        }
+        .schedule-table thead { 
+            background: var(--glass-bg-color); backdrop-filter: blur(var(--glass-blur));
+            color: var(--text-color);
+            position: sticky; top: 0; z-index: 10;
+            border-bottom: 1px solid var(--glass-border-color);
+        }
+        .schedule-table th, .schedule-table td { 
+            border: 1px solid var(--glass-border-color); 
+            padding: 8px 10px; text-align: center; min-width: 125px; 
+            transition: background-color 0.3s, color 0.3s, height 0.3s, box-shadow 0.2s ease; 
+            position: relative; font-size: calc(var(--table-font-size) * var(--dynamic-font-size)); vertical-align: middle; 
+        }
+        
+        .schedule-table th { font-weight: 500; text-transform: uppercase; letter-spacing: 1px; height: var(--row-height); }
+        .schedule-table th .material-icons-outlined { margin-right: 6px; font-size: 1.1em; vertical-align: text-bottom; }
+        .schedule-table th.date-header { background: transparent; color: var(--text-color); font-size: 1em; }
+        .schedule-table td.name-cell { color: var(--header-text); font-weight: 500; cursor: pointer; padding: 10px 12px; user-select: none; font-size: calc(var(--table-font-size) * var(--dynamic-font-size)); height: var(--row-height); position: relative; transition: background-color 0.4s ease, color 0.4s ease, transform 0.1s ease; }
+        .schedule-table td.name-cell:active { transform: scale(0.98); }
+        .schedule-table td.name-cell.first-shift { background: var(--first_shift-color); }
+        .schedule-table td.name-cell.second-shift { background: var(--second_shift-color); }
+        .schedule-table td.name-cell.third-shift { background: var(--third_shift-color); }
+        
+        .schedule-table td.name-cell .title { display: block; font-weight: 400; font-size: 0.85em; margin-top: 4px; color: rgba(255, 255, 255, 0.8); opacity: 0.9; }
+        body.dark-theme .schedule-table td.name-cell .title { color: rgba(236, 239, 241, 0.8); }
+        .schedule-table td.name-cell.supervisor .title { color: gold !important; text-shadow: 0 0 8px gold; font-weight: 500; }
+        
+        .schedule-table td.shift {
+            background: var(--glass-bg-color); backdrop-filter: blur(5px);
+            color: var(--text-color); cursor: pointer; user-select: none; 
+            position: relative; font-size: calc(var(--table-font-size) * var(--dynamic-font-size)); 
+            height: var(--shift-row-height); padding: 8px; 
+            transition: background-color 0.3s, height 0.3s, transform 0.15s ease-out, box-shadow 0.2s ease; 
+            border: 1px solid var(--glass-border-color); 
+        }
+        .schedule-table td.shift:hover { transform: scale(1.04); z-index: 5; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        
+        .schedule-table td.shift.has-shift { font-weight: 500; text-shadow: 1px 1px 1px rgba(0,0,0,0.1); }
+        .schedule-table td.shift.custom { color: #111 !important; }
+        .schedule-table td.shift.first_shift { background: var(--first_shift-color); color: var(--header-text); }
+        .schedule-table td.shift.second_shift { background: var(--second_shift-color); color: var(--header-text); }
+        .schedule-table td.shift.third_shift { background: var(--third_shift-color); color: var(--header-text); }
+        .schedule-table td.shift.custom { background: var(--custom_shift-color); color: #111 !important; }
+        .schedule-table td.shift.sick { background: var(--sick-color); color: #111 !important; font-weight: bold; }
+        .schedule-table td.shift.vacation { background: var(--vacation-color); color: var(--header-text); font-weight: bold; }
+        body.dark-theme .schedule-table td.shift.sick { color: var(--header-text) !important; }
+        
+        .shift-group-header { font-weight: 700; text-align: center; padding-left: 15px; font-size: 1.05em; height: var(--row-height); position: sticky; top: calc(var(--row-height) * 2); z-index: 9; }
+        .shift-group-header td { color: var(--header-text); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border: none !important; }
+        .shift-group-header.first_shift td { background-color: var(--first_shift-color) !important; }
+        .shift-group-header.second_shift td { background-color: var(--second_shift-color) !important; }
+        .shift-group-header.third_shift td { background-color: var(--third_shift-color) !important; }
+
+        #shiftCountRow { transition: all 0.3s ease-in-out; }
+        #shiftCountRow.hidden { display: none; }
+        #shiftCountRow th, #shiftCountRow td { font-size: 0.8em; padding: 4px; background: transparent; color: var(--text-color); text-align: left; vertical-align: top; height: auto; }
+        .shift-count-display { display: block; margin-bottom: 2px; padding: 2px 4px; border-radius: 4px; font-weight: 500; }
+        .shift-count-display.first { background-color: rgba(var(--first_shift-color-rgb), 0.2); }
+        .shift-count-display.second { background-color: rgba(var(--second_shift-color-rgb), 0.2); }
+        .shift-count-display.third { background-color: rgba(var(--third_shift-color-rgb), 0.2); }
+        .count-value { transition: color 0.3s; }
+        .count-value.met { color: var(--first_shift-color); }
+        .count-value.under { color: var(--ot-color); font-weight: bold; }
+        .count-value.over { color: var(--custom_shift-color); font-weight: bold; }
+
+        .modal { display: none; position: fixed; z-index: 1000; padding-top: 5vh; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.1); backdrop-filter: blur(5px); }
+        .modal-content { 
+            background: var(--glass-bg-color); 
+            backdrop-filter: blur(var(--glass-blur));
+            margin: 5vh auto; padding: 35px; border: 1px solid var(--glass-border-color); 
+            width: 90%; max-width: 580px; box-shadow: var(--glass-shadow); 
+            border-radius: var(--border-radius); font-size: var(--modal-font-size); 
+            color: var(--text-color); position: relative; overflow: visible; 
+            transform: scale(0.95); opacity: 0; animation: modalFadeIn 0.3s ease-out forwards; 
+        }
+        
+        @keyframes modalFadeIn { to { transform: scale(1); opacity: 1; } }
+        .close { color: #95a5a6; position: absolute; top: 12px; right: 15px; font-size: 36px; font-weight: 300; cursor: pointer; transition: color 0.3s ease, transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); line-height: 1; }
+        .close:hover { color: var(--third_shift-color); transform: rotate(180deg) scale(1.1); }
+        body.dark-theme .close { color: #78909c; } body.dark-theme .close:hover { color: var(--third_shift-color); }
+        .modal-content h2 { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 0; margin-bottom: 30px; color: var(--text-color); font-size: var(--modal-header-font-size); font-weight: 500; text-align: center; }
+        .modal-content h2 .material-icons-outlined { font-size: 1.2em; }
+        .modal-content label { display: block; margin: 18px 0 8px 0; font-weight: 500; }
+        .modal-content input[type="time"], .modal-content input[type="color"], .modal-content input[type="number"], .modal-content select, .modal-content input[type="text"] { width: 100%; box-sizing: border-box; padding: 12px 15px; border-radius: var(--border-radius); border: 1px solid var(--input-border-color); font-size: var(--modal-font-size); background-color: var(--input-bg-color); color: var(--text-color); transition: border-color 0.3s ease, box-shadow 0.3s ease; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.05); }
+        .modal-content input:focus, .modal-content select:focus { border-color: var(--primary-color); box-shadow: 0 0 8px rgba(52, 152, 219, 0.3), inset 1px 1px 2px rgba(0,0,0,0.05); outline: none; }
+        .modal-content button { margin-top: 30px; padding: 12px 25px; width: 100%; background: var(--glass-bg-color); color: var(--button-text-color); border: 1px solid var(--glass-border-color); border-radius: var(--border-radius); cursor: pointer; font-size: 1.1em; font-weight: 500; transition: background 0.2s, transform 0.1s, box-shadow 0.2s ease; box-shadow: var(--glass-shadow); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        
+        /* Guard Management Modal Styles */
+        #guardManagementModal .modal-content { max-width: 700px; }
+        #guardList { max-height: 40vh; overflow-y: auto; border: 1px solid var(--input-border-color); border-radius: var(--border-radius); padding: 10px; margin-bottom: 20px; }
+        .guard-list-item { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--input-border-color); }
+        .guard-list-item:last-child { border-bottom: none; }
+        .guard-list-item span.supervisor-tag { font-size: 0.8em; font-weight: bold; color: gold; margin-left: 8px; }
+        .guard-list-item .actions button { padding: 4px 8px; font-size: 0.9em; margin-left: 5px; min-width: 70px; background: var(--input-bg-color); color: var(--text-color); border: 1px solid var(--input-border-color); }
+        .guard-list-item .actions button .material-icons-outlined { font-size: 1em; }
+        #addGuardForm { padding: 15px; border: 1px solid var(--input-border-color); border-radius: var(--border-radius); }
+        #addGuardForm label { display: inline-block; margin-right: 10px; }
+        #addGuardForm input[type="text"] { width: auto; display: inline-block; }
+        #addGuardForm button { width: auto; margin-top: 0; background: var(--input-bg-color); color: var(--text-color); border: 1px solid var(--input-border-color); }
+
+        .floating-controls { position: fixed; bottom: 25px; display: flex; gap: 12px; z-index: 200; }
+        .floating-controls.left { left: 25px; }
+        .floating-controls.right { right: 25px; }
+        .floating-controls button { padding: 0; border-radius: 50%; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+       
+        #settingsModal .modal-content { max-width: 650px; }
+        .settings-section { margin-bottom: 30px; }
+        .settings-section h3 { margin-bottom: 20px; font-size: 1.3em; font-weight: 500; color: var(--text-color); border-bottom: 1px solid var(--input-border-color); padding-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .settings-section h3 .material-icons-outlined { font-size: 1.1em; }
+        .settings-section label { margin-top: 12px; font-weight: 500; }
+        .settings-section input[type="color"], .settings-section input[type="number"] { padding: 10px; margin-top: 6px; width: auto; min-width: 80px; }
+        .color-picker { display: flex; align-items: center; margin-bottom: 15px; gap: 15px; flex-wrap: wrap; }
+        .color-picker label { flex-basis: 130px; flex-shrink: 0; font-weight: 500; margin: 0; }
+        .color-picker input[type="color"] { flex-grow: 0; flex-shrink: 0; width: 70px; height: 35px; border: 1px solid var(--input-border-color); padding: 0; background: none; cursor: pointer; margin: 0; border-radius: 5px; transition: transform 0.2s ease; }
+        .color-picker input[type="color"]:hover { transform: scale(1.1); }
+        .color-code { flex-grow: 1; margin-left: 0; font-weight: 500; text-align: right; font-family: monospace; background-color: var(--input-bg-color); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--input-border-color); }
+
+        .shift-options { display: flex; flex-direction: column; gap: 12px; margin-top: 25px; }
+        .shift-options button { padding: 12px 20px; border-radius: var(--border-radius); cursor: pointer; font-size: 1em; font-weight: 500; width: 100%; box-sizing: border-box; transition: background 0.2s, transform 0.1s, box-shadow 0.2s ease; color: var(--button-text-color); box-shadow: var(--glass-shadow); display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--glass-border-color); background: var(--glass-bg-color); }
+        
+        .guard-hours { display: block; font-size: var(--guard-hours-font-size); margin-top: 5px; font-weight: 500; }
+        .guard-hours .total-hrs { color: gold; text-shadow: 1px 1px 1px rgba(0,0,0,0.3); }
+        .guard-hours .ot-hrs { color: var(--ot-color); text-shadow: var(--ot-glow-base); margin-left: 6px; animation: pulsateGlow 2.5s infinite ease-in-out; }
+        .highlighted { outline: 3px solid var(--primary-color) !important; outline-offset: -3px; box-shadow: inset 0 0 10px rgba(var(--primary-color), 0.4); transform: scale(1.02); z-index: 6 !important; }
+        .jiggle-effect { animation: jiggle 0.3s ease-in-out; }
+
+        @media print { body{background-color:#fff!important;color:#000!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body,body.dark-theme{--primary-color:#3498db;--second_shift-color:#2196F3;--third_shift-color:#e74c3c;--first_shift-color:#4caf50;--custom_shift-color:#f1c40f;--background-color:#fff;--container-bg:#fff;--table-bg:#fff;--text-color:#000;--header-bg:#ddd;--header-text:#000;--modal-content-bg:#fff;--input-border-color:#aaa;--input-bg-color:#fff;--progress-bg:#ddd;--group-header-bg:#eee;--group-header-text:#000;--ot-color:#c00;--ot-glow:none}.container{box-shadow:none!important;border:1px solid #ccc;margin:0;padding:10px;max-width:100%}.buttons-bar,.floating-controls,#themeToggleBtn,#settingsBtn,#addGuardBtn,#saveScheduleBtn,#downloadBtn,.progress-bar-container,.progress-info,.hours-container,.modal,.material-icons-outlined,#shiftCountRow{display:none!important}h1,h2{color:#000!important;margin-bottom:5px;font-size:14pt}h1 .icon{display:none}h2{font-size:12pt}.schedule-table{box-shadow:none!important;margin-top:5px;font-size:9pt!important;width:100%!important;border:1px solid #666!important}.schedule-table th,.schedule-table td{border:1px solid #999!important;padding:4px!important;font-size:9pt!important;color:#000!important;min-width:auto!important;height:auto!important;background-color:transparent!important}.schedule-table th .icon{display:none}.schedule-table thead th{background-color:#eee!important}.schedule-table td.name-cell{background-color:#f0f0f0!important;color:#000!important;font-weight:700}.schedule-table td.name-cell.first-shift,.schedule-table td.name-cell.second-shift,.schedule-table td.name-cell.third-shift{background-color:#f0f0f0!important}.schedule-table td.shift{background-color:#fff!important;color:#000!important;height:auto!important}.schedule-table td.shift.first_shift{background-color:var(--first_shift-color)!important;color:#000!important}.schedule-table td.shift.second_shift{background-color:var(--second_shift-color)!important;color:#000!important}.schedule-table td.shift.third_shift{background-color:var(--third_shift-color)!important;color:#000!important}.schedule-table td.shift.custom{background-color:var(--custom_shift-color)!important;color:#000!important}.shift-group-header td{background-color:#ddd!important;color:#000!important;font-weight:700!important;text-align:center!important}.shift-group-header{page-break-before:always!important}#scheduleBody tr:first-child.shift-group-header{page-break-before:avoid!important}.guard-hours{display:none}.title{font-size:.8em!important;color:#333!important}.schedule-table td.name-cell.supervisor .title{color:#000!important;font-style:italic} }
+
+        @media (max-width: 1200px) { .schedule-table th, .schedule-table td { min-width: 100px; } }
+        @media (max-width: 768px) { .schedule-table th, .schedule-table td { padding: 6px; min-width: 80px; font-size: 0.9em; } .buttons-bar { gap: 8px; } .buttons-bar button { padding: 8px 18px; font-size: 0.9em; } .modal-content { width: 92%; } .hours-container { max-width: 100%; } h1 { font-size: 1.9em;} h2 { font-size: 1.2em;} .hours-text { font-size: 1.4em;} .progress-info {font-size: 1.05em;} }
+        @media (max-width: 480px) { .schedule-table th, .schedule-table td { padding: 5px; min-width: 65px; font-size: 0.8em; } .schedule-table td.name-cell .title { font-size: 0.75em; } .guard-hours { font-size: 0.7em; } .modal-content h2 { font-size: 1.3em; } .modal-content button { font-size: 1em; } h1 { font-size: 1.6em;} h2 { font-size: 1.1em;} .hours-text { font-size: 1.2em;} .progress-info {font-size: 0.95em;} .floating-controls { bottom: 15px; gap: 8px; } .floating-controls.left { left: 15px; } .floating-controls.right { right: 15px; } .floating-controls button { width: 45px; height: 45px; font-size: 1.4em; } }
+    </style>
+</head>
+<body>
+
+<div class="floating-controls right">
+    <button id="themeToggleBtn" title="Toggle Theme"><span class="material-icons-outlined">brightness_6</span></button>
+    <button id="settingsBtn" title="Settings"><span class="material-icons-outlined">settings</span></button>
+</div>
+
+<div class="container">
+    <h1><span class="material-icons-outlined">calendar_month</span> Weekly Guard Schedule</h1>
+    <h2 id="monthHeader">Month Year</h2>
+    <input type="date" id="datePicker">
+    <div class="buttons-bar">
+        <button id="manageGuardsBtn"><span class="material-icons-outlined">groups</span>Manage Guards</button>
+        <button id="toggleCountsBtn"><span class="material-icons-outlined">visibility</span>Toggle Counts</button>
+        <button id="saveScheduleBtn"><span class="material-icons-outlined">save</span>Save Schedule</button>
+        <button id="downloadPngsBtn"><span class="material-icons-outlined">image</span>Download PNGs</button>
+        <button id="downloadBtn"><span class="material-icons-outlined">picture_as_pdf</span>Download PDF</button>
+        <button id="printPngsBtn"><span class="material-icons-outlined">print</span>Print All Images</button>
+    </div>
+    <div class="hours-container">
+        <div class="hours-text">Total Hours: <span id="totalHours">0</span> / 1108</div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBar"></div>
+            <div class="progress-bar-overtime" id="overtimeBar"></div>
+        </div>
+        <div class="progress-info">
+            <span>Scheduled: <span id="scheduledHours">0</span> hrs</span>
+            <span>Overtime: <span id="overtimeHours" class="ot-hours">0</span> hrs</span>
+            <span>Remaining: <span id="remainingHours">1108</span> hrs</span>
+        </div>
+    </div>
+    <table class="schedule-table">
+        <thead>
+        <tr>
+            <th><span class="material-icons-outlined">security</span> Guard</th>
+            <th colspan="1" class="date-header" id="dateFri">Fri</th>
+            <th colspan="1" class="date-header" id="dateSat">Sat</th>
+            <th colspan="1" class="date-header" id="dateSun">Sun</th>
+            <th colspan="1" class="date-header" id="dateMon">Mon</th>
+            <th colspan="1" class="date-header" id="dateTue">Tue</th>
+            <th colspan="1" class="date-header" id="dateWed">Wed</th>
+            <th colspan="1" class="date-header" id="dateThu">Thu</th>
+        </tr>
+        <tr>
+            <th></th>
+            <th id="dayFri">Friday</th>
+            <th id="daySat">Saturday</th>
+            <th id="daySun">Sunday</th>
+            <th id="dayMon">Monday</th>
+            <th id="dayTue">Tuesday</th>
+            <th id="dayWed">Wednesday</th>
+            <th id="dayThu">Thursday</th>
+        </tr>
+        <tr id="shiftCountRow">
+            <th>Counts</th>
+            <td id="countDay0"></td>
+            <td id="countDay1"></td>
+            <td id="countDay2"></td>
+            <td id="countDay3"></td>
+            <td id="countDay4"></td>
+            <td id="countDay5"></td>
+            <td id="countDay6"></td>
+        </tr>
+        </thead>
+        <tbody id="scheduleBody"></tbody>
+    </table>
+</div>
+
+<div id="shiftModal" class="modal"> <div class="modal-content"> <span class="close" onclick="closeShiftModal()">×</span> <h2 id="shiftModalTitle"><span class="material-icons-outlined">schedule</span> Assign Shift</h2> <label for="shiftType">Shift Type:</label> <select id="shiftType"> <option value="">Select Shift</option> <option value="first_shift">First Shift (6-14)</option> <option value="second_shift">Second Shift (14-22)</option> <option value="third_shift">Third Shift (22-6)</option> <option value="custom">Custom Shift</option> </select> <div id="customShiftInputs" style="display: none;"> <label for="customStart">Start Time:</label> <input type="time" id="customStart"> <label for="customEnd">End Time:</label> <input type="time" id="customEnd"> </div> <button id="assignShiftBtn" onclick="assignShift()"><span class="material-icons-outlined">check_circle</span> Assign Shift</button> </div> </div>
+<div id="shiftOptionsModal" class="modal"> <div class="modal-content"> <span class="close" onclick="closeShiftOptionsModal()">×</span> <h2 id="shiftOptionsTitle"><span class="material-icons-outlined">tune</span> Choose Action</h2> <div class="shift-options" id="shiftOptionsButtons"></div> </div> </div>
+<div id="settingsModal" class="modal"> <div class="modal-content"> <span class="close" onclick="closeSettingsModal()">×</span> <h2><span class="material-icons-outlined">settings</span> Settings</h2> <div class="settings-section"> <h3><span class="material-icons-outlined">palette</span> Shift Colors</h3> <div class="color-picker"> <label for="firstShiftColor">First Shift:</label> <input type="color" id="firstShiftColor"> <span class="color-code" id="firstShiftCode"></span> </div> <div class="color-picker"> <label for="secondShiftColor">Second Shift:</label> <input type="color" id="secondShiftColor"> <span class="color-code" id="secondShiftCode"></span> </div> <div class="color-picker"> <label for="thirdShiftColor">Third Shift:</label> <input type="color" id="thirdShiftColor"> <span class="color-code" id="thirdShiftCode"></span> </div> <div class="color-picker"> <label for="customShiftColor">Custom Shift:</label> <input type="color" id="customShiftColor"> <span class="color-code" id="customShiftCode"></span> </div> <div class="color-picker"> <label for="sickColor">Sick Day:</label> <input type="color" id="sickColor"> <span class="color-code" id="sickCode"></span> </div> <div class="color-picker"> <label for="vacationColor">Vacation:</label> <input type="color" id="vacationColor"> <span class="color-code" id="vacationCode"></span> </div> </div> <div class="settings-section"> <h3><span class="material-icons-outlined">text_fields</span> Font & Appearance</h3> <div class="color-picker"> <label for="fontColor">Font Color:</label> <input type="color" id="fontColor"> <span class="color-code" id="fontColorCode"></span> </div> <label for="fontSize">Font Size Multiplier:</label> <input type="number" id="fontSize" min="0.5" max="2" step="0.1"> </div> <div class="settings-section"> <h3><span class="material-icons-outlined">unfold_more</span> Row Heights</h3> <label for="rowHeight">Name/Header Row Height (px):</label> <input type="number" id="rowHeight" min="20" max="100" step="2"> <label for="shiftHeight">Shift Box Height (px):</label> <input type="number" id="shiftHeight" min="20" max="100" step="2"> </div> <button onclick="applySettings()"><span class="material-icons-outlined">done</span> Apply & Close</button> </div> </div>
+<div id="guardManagementModal" class="modal"> <div class="modal-content"> <span class="close" onclick="closeGuardManagementModal()">×</span> <h2><span class="material-icons-outlined">groups</span> Manage Guards</h2> <div id="guardList"></div> <div id="addGuardForm"> <h3><span class="material-icons-outlined">person_add</span> Add New Guard</h3> <input type="text" id="newGuardName" placeholder="Guard Name"> <label> <input type="checkbox" id="newGuardIsSupervisor"> Supervisor </label> <button id="addNewGuardBtn"><span class="material-icons-outlined">add_circle</span> Add</button> </div> <button onclick="applyGuardManagementChanges()"><span class="material-icons-outlined">done_all</span> Apply All Changes & Close</button> </div> </div>
+
+<div class="floating-controls left">
+    <button id="increaseHeightBtn" title="Increase Shift Box Height"><span class="material-icons-outlined">add</span></button>
+    <button id="decreaseHeightBtn" title="Decrease Shift Box Height"><span class="material-icons-outlined">remove</span></button>
+</div>
+
+<!-- USING CDN Libraries for maximum compatibility -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script>
+    // --- Global Variables & Initial Data ---
+    let supervisors = ["Lavallee", "Lee", "Riojas"];
+    let guards = [ "Akol", "Clayton", "Friedman", "Greiner", "Frausto", "Jordan", "Roldan", "Ruiz", "Talamantes Alavarez", "Tramble", "Velazquez", "Ward", "Lavallee", "Aria", "Bejarano", "Hayes", "Nicholson", "Johns", "Lee", "Rose", "Salinas", "McGee", "Riojas", "Hawthorne", "Shivka", "Washington", "Opoku", "Gutierrez" ];
+    const shiftPresets = { "first_shift": { start: "06:00", end: "14:00" }, "second_shift": { start: "14:00", end: "22:00" }, "third_shift": { start: "22:00", end: "06:00" }, "custom": { start: "", end: "" } };
+    let shiftTypeColors = {};
+    const defaultShifts = { "Akol": { 0: "06:00-18:00", 4: "06:00-14:00", 5: "06:00-14:00", 6: "06:00-18:00" }, "Velazquez": { 1: "06:00-18:00", 2: "06:00-18:00", 3: "06:00-14:00", 4: "06:00-14:00" }, "Clayton": { 0: "06:00-14:00", 3: "06:00-14:00", 4: "06:00-14:00", 5: "06:00-14:00", 6: "06:00-14:00" }, "Friedman": { 0: "06:00-14:00", 3: "06:00-14:00", 4: "06:00-14:00", 5: "06:00-14:00", 6: "06:00-14:00" }, "Hawthorne": { 0: "09:00-17:00", 3: "09:00-17:00", 4: "08:00-16:00", 5: "09:00-17:00", 6: "08:00-16:00" }, "Jordan": { 0: "22:00-06:00", 3: "22:00-06:00", 4: "22:00-06:00", 5: "22:00-06:00", 6: "22:00-06:00" }, "Roldan": { 0: "06:00-14:00", 3: "06:00-14:00", 4: "06:00-14:00", 5: "06:00-14:00", 6: "06:00-14:00" }, "Ruiz": { 0: "22:00-06:00", 3: "22:00-06:00", 4: "22:00-06:00", 5: "22:00-06:00", 6: "22:00-06:00" }, "Ward": { 0: "22:00-06:00", 3: "22:00-06:00", 4: "22:00-06:00", 5: "22:00-06:00", 6: "22:00-06:00" }, "Lavallee": { 0: "06:00-14:00", 3: "06:00-14:00", 4: "06:00-14:00", 5: "06:00-14:00", 6: "06:00-14:00" }, "Washington": { 0: "14:00-22:00", 3: "14:00-22:00", 4: "14:00-22:00", 5: "14:00-22:00", 6: "14:00-22:00" }, "Greiner": { 0: "06:00-14:00", 3: "06:00-14:00", 4: "06:00-14:00", 5: "06:00-14:00", 6: "06:00-14:00" }, "Talamantes Alavarez": { 0: "14:00-22:00", 3: "14:00-22:00", 4: "14:00-22:00", 5: "14:00-22:00", 6: "14:00-22:00" }, "Tramble": { 0: "14:00-22:00", 3: "14:00-22:00", 4: "14:00-22:00", 5: "14:00-22:00", 6: "14:00-22:00" }, "McGee": { 0: "14:00-22:00", 3: "14:00-22:00", 4: "14:00-22:00", 5: "14:00-22:00", 6: "14:00-22:00" }, "Riojas": { 0: "14:00-22:00", 3: "14:00-22:00", 4: "14:00-22:00", 5: "14:00-22:00", 6: "14:00-22:00" }, "Shivka": { 0: "16:00-00:00", 4: "16:00-00:00", 5: "16:00-00:00", 6: "16:00-00:00" }, "Aria": { 1: "18:00-06:00", 2: "18:00-06:00", 5: "22:00-06:00", 6: "22:00-06:00" }, "Bejarano": { 0: "22:00-06:00", 1: "18:00-06:00", 2: "18:00-06:00", 3: "22:00-06:00" }, "Hayes": { 3: "20:30-04:30", 4: "20:30-04:30", 5: "20:30-04:30", 6: "20:30-04:30" }, "Johns": { 1: "06:00-18:00", 2: "06:00-18:00" }, "Opoku": { 1: "06:00-16:00", 2: "06:00-16:00" }, "Lee": { 0: "22:00-06:00", 3: "22:00-06:00", 4: "22:00-06:00", 5: "22:00-06:00", 6: "22:00-06:00" }, "Rose": { 0: "22:00-06:00", 3: "22:00-06:00", 4: "22:00-06:00", 5: "22:00-06:00", 6: "22:00-06:00" }, "Salinas": { 1: "18:00-06:00", 2: "18:00-06:00" }, "Frausto": { 0: "22:00-06:00", 3: "22:00-06:00", 4: "22:00-06:00", 5: "22:00-06:00", 6: "22:00-06:00" }, "Nicholson": { 0: "14:00-22:00", 3: "14:00-22:00", 4: "14:00-22:00", 5: "14:00-22:00", 6: "14:00-22:00" } };
+    let copiedShift = null, selectedCells = [], currentCell = null, currentGuard = null, currentRow = null, moveTarget = null;
+    let guardShiftAssignments = {};
+    let generatedImages = [];
+    const WEEKLY_OT_THRESHOLD = 40, TOTAL_HOURS_TARGET = 1108;
+
+    const optimalGuardCounts = {
+        0: { first_shift: 6, second_shift: 6, third_shift: 6 }, // Fri
+        1: { first_shift: 4, second_shift: 4, third_shift: 4 }, // Sat
+        2: { first_shift: 4, second_shift: 4, third_shift: 4 }, // Sun
+        3: { first_shift: 7, second_shift: 7, third_shift: 6 }, // Mon
+        4: { first_shift: 7, second_shift: 7, third_shift: 6 }, // Tue
+        5: { first_shift: 7, second_shift: 6, third_shift: 6 }, // Wed
+        6: { first_shift: 6, second_shift: 6, third_shift: 6 }  // Thu
+    };
+
+    // --- Initialization ---
+    document.addEventListener("DOMContentLoaded", () => {
+        initTheme(); syncColorsFromCSS(); setupDatePicker(); setInitialDate();
+        initializeShiftCountsDisplay();
+        populateGuards(); updateMonthHeader(); applyDefaultShifts();
+        assignGuardShiftOverride('Bejarano', 'third_shift'); assignGuardShiftOverride('Salinas', 'third_shift');
+        guards.forEach(g => { if (!guardShiftAssignments[g]) guardShiftAssignments[g] = calculateMainShift(g); });
+        attachEventListeners(); initializeSettings(); initializeDragDropLoad();
+        reorganizeRows();
+        updateAllCalculations();
+    });
+
+    // --- Event Listeners Setup ---
+    function attachEventListeners(){
+        document.getElementById('downloadBtn').addEventListener('click', downloadPDF);
+        document.getElementById('downloadPngsBtn').addEventListener('click', downloadPNGs);
+        document.getElementById('printPngsBtn').addEventListener('click', printGeneratedImages);
+        document.getElementById('saveScheduleBtn').addEventListener('click', saveScheduleToFile);
+        document.getElementById('manageGuardsBtn').addEventListener('click', openGuardManagementModal);
+        document.getElementById('toggleCountsBtn').addEventListener('click', toggleShiftCountRow);
+        document.getElementById('shiftType').addEventListener('change', toggleCustomShiftInputs);
+        document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+        document.getElementById('settingsBtn').addEventListener('click', openSettingsModal);
+        document.getElementById('increaseHeightBtn').addEventListener('click', () => changeShiftHeight(5));
+        document.getElementById('decreaseHeightBtn').addEventListener('click', () => changeShiftHeight(-5));
+        initKeyboardShortcuts();
+    }
+
+    // --- Theme Management ---
+    function initTheme(){ const t = localStorage.getItem('scheduleTheme') || 'dark'; if (t === 'dark') document.body.classList.add('dark-theme'); updateThemeToggleButton(t); }
+    function toggleTheme(){ const d = document.body.classList.toggle('dark-theme'); const t = d ? 'dark' : 'light'; localStorage.setItem('scheduleTheme', t); updateThemeToggleButton(t); syncColorsFromCSS(); reapplyAllColors(); }
+    function updateThemeToggleButton(t){ const b = document.getElementById('themeToggleBtn'); if(b) { b.innerHTML = `<span class="material-icons-outlined">${t === 'dark' ? 'light_mode' : 'dark_mode'}</span>`; b.title = t === 'dark' ? 'Light Theme' : 'Dark Theme'; } }
+    function syncColorsFromCSS(){ const cs = getComputedStyle(document.documentElement); const g = (v) => cs.getPropertyValue(v).trim(); shiftTypeColors.first_shift=g('--first_shift-color'); shiftTypeColors.second_shift=g('--second_shift-color'); shiftTypeColors.third_shift=g('--third_shift-color'); shiftTypeColors.custom=g('--custom_shift-color'); shiftTypeColors.sick=g('--sick-color'); shiftTypeColors.vacation=g('--vacation-color');}
+    function reapplyAllColors(){ document.querySelectorAll('.shift').forEach(c => { const t = c.dataset.statusType || c.dataset.shiftType; let color, textColor; if (shiftTypeColors[t]) { color = shiftTypeColors[t]; if (t === 'custom' || t === 'sick' || (t === 'vacation' && !document.body.classList.contains('dark-theme'))) { textColor = '#111'; } else { textColor = 'var(--header-text)'; } } else { color = 'var(--glass-bg-color)'; textColor = 'var(--text-color)'; } c.style.backgroundColor = color; c.style.color = textColor; }); document.querySelectorAll('.name-cell').forEach(c => applyGuardShiftColor(c, guardShiftAssignments[c.dataset.guard] || 'first_shift')); document.querySelectorAll('.shift-group-header').forEach(h => { const s = Array.from(h.classList).find(c => shiftTypeColors[c]); const c = h.querySelector('td'); if (!c) return; const bg = shiftTypeColors[s]; const tc = getComputedStyle(document.documentElement).getPropertyValue('--header-text'); c.style.backgroundColor = bg; c.style.color = tc; }); }
+
+    // --- Date Handling ---
+    function setupDatePicker(){ const d = document.getElementById('datePicker'); const t = new Date(); const f = getThisOrNextFriday(t); d.value = formatDate(f); d.addEventListener('change', function(){ updateDayHeaders(new Date(this.value)); updateMonthHeader(); }); }
+    function setInitialDate(){ updateDayHeaders(new Date(document.getElementById('datePicker').value)); }
+    function getThisOrNextFriday(t){ const d = new Date(t.getTime()); const day = d.getDay(); d.setDate(d.getDate() + (5 - day + 7) % 7); return d; }
+    function formatDate(d){ if(!(d instanceof Date)) d = new Date(d); if(isNaN(d.getTime())) return new Date().toISOString().split('T')[0]; const y = d.getFullYear(), m = ("0" + (d.getMonth() + 1)).slice(-2), day = ("0" + d.getDate()).slice(-2); return `${y}-${m}-${day}`; }
+    function updateMonthHeader(){ const d = new Date(document.getElementById('datePicker').value); if(!isNaN(d.getTime())) document.getElementById('monthHeader').textContent = `${d.toLocaleString('default',{month:'long'})} ${d.getFullYear()}`; }
+    function updateDayHeaders(sD){ if(!(sD instanceof Date)||isNaN(sD.getTime())){ sD = new Date(document.getElementById('datePicker').value); if(isNaN(sD.getTime())) return; } const dates = []; const sOffset = (5 - sD.getDay() + 7) % 7; const start = new Date(sD); start.setDate(sD.getDate() + sOffset); for(let i = 0; i < 7; i++){ const d = new Date(start.getTime()); d.setDate(start.getDate() + i); dates.push(d); } const dIds = ['dateFri','dateSat','dateSun','dateMon','dateTue','dateWed','dateThu']; const dnIds = ['dayFri','daySat','daySun','dayMon','dayTue','dayWed','dayThu']; dates.forEach((dt, i) => { const dNum = dt.toLocaleDateString('default',{day:'numeric',month:'short'}); const dName = dt.toLocaleDateString('default',{weekday:'long'}); const dEl = document.getElementById(dIds[i]); const dnEl = document.getElementById(dnIds[i]); if(dEl) dEl.textContent = dNum; if(dnEl) dnEl.textContent = dName; }); }
+
+    // --- Table Population & Structure ---
+    function populateGuards(){
+        const scheduleBody = document.getElementById('scheduleBody');
+        const existingAssignments = {};
+        scheduleBody.querySelectorAll('.shift[data-shift-times], .shift[data-status-type]').forEach(cell => {
+            const guard = cell.dataset.guard;
+            const day = cell.dataset.day;
+            if (!existingAssignments[guard]) existingAssignments[guard] = {};
+            existingAssignments[guard][day] = {
+                shiftType: cell.dataset.shiftType,
+                shiftTimes: cell.dataset.shiftTimes,
+                statusType: cell.dataset.statusType
+            };
+        });
+
+        scheduleBody.innerHTML = '';
+        const sortedGuards = guards.filter(g => g && g.trim()).sort((a, b) => a.localeCompare(b));
+        
+        sortedGuards.forEach(g => {
+            const row = createGuardRow(g, scheduleBody);
+            if (existingAssignments[g]) {
+                Object.keys(existingAssignments[g]).forEach(day => {
+                    const cell = row.querySelector(`.shift[data-day="${day}"]`);
+                    const data = existingAssignments[g][day];
+                    if (data.statusType) {
+                        assignStatusToCell(cell, data.statusType);
+                    } else if (data.shiftType && data.shiftTimes) {
+                        const [start, end] = data.shiftTimes.split('-');
+                        assignShiftToCell(cell, data.shiftType, start, end);
+                    }
+                });
+            }
+        });
+
+        sortedGuards.forEach(g => {
+            updateGuardHours(g);
+            if (!guardShiftAssignments[g]) { guardShiftAssignments[g] = calculateMainShift(g); }
+            const nameCell = document.querySelector(`.name-cell[data-guard="${g}"]`);
+            if(nameCell) applyGuardShiftColor(nameCell, guardShiftAssignments[g]);
+        });
+    }
+
+    function createGuardRow(g, p){
+        const tr = document.createElement('tr'); tr.dataset.guard = g;
+        const tdN = document.createElement('td'); tdN.classList.add('name-cell'); if(supervisors.includes(g)) tdN.classList.add('supervisor'); tdN.dataset.guard = g;
+        tdN.innerHTML = `${g}<span class="title">${supervisors.includes(g)?"Supervisor":"Professional"}</span><span class="guard-hours"><span class="total-hrs">0 hrs</span></span>`;
+        tdN.addEventListener('click', e => { e.stopPropagation(); handleGuardNameClick(g, tr); }); tr.appendChild(tdN);
+        for(let i = 0; i < 7; i++){ const td = document.createElement('td'); td.classList.add('shift'); td.dataset.guard = g; td.dataset.day = i; td.addEventListener('click', e => { e.stopPropagation(); handleShiftClick(td, e); }); td.addEventListener('dblclick', e => { e.stopPropagation(); handleShiftDoubleClick(td, e); }); tr.appendChild(td); }
+        p.appendChild(tr); return tr;
+    }
+
+    function reorganizeRows() {
+        const scheduleBody = document.getElementById('scheduleBody');
+        const rows = Array.from(scheduleBody.querySelectorAll('tr[data-guard]'));
+        const fragment = document.createDocumentFragment();
+        const shiftOrder = ['first_shift', 'second_shift', 'third_shift'];
+        const shiftGroups = { 'first_shift': [], 'second_shift': [], 'third_shift': [] };
+        rows.forEach(row => {
+            const guardName = row.dataset.guard;
+            let type = guardShiftAssignments[guardName];
+            if (!type || !shiftGroups.hasOwnProperty(type)) {
+                type = calculateMainShift(guardName);
+                guardShiftAssignments[guardName] = type;
+            }
+            const nameCell = row.querySelector('.name-cell');
+            if (nameCell) applyGuardShiftColor(nameCell, type);
+            shiftGroups[type].push(row);
+        });
+        for (const shift of shiftOrder) {
+            if (shiftGroups[shift].length > 0) {
+                const header = document.createElement('tr'); header.classList.add('shift-group-header', shift);
+                let label = ''; switch (shift) { case 'first_shift': label = 'First Shift'; break; case 'second_shift': label = 'Second Shift'; break; case 'third_shift': label = 'Third Shift'; break; }
+                const bgColor = shiftTypeColors[shift]; const txtColor = getComputedStyle(document.documentElement).getPropertyValue('--header-text');
+                header.innerHTML = `<td colspan="8" style="background-color:${bgColor}; color: ${txtColor};">${capitalizeFirstLetter(label)}</td>`;
+                fragment.appendChild(header);
+                shiftGroups[shift].sort((a, b) => a.dataset.guard.localeCompare(b.dataset.guard)).forEach(r => fragment.appendChild(r));
+            }
+        }
+        scheduleBody.innerHTML = ''; scheduleBody.appendChild(fragment);
+    }
+
+    // --- Shift Cell Interaction ---
+    function handleShiftClick(c, e){ if(e.ctrlKey){ if(selectedCells.includes(c)){ selectedCells = selectedCells.filter(x => x !== c); c.classList.remove('highlighted'); } else { selectedCells.push(c); c.classList.add('highlighted'); } } else { clearHighlightedCells(); selectedCells.push(c); c.classList.add('highlighted'); } }
+    function handleShiftDoubleClick(c, e){ e.stopPropagation(); clearHighlightedCells(); selectedCells.push(c); c.classList.add('highlighted'); openShiftOptionsModal(c); }
+    function clearHighlightedCells(){ selectedCells.forEach(c => c.classList.remove('highlighted')); selectedCells = []; }
+
+    // --- Shift Assignment & Editing ---
+    function assignShift() {
+        const type = document.getElementById("shiftType").value; if (!type) { alert("Select shift."); return; }
+        const isGuardAssign = document.getElementById("shiftModal").dataset.guardAssignment === "true";
+        if (isGuardAssign && currentRow) { assignGuardShift(type); closeShiftModal(); return; }
+        let start, end;
+        if (type === "custom") { start = document.getElementById("customStart").value; end = document.getElementById("customEnd").value; if (!start || !end) { alert("Need times."); return; } }
+        else { const p = shiftPresets[type]; if (!p) return; start = p.start; end = p.end; }
+        const targets = selectedCells.length > 0 ? selectedCells : (currentCell ? [currentCell] : []);
+        if (targets.length > 0) {
+            const affectedGuards = new Set();
+            targets.forEach(c => { assignShiftToCell(c, type, start, end); affectedGuards.add(c.dataset.guard); });
+            clearHighlightedCells();
+            affectedGuards.forEach(g => { guardShiftAssignments[g] = calculateMainShift(g); applyGuardShiftColor(document.querySelector(`.name-cell[data-guard="${g}"]`), guardShiftAssignments[g]); });
+            reorganizeRows();
+            updateAllCalculations();
+            closeShiftModal();
+        } else alert("No target.");
+    }
+
+    function clearCell(cell) {
+        cell.innerHTML = '';
+        cell.classList.remove('has-shift', 'has-status', 'first_shift', 'second_shift', 'third_shift', 'custom', 'sick', 'vacation');
+        delete cell.dataset.shiftType;
+        delete cell.dataset.shiftTimes;
+        delete cell.dataset.statusType;
+        cell.style.backgroundColor = 'var(--glass-bg-color)';
+        cell.style.color = 'var(--text-color)';
+    }
+
+    function assignShiftToCell(c, type, start, end) {
+        if (!c || !type || !start || !end) return;
+        clearCell(c);
+        c.dataset.shiftType = type; c.dataset.shiftTimes = `${start}-${end}`;
+        c.innerHTML = `${formatTime(start)} - ${formatTime(end)}<br><small>${formatShiftType(type)}</small>`;
+        c.classList.add('has-shift', type);
+        reapplyAllColors();
+        const g = c.dataset.guard;
+        if (g) { updateGuardHours(g); }
+    }
+    
+    function assignStatusToCell(cell, statusType) {
+        if (!cell || !statusType) return;
+        clearCell(cell);
+        cell.dataset.statusType = statusType;
+        cell.innerHTML = statusType.toUpperCase();
+        cell.classList.add('has-status', statusType);
+        reapplyAllColors();
+        const guardName = cell.dataset.guard;
+        if (guardName) { updateGuardHours(guardName); }
+    }
+
+
+    function openAssignShiftModal(c){ currentCell=c;currentRow=null;document.getElementById("shiftModalTitle").innerHTML='<span class="material-icons-outlined">schedule</span> Assign Shift';document.getElementById("assignShiftBtn").innerHTML='<span class="material-icons-outlined">check_circle</span> Assign Shift';document.getElementById("shiftModal").style.display="block";const s=document.getElementById("shiftType");s.value="";Array.from(s.options).forEach(o=>o.style.display="");document.getElementById("customShiftInputs").style.display="none";document.getElementById("customStart").value="";document.getElementById("customEnd").value="";document.getElementById("shiftModal").dataset.guardAssignment="false"; }
+    function openEditShiftModal(c){ currentCell=c;currentRow=null;document.getElementById("shiftModalTitle").innerHTML='<span class="material-icons-outlined">edit</span> Edit Shift';document.getElementById("assignShiftBtn").innerHTML='<span class="material-icons-outlined">check_circle</span> Update Shift';document.getElementById("shiftModal").style.display="block";const type=c.dataset.shiftType||"";const[start,end]=(c.dataset.shiftTimes||"-").split('-');const s=document.getElementById("shiftType");s.value=type;Array.from(s.options).forEach(o=>o.style.display="");document.getElementById("customShiftInputs").style.display=(type==="custom")?"block":"none";document.getElementById("customStart").value=start||"";document.getElementById("customEnd").value=end||"";document.getElementById("shiftModal").dataset.guardAssignment="false"; }
+    function clearShiftInCell(c){ if(!c)return; clearCell(c); const g=c.dataset.guard; if(g){updateGuardHours(g); const mainShift=calculateMainShift(g); guardShiftAssignments[g]=mainShift; applyGuardShiftColor(document.querySelector(`.name-cell[data-guard="${g}"]`),mainShift);}}
+
+    // --- Guard Row Interaction ---
+    function handleGuardNameClick(g,r){currentGuard=g;currentRow=r;currentCell=null;openGuardOptionsModal(g,r);}
+    function openGuardOptionsModal(g,r){document.getElementById("shiftOptionsTitle").innerHTML=`<span class="material-icons-outlined">tune</span> Actions for ${g}`;document.getElementById("shiftOptionsModal").style.display="block";const b=document.getElementById('shiftOptionsButtons');b.innerHTML='';const add=(txt,cls,act)=>{const btn=document.createElement('button');btn.innerHTML=txt;btn.classList.add(cls);btn.onclick=()=>{act();closeShiftOptionsModal();};b.appendChild(btn);};add('<span class="material-icons-outlined">group_work</span>Assign Group','assign-btn',()=>openAssignGuardShiftModal(g,r));add('<span class="material-icons-outlined">swap_vert</span>Move Row','paste-btn',()=>initiateMoveGuard(g,r));add('<span class="material-icons-outlined">content_copy</span>Copy Week','paste-btn',()=>copyGuardWeek(g,r));if(copiedShift?.type==='week')add(`<span class="material-icons-outlined">content_paste</span>Paste Week (${copiedShift.guard})`,'paste-week-btn',()=>pasteGuardWeek(g,r));add('<span class="material-icons-outlined">delete_sweep</span>Clear Week','clear-btn',()=>{if(confirm(`Clear shifts for ${g}?`))clearGuardShifts(g,r);});add('<span class="material-icons-outlined">delete_forever</span>Delete Guard','clear-btn',()=>deleteGuard(g));add('<span class="material-icons-outlined">cancel</span>Cancel','cancel-btn',()=>{});}
+    function openAssignGuardShiftModal(g,r){currentGuard=g;currentRow=r;document.getElementById("shiftModalTitle").innerHTML=`<span class="material-icons-outlined">group_work</span> Set Group for ${g}`;document.getElementById("assignShiftBtn").innerHTML='<span class="material-icons-outlined">check_circle</span> Set Group';document.getElementById("shiftModal").style.display="block";const s=document.getElementById("shiftType");s.value=guardShiftAssignments[g]||"first_shift";document.getElementById("customShiftInputs").style.display="none";Array.from(s.options).forEach(o=>{o.style.display=["","first_shift","second_shift","third_shift"].includes(o.value)?"":"none";});document.getElementById("shiftModal").dataset.guardAssignment="true";}
+    function assignGuardShift(type){ if(!currentRow||!currentGuard)return;const c=currentRow.querySelector('.name-cell');if(!c)return; const newAssignment=['first_shift','second_shift','third_shift'].includes(type)?type:'first_shift'; guardShiftAssignments[currentGuard]=newAssignment; applyGuardShiftColor(c,newAssignment); reorganizeRows();}
+    function assignGuardShiftOverride(g,type){const c=document.querySelector(`.name-cell[data-guard="${g}"]`);if(!c)return;guardShiftAssignments[g]=type;applyGuardShiftColor(c,type);}
+    function initiateMoveGuard(g,r){if(moveTarget)return;moveTarget={guard:g,row:r};alert(`Moving ${g}. Click target guard.`);document.body.style.cursor='move';r.style.opacity='0.6';document.body.addEventListener('click',handleMoveClick,{capture:true,once:true});}
+    function handleMoveClick(e){e.preventDefault();e.stopPropagation();document.body.style.cursor='default';if(moveTarget?.row)moveTarget.row.style.opacity='1';const tC=e.target.closest('.name-cell');if(!moveTarget||!tC?.dataset.guard){moveTarget=null;return;}const tG=tC.dataset.guard;if(moveTarget.guard===tG){alert("Cannot move to self.");moveTarget=null;return;}const p=prompt(`Place ${moveTarget.guard} 'above' or 'below' ${tG}?`,"below")?.toLowerCase();if(!p||(p!=='above'&&p!=='below')){alert("Invalid placement.");moveTarget=null;return;}const tR=tC.parentElement;const sB=document.getElementById('scheduleBody');if(p==='above')sB.insertBefore(moveTarget.row,tR);else sB.insertBefore(moveTarget.row,tR.nextSibling);moveTarget=null;reorganizeRows();}
+    function clearGuardShifts(g, r) { r.querySelectorAll('.shift').forEach(c => clearCell(c)); guardShiftAssignments[g] = calculateMainShift(g); const c = r.querySelector('.name-cell'); if (c) applyGuardShiftColor(c, guardShiftAssignments[g]); updateGuardHours(g); reorganizeRows(); updateAllCalculations(); }
+    function deleteGuard(guardNameToDelete) { if (confirm(`Are you sure you want to permanently delete ${guardNameToDelete}? This action cannot be undone.`)) { const row = document.querySelector(`tr[data-guard="${guardNameToDelete}"]`); if (row) { row.remove(); guards = guards.filter(g => g !== guardNameToDelete); supervisors = supervisors.filter(s => s !== guardNameToDelete); delete guardShiftAssignments[guardNameToDelete]; updateAllCalculations(); } } }
+
+    // --- Copy/Paste/Cut ---
+    function initKeyboardShortcuts(){document.addEventListener('keydown',e=>{const t=document.activeElement.tagName;if(['INPUT','SELECT','TEXTAREA'].includes(t))return;if(e.ctrlKey||e.metaKey){switch(e.key.toLowerCase()){case'c':e.preventDefault();copySelectedCells(true);break;case'v':e.preventDefault();pasteToSelectedCells(true);break;case'x':e.preventDefault();cutSelectedCells(true);break;}}else if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();clearSelectedCells(true);}}); }
+    function copySelectedCells(suppressAlert=false){if(!selectedCells.length){if(!suppressAlert)alert("No cells selected.");return;}if(selectedCells.length===1){const c=selectedCells[0];if(!c.classList.contains('has-shift') && !c.classList.contains('has-status')){if(!suppressAlert)alert("Cell empty.");copiedShift=null;return;}copiedShift={type:'single',shiftType:c.dataset.shiftType||"",shiftTimes:c.dataset.shiftTimes||"",statusType:c.dataset.statusType||"",guard:c.dataset.guard};if(!suppressAlert)alert("Shift/Status copied!");}else{const d=selectedCells.map(c=>({shiftType:c.dataset.shiftType||"",shiftTimes:c.dataset.shiftTimes||"",statusType:c.dataset.statusType||"",hasData:c.classList.contains('has-shift')||c.classList.contains('has-status')})).filter(x=>x.hasData);if(!d.length){if(!suppressAlert)alert("Selected cells empty.");copiedShift=null;return;}copiedShift={type:'multi',data:d};if(!suppressAlert)alert(`${d.length} cells copied!`);}}
+    function cutSelectedCells(suppressAlert=false){copySelectedCells(true);if(!copiedShift)return;const affectedGuards=new Set();selectedCells.forEach(c=>{clearCell(c);affectedGuards.add(c.dataset.guard);});affectedGuards.forEach(g=>{guardShiftAssignments[g]=calculateMainShift(g);applyGuardShiftColor(document.querySelector(`.name-cell[data-guard="${g}"]`),guardShiftAssignments[g]);});reorganizeRows();updateAllCalculations();if(!suppressAlert)alert("Shifts cut!");clearHighlightedCells();}
+    function pasteToSelectedCells(suppressAlert = false) { if (!copiedShift) { if (!suppressAlert) alert("Nothing copied."); return; } if (!selectedCells.length) { if (!suppressAlert) alert("No target cells."); return; } const affectedGuards = new Set(); if (copiedShift.type === 'single') { selectedCells.forEach(c => { if (copiedShift.statusType) { assignStatusToCell(c, copiedShift.statusType); } else if (copiedShift.shiftType && copiedShift.shiftTimes) { const t = copiedShift.shiftTimes.split('-'); assignShiftToCell(c, copiedShift.shiftType, t[0], t[1]); } else { clearCell(c); } affectedGuards.add(c.dataset.guard); }); if (!suppressAlert) alert("Pasted!"); } else if (copiedShift.type === 'multi') { selectedCells.forEach((c, i) => { const d = copiedShift.data[i % copiedShift.data.length]; if (d.statusType) { assignStatusToCell(c, d.statusType); } else if (d.shiftType && d.shiftTimes) { const t = d.shiftTimes.split('-'); assignShiftToCell(c, d.shiftType, t[0], t[1]); } else { clearCell(c); } affectedGuards.add(c.dataset.guard); }); if (!suppressAlert) alert("Pasted multi!"); } else if (copiedShift.type === 'week') { if (!suppressAlert) alert("Use Guard Name > Paste Week."); return; } affectedGuards.forEach(g => { guardShiftAssignments[g] = calculateMainShift(g); const nameCell = document.querySelector(`.name-cell[data-guard="${g}"]`); if(nameCell) applyGuardShiftColor(nameCell, guardShiftAssignments[g]); }); reorganizeRows(); updateAllCalculations(); clearHighlightedCells(); }
+    function clearSelectedCells(suppressAlert=false){if(!selectedCells.length){if(!suppressAlert)alert("No cells selected.");return;}const affectedGuards = new Set(); selectedCells.forEach(c=>{clearCell(c); affectedGuards.add(c.dataset.guard);}); affectedGuards.forEach(g => { guardShiftAssignments[g] = calculateMainShift(g); const nameCell = document.querySelector(`.name-cell[data-guard="${g}"]`); if(nameCell) applyGuardShiftColor(nameCell, guardShiftAssignments[g]); }); reorganizeRows(); updateAllCalculations();if(!suppressAlert)alert("Selected cells cleared!");clearHighlightedCells();}
+    function copyGuardWeek(g,r){const s=[];r.querySelectorAll('.shift').forEach(c=>s.push({day:c.dataset.day,shiftType:c.dataset.shiftType||"",shiftTimes:c.dataset.shiftTimes||"",statusType:c.dataset.statusType||""}));copiedShift={type:'week',guard:g,shifts:s};alert(`Week copied for ${g}!`);}
+    function pasteGuardWeek(tG,tR){if(copiedShift?.type!=='week'){alert("No week copied.");return;}if(copiedShift.guard===tG){alert("Cannot paste to same guard.");return;}if(!confirm(`Paste ${copiedShift.guard}'s week onto ${tG}?`))return;const c=tR.querySelectorAll('.shift');const affectedGuards = new Set([tG]); copiedShift.shifts.forEach(d=>{const cell=Array.from(c).find(tc=>tc.dataset.day===d.day);if(cell){if(d.statusType){assignStatusToCell(cell, d.statusType);}else if(d.shiftType&&d.shiftTimes){const t=d.shiftTimes.split('-');assignShiftToCell(cell,d.shiftType,t[0],t[1]);}else{clearCell(cell);}}}); affectedGuards.forEach(g => { guardShiftAssignments[g] = calculateMainShift(g); applyGuardShiftColor(document.querySelector(`.name-cell[data-guard="${g}"]`), guardShiftAssignments[g]); });updateGuardHours(tG);reorganizeRows();updateAllCalculations();alert(`Pasted to ${tG}.`);}
+
+    // --- Calculations & Updates ---
+    function updateAllCalculations() {
+        updateTotalHoursAndOT();
+        updateAllShiftCounts();
+    }
+    function calculateShiftHours(t){if(!t?.includes('-'))return 0;const s=t.split('-');if(s.length!==2||!s[0]||!s[1])return 0;try{const st=new Date(`1970-01-01T${s[0]}:00Z`);let et=new Date(`1970-01-01T${s[1]}:00Z`);if(isNaN(st.getTime())||isNaN(et.getTime()))return 0;if(et<=st)et.setDate(et.getDate()+1);return(et.getTime()-st.getTime())/36e5;}catch{return 0;}}
+    function calculateGuardOvertime(gN){const r=document.querySelector(`tr[data-guard="${gN}"]`);if(!r)return{total:0,regular:0,overtime:0};let t=0;r.querySelectorAll('.shift.has-shift').forEach(c=>{t+=calculateShiftHours(c.dataset.shiftTimes);});t=parseFloat(t.toFixed(1));const ot=Math.max(0,t-WEEKLY_OT_THRESHOLD);const rg=t-ot;return{total:t,regular:parseFloat(rg.toFixed(1)),overtime:parseFloat(ot.toFixed(1))};}
+    function formatHours(h){return h % 1 === 0 ? `${h}` : h.toFixed(1);}
+    function updateGuardHours(gN){const c=document.querySelector(`.name-cell[data-guard="${gN}"]`);if(!c)return;const{total,overtime}=calculateGuardOvertime(gN);const s=c.querySelector('.guard-hours');if(s){let h=`<span class="total-hrs">${formatHours(total)} hrs</span>`;if(overtime>0){h+=` <span class="ot-hrs">(${formatHours(overtime)} OT)</span>`;}s.innerHTML=h;}}
+
+    function determineMajorityShift(startTimeStr, endTimeStr) {
+        if (!startTimeStr || !endTimeStr) return 'first_shift';
+        const toMinutes = (timeStr) => { const [hours, minutes] = timeStr.split(':').map(Number); return hours * 60 + minutes; };
+        let startMin = toMinutes(startTimeStr);
+        let endMin = toMinutes(endTimeStr);
+        if (endMin <= startMin) { endMin += 24 * 60; }
+        const overlaps = { first_shift: 0, second_shift: 0, third_shift: 0 };
+        const calculateOverlap = (customStart, customEnd, periodStart, periodEnd) => Math.max(0, Math.min(customEnd, periodEnd) - Math.max(customStart, periodStart));
+        overlaps.first_shift = calculateOverlap(startMin, endMin, 360, 840);
+        overlaps.second_shift = calculateOverlap(startMin, endMin, 840, 1320);
+        overlaps.third_shift = calculateOverlap(startMin, endMin, 0, 360) + calculateOverlap(startMin, endMin, 1320, 1440 + 360);
+        let majorityShift = 'first_shift';
+        let maxOverlap = overlaps.first_shift;
+        if (overlaps.second_shift > maxOverlap) { maxOverlap = overlaps.second_shift; majorityShift = 'second_shift'; }
+        if (overlaps.third_shift > maxOverlap) { majorityShift = 'third_shift'; }
+        if (maxOverlap > 0 && overlaps.first_shift === overlaps.second_shift && maxOverlap === overlaps.first_shift) return 'first_shift';
+        if (maxOverlap > 0 && overlaps.second_shift === overlaps.third_shift && maxOverlap === overlaps.second_shift) return 'second_shift';
+        return majorityShift;
+    }
+
+    function calculateMainShift(gN) {
+        const row = document.querySelector(`tr[data-guard="${gN}"]`);
+        if (!row) return 'first_shift';
+        const shifts = Array.from(row.querySelectorAll('.shift.has-shift'));
+        if (shifts.length === 0) return 'first_shift';
+        const counts = { first_shift: 0, second_shift: 0, third_shift: 0 };
+        shifts.forEach(c => {
+            let t = c.dataset.shiftType;
+            if (t === 'custom') {
+                const times = c.dataset.shiftTimes?.split('-');
+                if (times && times.length === 2) { t = determineMajorityShift(times[0], times[1]); }
+            }
+            if (counts.hasOwnProperty(t)) counts[t]++;
+        });
+        let mainShift = 'first_shift';
+        let max = counts.first_shift;
+        if (counts.second_shift > max) { max = counts.second_shift; mainShift = 'second_shift'; }
+        if (counts.third_shift > max) { mainShift = 'third_shift'; }
+        if (counts.first_shift === counts.second_shift && counts.first_shift >= counts.third_shift && max > 0) mainShift = 'first_shift';
+        else if (counts.second_shift === counts.third_shift && counts.second_shift >= counts.first_shift && max > 0) mainShift = 'second_shift';
+        return mainShift;
+    }
+
+    function applyGuardShiftColor(nC, mS){if(!nC)return; mS=mS||'first_shift'; nC.classList.remove('first_shift','second_shift','third_shift'); nC.classList.add(mS); const c=shiftTypeColors[mS]; nC.style.backgroundColor=c; nC.style.color='var(--header-text)'; const t=nC.querySelector('.title');if(t){const iS=nC.classList.contains('supervisor'); t.style.color=iS?'gold':(document.body.classList.contains('dark-theme')?'rgba(236,239,241,0.8)':'rgba(255,255,255,0.8)'); t.style.textShadow=iS?'0 0 8px gold':'none';}}
+    function updateTotalHoursAndOT(){let tH=0,tOT=0;guards.forEach(g=>{const{total,overtime}=calculateGuardOvertime(g);tH+=total;tOT+=overtime;});tH=parseFloat(tH.toFixed(1));tOT=parseFloat(tOT.toFixed(1));document.getElementById('totalHours').textContent=formatHours(tH);document.getElementById('scheduledHours').textContent=formatHours(tH);document.getElementById('overtimeHours').textContent=formatHours(tOT);document.getElementById('remainingHours').textContent=formatHours(Math.max(0,TOTAL_HOURS_TARGET-tH));const tPct=Math.min(100,(tH/TOTAL_HOURS_TARGET)*100);const otPct=Math.min(100,(tOT/TOTAL_HOURS_TARGET)*100);document.getElementById('progressBar').style.width=tPct+'%';document.getElementById('overtimeBar').style.width=otPct+'%';}
+    function applyDefaultShifts(){console.log("Applying defaults...");for(const g in defaultShifts){const r=document.querySelector(`tr[data-guard="${g}"]`);if(!r)continue;for(const d in defaultShifts[g]){const c=r.querySelector(`td.shift[data-day="${d}"]`);if(!c)continue;const t=defaultShifts[g][d].split('-');if(t.length===2)assignShiftToCell(c,'custom',t[0],t[1]);} guardShiftAssignments[g]=calculateMainShift(g); updateGuardHours(g); }}
+
+    // --- Shift Count Functions ---
+    function initializeShiftCountsDisplay() {
+        for (let i = 0; i < 7; i++) {
+            const cell = document.getElementById(`countDay${i}`);
+            if (!cell) continue;
+            const optimal = optimalGuardCounts[i];
+            cell.innerHTML = `
+                <span class="shift-count-display first">1st: <span class="count-value" id="countDay${i}First">0/${optimal.first_shift}</span></span>
+                <span class="shift-count-display second">2nd: <span class="count-value" id="countDay${i}Second">0/${optimal.second_shift}</span></span>
+                <span class="shift-count-display third">3rd: <span class="count-value" id="countDay${i}Third">0/${optimal.third_shift}</span></span>
+            `;
+        }
+    }
+    function updateAllShiftCounts() {
+        const scheduleBody = document.getElementById('scheduleBody');
+        if (!scheduleBody) return;
+        for (let day = 0; day < 7; day++) {
+            const counts = { first_shift: 0, second_shift: 0, third_shift: 0 };
+            scheduleBody.querySelectorAll(`.shift[data-day="${day}"].has-shift`).forEach(cell => {
+                let type = cell.dataset.shiftType;
+                if (type === 'custom') {
+                    const times = cell.dataset.shiftTimes?.split('-');
+                    if (times && times.length === 2) { type = determineMajorityShift(times[0], times[1]); }
+                }
+                if (counts.hasOwnProperty(type)) counts[type]++;
+            });
+            const updateSpan = (shiftType, typeLabel) => {
+                const optimal = optimalGuardCounts[day][shiftType];
+                const span = document.getElementById(`countDay${day}${typeLabel}`);
+                if(span){
+                    span.textContent = `${counts[shiftType]}/${optimal}`;
+                    span.className = 'count-value ' + (counts[shiftType] === optimal ? 'met' : (counts[shiftType] < optimal ? 'under' : 'over'));
+                }
+            };
+            updateSpan('first_shift', 'First');
+            updateSpan('second_shift', 'Second');
+            updateSpan('third_shift', 'Third');
+        }
+    }
+    function toggleShiftCountRow() { document.getElementById('shiftCountRow').classList.toggle('hidden'); }
+
+    // --- Export Functions ---
+    async function generateScheduleImages() {
+        const wasDark = document.body.classList.contains('dark-theme');
+        const allCanvases = [];
+        
+        try {
+            if (wasDark) {
+                document.body.classList.remove('dark-theme');
+                syncColorsFromCSS();
+                reapplyAllColors();
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            const mainTable = document.querySelector('.schedule-table');
+            const mainThead = mainTable.querySelector('thead').cloneNode(true);
+            mainThead.querySelector('#shiftCountRow')?.remove();
+            
+            const renderCanvas = async (rows, groupHeader, isContinued) => {
+                const container = document.createElement('div');
+                container.style.position = 'absolute'; container.style.left = '-9999px';
+                container.style.width = '1250px'; container.style.backgroundColor = '#ffffff';
+                container.style.padding = '10px';
+                
+                const table = document.createElement('table'); table.className = 'schedule-table';
+                const thead = mainThead.cloneNode(true); 
+                const tbody = document.createElement('tbody');
+                const header = groupHeader.cloneNode(true);
+
+                if (isContinued) {
+                    const cell = header.querySelector('td');
+                    if(cell && !cell.textContent.includes(' (continued)')) cell.textContent += ' (continued)';
+                }
+                
+                tbody.appendChild(header);
+                rows.forEach(r => tbody.appendChild(r.cloneNode(true)));
+                table.appendChild(thead); table.appendChild(tbody);
+                container.appendChild(table); document.body.appendChild(container);
+
+                const canvas = await html2canvas(container, { scale: 1.5, backgroundColor: '#ffffff' });
+                document.body.removeChild(container);
+                return canvas;
+            };
+
+            const groups = mainTable.querySelectorAll('#scheduleBody .shift-group-header');
+            for (const groupHeaderRow of groups) {
+                const guardRowsForGroup = [];
+                let nextRow = groupHeaderRow.nextElementSibling;
+                while (nextRow && !nextRow.classList.contains('shift-group-header')) { guardRowsForGroup.push(nextRow); nextRow = nextRow.nextElementSibling; }
+
+                if (guardRowsForGroup.length === 0) {
+                     allCanvases.push(await renderCanvas([], groupHeaderRow, false));
+                     continue;
+                }
+
+                let rowsToProcess = [...guardRowsForGroup];
+                let isFirstChunkOfGroup = true;
+                
+                while (rowsToProcess.length > 0) {
+                    // This is a simplified but faster estimation for pagination
+                    const approxRowHeight = 50; 
+                    const maxRowsPerPage = Math.floor(800 / approxRowHeight);
+                    const chunk = rowsToProcess.splice(0, maxRowsPerPage);
+                    allCanvases.push(await renderCanvas(chunk, groupHeaderRow, !isFirstChunkOfGroup));
+                    isFirstChunkOfGroup = false;
+                }
+            }
+        } catch (error) {
+            console.error("Error generating images:", error);
+            alert("An error occurred while generating the images.");
+        } finally {
+            if (wasDark) {
+                document.body.classList.add('dark-theme');
+                syncColorsFromCSS();
+                reapplyAllColors();
+            }
+        }
+        return allCanvases;
+    }
+
+    async function downloadPNGs() {
+        if (typeof JSZip === 'undefined' || typeof html2canvas === 'undefined') { alert("Error: Export libraries not loaded. Ensure you have an internet connection."); return; }
+        alert("Generating PNG images, please wait...");
+        generatedImages = [];
+        document.getElementById('printPngsBtn').style.display = 'none';
+
+        const canvases = await generateScheduleImages();
+        const zip = new JSZip();
+
+        canvases.forEach((canvas, index) => {
+            const dataUrl = canvas.toDataURL('image/png');
+            generatedImages.push(dataUrl);
+            zip.file(`Schedule-Page-${index + 1}.png`, dataUrl.substr(dataUrl.indexOf(',') + 1), {base64: true});
+        });
+        
+        zip.generateAsync({ type: "blob" }).then(content => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = `Guard_Schedule_${document.getElementById('datePicker').value}.zip`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            document.getElementById('printPngsBtn').style.display = 'inline-flex';
+        });
+    }
+
+    function printGeneratedImages() {
+        if (generatedImages.length === 0) { alert("Please use 'Download PNGs' first to generate the images for printing."); return; }
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write('<html><head><title>Print Schedule</title><style>@media print { body { margin: 0; } img { width: 100%; page-break-after: always; } }</style></head><body>');
+        generatedImages.forEach(imgDataUrl => {
+            printWindow.document.write(`<img src="${imgDataUrl}" />`);
+        });
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        setTimeout(() => { printWindow.focus(); printWindow.print(); }, 500);
+    }
+
+    async function downloadPDF() {
+        alert("Preparing PDF. This may be slow or fail on restrictive systems. The 'Download PNGs' option is recommended as a faster, more reliable alternative.");
+        if (typeof window.jspdf === 'undefined' || typeof window.html2canvas === 'undefined') { alert("Error: PDF libraries not loaded."); return; }
+        const { jsPDF } = window.jspdf;
+        const canvases = await generateScheduleImages();
+        const pdf = new jsPDF('landscape', 'pt', 'a4');
+        canvases.forEach((canvas, index) => {
+            if (index > 0) { pdf.addPage(); }
+            const imgData = canvas.toDataURL('image/png');
+            const props = pdf.getImageProperties(imgData);
+            const pdfW = pdf.internal.pageSize.getWidth(); const imgW = pdfW - 40;
+            const imgH = (props.height * imgW) / props.width;
+            pdf.addImage(imgData, 'PNG', 20, 20, imgW, imgH, undefined, 'FAST');
+        });
+        pdf.save(`Guard_Schedule_${document.getElementById('datePicker').value}_ByShift.pdf`);
+    }
+
+    // --- Modal Management & Utilities ---
+    function closeShiftModal(){document.getElementById("shiftModal").style.display="none";document.getElementById("shiftType").value="";delete document.getElementById("shiftModal").dataset.guardAssignment;}
+    function closeShiftOptionsModal(){document.getElementById("shiftOptionsModal").style.display="none";clearHighlightedCells();}
+    function closeSettingsModal(){document.getElementById("settingsModal").style.display="none";}
+    function toggleCustomShiftInputs(){document.getElementById("customShiftInputs").style.display=(document.getElementById("shiftType").value==="custom")?"block":"none";}
+    window.onclick = function(event) {
+        ['shiftModal', 'shiftOptionsModal', 'settingsModal', 'guardManagementModal'].forEach(id => {
+            const modal = document.getElementById(id);
+            if (event.target == modal) {
+                modal.style.display = 'none';
+                if (id === 'guardManagementModal') applyGuardManagementChanges();
+            }
+        });
+    };
+    function initializeSettings(){setupSettingsListeners();}
+    function openSettingsModal(){syncColorsFromCSS();Object.keys(shiftTypeColors).forEach(k=>{const b=k.replace(/_shift|/,'').replace(/(\w)/, c => c.toUpperCase()) + "Color";const cId=k.replace('_shift','')+"Code";const ci=document.getElementById(b);const cc=document.getElementById(cId);if(ci)ci.value=shiftTypeColors[k];if(cc)cc.textContent=shiftTypeColors[k];});const cs=getComputedStyle(document.documentElement);const gV=(v,d)=>cs.getPropertyValue(v).trim()||d;document.getElementById('fontColor').value=gV('--text-color','#333');document.getElementById('fontColorCode').textContent=gV('--text-color','#333');document.getElementById('fontSize').value=parseFloat(gV('--dynamic-font-size',1));document.getElementById('rowHeight').value=parseInt(gV('--row-height','40px'));document.getElementById('shiftHeight').value=parseInt(gV('--shift-row-height','40px'));document.getElementById("settingsModal").style.display="block";}
+    function setupSettingsListeners(){const uC=(id,cId,css,key)=>{const p=document.getElementById(id);const c=document.getElementById(cId);if(p){p.addEventListener('input',()=>{const v=p.value;c.textContent=v;document.documentElement.style.setProperty(css,v);shiftTypeColors[key]=v;reapplyAllColors();});}};uC('firstShiftColor','firstShiftCode','--first_shift-color','first_shift');uC('secondShiftColor','secondShiftCode','--second_shift-color','second_shift');uC('thirdShiftColor','thirdShiftCode','--third_shift-color','third_shift');uC('customShiftColor','customShiftCode','--custom_shift-color','custom');uC('sickColor','sickCode','--sick-color','sick');uC('vacationColor','vacationCode','--vacation-color','vacation');const fc=document.getElementById('fontColor'),fcC=document.getElementById('fontColorCode');fc.addEventListener('input',()=>{document.documentElement.style.setProperty('--text-color',fc.value);fcC.textContent=fc.value;});const fs=document.getElementById('fontSize');fs.addEventListener('input',()=>{let s=Math.max(0.5,Math.min(2,parseFloat(fs.value)||1));fs.value=s;document.documentElement.style.setProperty('--dynamic-font-size',s);});const rh=document.getElementById('rowHeight');rh.addEventListener('input',()=>{let h=Math.max(20,Math.min(100,parseInt(rh.value)||40));rh.value=h;document.documentElement.style.setProperty('--row-height',`${h}px`);});const sh=document.getElementById('shiftHeight');sh.addEventListener('input',()=>{let h=Math.max(20,Math.min(100,parseInt(sh.value)||40));sh.value=h;document.documentElement.style.setProperty('--shift-row-height',`${h}px`);});}
+    window.applySettings=function(){closeSettingsModal();}
+    function changeShiftHeight(d){const i=document.getElementById('shiftHeight');let h=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--shift-row-height'));h=Math.max(20,Math.min(100,h+d));document.documentElement.style.setProperty('--shift-row-height',`${h}px`);i.value=h;}
+    function openShiftOptionsModal(c){currentCell=c;currentRow=null;currentGuard=c.dataset.guard;document.getElementById("shiftOptionsTitle").innerHTML=`<span class="material-icons-outlined">tune</span> Actions for ${currentGuard} (${formatDay(c.dataset.day)})`;document.getElementById("shiftOptionsModal").style.display="block";const b=document.getElementById('shiftOptionsButtons');b.innerHTML='';const hS=c.classList.contains('has-shift');const add=(txt,cls,act)=>{const btn=document.createElement('button');btn.innerHTML=txt;btn.classList.add(cls);btn.onclick=()=>{act();closeShiftOptionsModal();};b.appendChild(btn);};add(`<span class="material-icons-outlined">${hS?'edit':'add'}</span> ${hS?"Edit":"Assign"} Shift`,'assign-btn',()=>{if(hS)openEditShiftModal(c);else openAssignShiftModal(c);});if(hS)add('<span class="material-icons-outlined">content_copy</span>Copy Shift','paste-btn',()=>copySelectedCells());if(copiedShift?.type==='single'||copiedShift?.type==='multi')add('<span class="material-icons-outlined">content_paste</span>Paste Shift','paste-btn',()=>pasteToSelectedCells());add('<span class="material-icons-outlined">sick</span> Mark as Sick', 'clear-btn', () => { assignStatusToCell(c, 'sick'); updateAllCalculations(); });add('<span class="material-icons-outlined">beach_access</span> Mark as Vacation', 'assign-btn', () => { assignStatusToCell(c, 'vacation'); updateAllCalculations(); });add('<span class="material-icons-outlined">delete</span>Clear Cell','clear-btn',()=>{clearShiftInCell(c);reorganizeRows();updateAllCalculations();});add('<span class="material-icons-outlined">cancel</span>Cancel','cancel-btn',()=>{});}
+    function formatShiftType(t){switch(t){case"first_shift":return"1st";case"second_shift":return"2nd";case"third_shift":return"3rd";case"custom":return"Custom";default:return"";}}
+    function formatTime(t){if(!t?.includes(':'))return"";const[h,m]=t.split(':');const hr=parseInt(h);const a=hr>=12?'PM':'AM';let h12=hr%12;if(h12===0)h12=12;return`${h12}:${m} ${a}`;}
+    function formatDay(d){const n=["Fri","Sat","Sun","Mon","Tue","Wed","Thu"];return n[parseInt(d)]||"";}
+    function capitalizeFirstLetter(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+    function getScheduleState(){const cs=(v,d)=>getComputedStyle(document.documentElement).getPropertyValue(v).trim()||d;const state={version:1.6,selectedDate:document.getElementById('datePicker').value,guards,supervisors,shiftAssignments:{},guardPrimaryShifts:guardShiftAssignments,settings:{colors:shiftTypeColors,fontSize:cs('--dynamic-font-size',1),rowHeight:cs('--row-height','40px'),shiftHeight:cs('--shift-row-height','40px'),fontColor:cs('--text-color','#333')}};document.querySelectorAll('#scheduleBody .shift[data-guard]').forEach(c=>{const{guard:g,day:d,shiftType:st,shiftTimes:t,statusType:ss}=c.dataset;if(st&&t||ss){if(!state.shiftAssignments[g])state.shiftAssignments[g]={};state.shiftAssignments[g][d]={type:st,times:t,status:ss};}});return state;}
+    function saveScheduleToFile(){try{const state=getScheduleState();const j=JSON.stringify(state,null,2);const b=new Blob([j],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=`guard-schedule-${state.selectedDate||formatDate(new Date())}.json`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);alert("Schedule saved!");}catch(e){console.error("Save error:",e);alert("Failed to save.");}}
+    function initializeDragDropLoad(){const d=document.querySelector('.container');d.addEventListener('dragover',e=>{e.stopPropagation();e.preventDefault();e.dataTransfer.dropEffect='copy';d.classList.add('drag-over-active');});d.addEventListener('dragleave',()=>d.classList.remove('drag-over-active'));d.addEventListener('drop',e=>{e.stopPropagation();e.preventDefault();d.classList.remove('drag-over-active');const f=e.dataTransfer.files[0];if(f&&(f.type==='application/json'||f.name.toLowerCase().endsWith('.json')))loadScheduleFromFile(f);else alert('Invalid file. Drop .json');});}
+    function loadScheduleFromFile(f){const r=new FileReader();r.onload=e=>{try{const s=JSON.parse(e.target.result);if(!s?.guards||!s.shiftAssignments)throw new Error("Invalid format.");applyScheduleState(s);alert('Loaded!');}catch(err){console.error("Load err:",err);alert(`Load failed: ${err.message}`);}};r.onerror=()=>alert(`Read err: ${r.error}`);r.readAsText(f);}
+    function applyScheduleState(s){guards=s.guards||[];supervisors=s.supervisors||[];guardShiftAssignments=s.guardPrimaryShifts||{};if(s.settings)applyLoadedSettings(s.settings);else syncColorsFromCSS();document.getElementById('datePicker').value=s.selectedDate;updateDayHeaders(new Date(s.selectedDate));updateMonthHeader();populateGuards();const sb=document.getElementById('scheduleBody');for(const g in s.shiftAssignments){const row=sb.querySelector(`tr[data-guard="${g}"]`);if(row){const gD=s.shiftAssignments[g];for(const d in gD){const c=row.querySelector(`.shift[data-day="${d}"]`);const sD=gD[d];if(c){if(sD.status){assignStatusToCell(c, sD.status);}else if(sD?.type&&sD.times){const t=sD.times.split('-');assignShiftToCell(c,sD.type,t[0],t[1]);}}}}} guards.forEach(g => { if(!guardShiftAssignments[g]) guardShiftAssignments[g] = calculateMainShift(g); }); guards.forEach(g=>updateGuardHours(g));reorganizeRows();updateAllCalculations();}
+    function applyLoadedSettings(s){if(s.colors){shiftTypeColors=s.colors;Object.keys(shiftTypeColors).forEach(k=>{try{document.documentElement.style.setProperty(`--${k.replace('_','-')}-color`,shiftTypeColors[k]);}catch{}}); }const set=(v,val)=>{if(val)document.documentElement.style.setProperty(v,val);};set('--dynamic-font-size',s.fontSize);set('--row-height',s.rowHeight);set('--shift-row-height',s.shiftHeight);set('--text-color',s.fontColor);reapplyAllColors();if(document.getElementById('settingsModal').style.display==='block'){closeSettingsModal();openSettingsModal();}}
+    
+    // --- Guard Management Modal Functions ---
+    let tempGuards = [], tempSupervisors = [];
+    function openGuardManagementModal() {
+        tempGuards = [...guards];
+        tempSupervisors = [...supervisors];
+        populateGuardManagementList();
+        document.getElementById('addNewGuardBtn').onclick = () => addNewGuardToTempList();
+        document.getElementById('guardManagementModal').style.display = 'block';
+    }
+    function closeGuardManagementModal() { document.getElementById('guardManagementModal').style.display = 'none'; }
+    function applyGuardManagementChanges() {
+        guards = [...tempGuards];
+        supervisors = [...tempSupervisors];
+        populateGuards();
+        reorganizeRows();
+        updateAllCalculations();
+        closeGuardManagementModal();
+    }
+    function populateGuardManagementList() {
+        const listContainer = document.getElementById('guardList');
+        listContainer.innerHTML = '';
+        tempGuards.sort().forEach(guard => {
+            const isSupervisor = tempSupervisors.includes(guard);
+            const item = document.createElement('div');
+            item.className = 'guard-list-item';
+            item.dataset.guard = guard;
+            item.innerHTML = `
+                <div>
+                    <span class="guard-name">${guard}</span>
+                    ${isSupervisor ? '<span class="supervisor-tag">Supervisor</span>' : ''}
+                </div>
+                <div class="actions">
+                    <button class="edit-guard-btn"><span class="material-icons-outlined">edit</span> Edit</button>
+                    <button class="delete-guard-btn"><span class="material-icons-outlined">delete</span> Delete</button>
+                </div>
+            `;
+            listContainer.appendChild(item);
+        });
+        listContainer.querySelectorAll('.edit-guard-btn').forEach(btn => btn.onclick = (e) => editGuardInTempList(e));
+        listContainer.querySelectorAll('.delete-guard-btn').forEach(btn => btn.onclick = (e) => deleteGuardFromTempList(e));
+    }
+    function addNewGuardToTempList() {
+        const nameInput = document.getElementById('newGuardName');
+        const isSupervisorCheckbox = document.getElementById('newGuardIsSupervisor');
+        const name = nameInput.value.trim();
+        if (!name) { alert("Guard name cannot be empty."); return; }
+        if (tempGuards.find(g => g.toLowerCase() === name.toLowerCase())) { alert("A guard with this name already exists."); return; }
+        
+        tempGuards.push(name);
+        if (isSupervisorCheckbox.checked) { tempSupervisors.push(name); }
+        
+        nameInput.value = '';
+        isSupervisorCheckbox.checked = false;
+        populateGuardManagementList();
+    }
+    function deleteGuardFromTempList(event) {
+        const item = event.target.closest('.guard-list-item');
+        const guardName = item.dataset.guard;
+        if (confirm(`Remove ${guardName} from the list? This will be finalized when you click 'Apply & Close'.`)) {
+            tempGuards = tempGuards.filter(g => g !== guardName);
+            tempSupervisors = tempSupervisors.filter(s => s !== guardName);
+            populateGuardManagementList();
+        }
+    }
+    function editGuardInTempList(event) {
+        const item = event.target.closest('.guard-list-item');
+        const originalName = item.dataset.guard;
+        const nameSpan = item.querySelector('.guard-name');
+        const isSupervisor = tempSupervisors.includes(originalName);
+
+        nameSpan.innerHTML = `
+            <input type="text" value="${originalName}" class="edit-name-input" style="width: 150px;">
+            <label><input type="checkbox" class="edit-supervisor-check" ${isSupervisor ? 'checked' : ''}> Supervisor</label>
+        `;
+        const actionsDiv = item.querySelector('.actions');
+        actionsDiv.innerHTML = `<button class="save-guard-btn"><span class="material-icons-outlined">save</span> Save</button>`;
+        actionsDiv.querySelector('.save-guard-btn').onclick = () => saveGuardEdit(originalName, item);
+    }
+    function saveGuardEdit(originalName, item) {
+        const nameInput = item.querySelector('.edit-name-input');
+        const isSupervisorCheckbox = item.querySelector('.edit-supervisor-check');
+        const newName = nameInput.value.trim();
+
+        if (!newName) { alert("Name cannot be empty."); return; }
+        if (newName.toLowerCase() !== originalName.toLowerCase() && tempGuards.find(g => g.toLowerCase() === newName.toLowerCase())) {
+            alert("A guard with this new name already exists."); return;
+        }
+
+        const guardIndex = tempGuards.indexOf(originalName);
+        if (guardIndex > -1) tempGuards[guardIndex] = newName;
+        
+        const supervisorIndex = tempSupervisors.indexOf(originalName);
+        if (supervisorIndex > -1) {
+            tempSupervisors.splice(supervisorIndex, 1);
+        }
+        if (isSupervisorCheckbox.checked) {
+            tempSupervisors.push(newName);
+        }
+
+        populateGuardManagementList();
+    }
+
+</script>
+</body>
+</html>

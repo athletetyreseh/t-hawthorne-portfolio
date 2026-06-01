@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" role="img" aria-labelledby="title desc">
+  <title id="title">IPSA Security Services</title>
+  <desc id="desc">White IPSA Security Services logo on a transparent background.</desc>
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M129 24C86 44 55 92 55 145c0 55 31 103 74 123" stroke-width="10"/>
+    <path d="M176 26c-24 26-39 72-39 119 0 46 15 93 39 129" stroke-width="8"/>
+    <path d="M53 153h189" stroke-width="9"/>
+    <path d="M226 74c-23 21-42 49-54 84" stroke-width="8"/>
+    <path d="M231 231c-20-16-39-41-54-74" stroke-width="8"/>
+  </g>
+  <g fill="#ffffff" font-family="Georgia, Times New Roman, serif" font-weight="700">
+    <text x="250" y="125" font-size="132" letter-spacing="4">IPSA</text>
+    <text x="6" y="226" font-size="88">Security Services</text>
+    <text x="44" y="278" font-size="34" font-family="Arial, Helvetica, sans-serif" font-weight="600">Local Service. Unlimited Capability.</text>
+  </g>
+</svg>
