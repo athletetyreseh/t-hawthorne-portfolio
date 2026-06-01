@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tempe Security Rotations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --background-color: #1a1a2e;
+            --card-background: #16213e;
+            --border-radius: 12px;
+            --box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --green-color: #4caf50; /* Cosmos */
+            --blue-color: #2196f3; /* Southgate */
+            --orange-color: #ff9800; /* Break */
+            --roving-color: #f5f5f5; /* Roving */
+            --unavailable-color: #ff4444; /* Unavailable */
+            --escort-color: #00bcd4; /* Escort */
+            --training-color: #9c27b0; /* Training */
+            --shift-first-color: #3498db;
+            --shift-second-color: #e74c3c;
+            --shift-third-color: #2ecc71;
+            --shift-weekend-color: #f39c12;
+        }
+
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            margin: 0; padding: 0;
+            background-color: var(--background-color);
+            color: #fff; line-height: 1.6;
+            min-height: 100vh; display: flex; flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color), #4e54c8, #8f94fb);
+            background-size: 300% 300%;
+            animation: gradient-animation 15s ease infinite;
+            color: #fff; padding: 10px 0; text-align: center;
+            box-shadow: var(--box-shadow); flex-shrink: 0;
+        }
+
+        h1 { margin: 0; font-size: 2em; letter-spacing: 2px; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 20px; }
+
+        .schedule-container, .attached-rotations-container, .guard-sliders {
+            background-color: rgba(22, 33, 62, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px; box-sizing: border-box; width: 100%;
+        }
+
+        .controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-bottom: 20px; }
+        .control-group { display: flex; flex-direction: column; min-width: 150px; }
+        select, input {
+            width: 100%; padding: 8px; border: 1px solid #555;
+            border-radius: var(--border-radius); background-color: #222; color: #fff;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button {
+            padding: 8px 12px; border: none; border-radius: var(--border-radius);
+            cursor: pointer; font-size: 1em; font-weight: 600; text-transform: uppercase;
+            color: #fff; background-size: 200% 200%; animation: gradient-animation 8s ease infinite;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+
+        .blue-button { background-image: linear-gradient(135deg, #3498db, #2980b9, #34dbeb); }
+        .green-button { background-image: linear-gradient(135deg, #2ecc71, #27ae60, #2eff71); }
+        .red-button { background-image: linear-gradient(135deg, #e74c3c, #c0392b, #ff4c3c); }
+        .purple-button { background-image: linear-gradient(135deg, #9b59b6, #8e44ad, #af7ac5); }
+        .grey-button { background-image: linear-gradient(135deg, #95a5a6, #7f8c8d, #bdc3c7); }
+
+        #rotation-container { background-color: #fff; border-radius: var(--border-radius); padding: 20px; color: #000; overflow-x: auto; }
+        #scheduleTable { width: 100%; border-collapse: collapse; table-layout: auto; }
+
+        .printable-content th, .printable-content td {
+            border: 1px solid #555; padding: 4px; text-align: center; font-size: 0.85em; color: #000;
+        }
+
+        .cosmos { background-color: var(--green-color) !important; color: #fff !important; }
+        .southgate { background-color: var(--blue-color) !important; color: #fff !important; }
+        .break { background-color: var(--orange-color) !important; color: #fff !important; }
+        .roving { background-color: var(--roving-color) !important; color: #666 !important; }
+        .unavailable { background-color: var(--unavailable-color) !important; color: #fff !important; }
+        .escort { background-color: var(--escort-color) !important; color: #fff !important; }
+        .training { background-color: var(--training-color) !important; color: #fff !important; }
+
+        /* FIXED FOOTER BUTTON LAYOUT */
+        .footer-button-group {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+            padding: 5px 0;
+        }
+
+        .footer-button-group button {
+            flex: 1;
+            font-size: 0.7em;
+            padding: 6px 2px;
+            border-radius: 6px;
+            white-space: nowrap;
+            min-width: 0;
+        }
+
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(26,26,46,0.9); align-items: center; justify-content: center;
+        }
+        .modal.visible { display: flex; }
+        .modal-content { background-color: #fff; padding: 20px; border-radius: var(--border-radius); width: 80%; max-width: 500px; color: #000; }
+
+        @media print {
+            header, .controls, .guard-sliders, .schedule-footer, .undo-button { display: none !important; }
+            body { background: white; color: black; }
+            #rotation-container { box-shadow: none; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>Tempe Security Rotations</h1>
+    </div>
+</header>
+
+<div class="container">
+    <div class="schedule-container">
+        <div class="controls">
+            <div class="control-group">
+                <label>Shift:</label>
+                <select id="shiftSelect" onchange="updateShift()">
+                    <option value="first">First Shift</option>
+                    <option value="second">Second Shift</option>
+                    <option value="third">Third Shift</option>
+                    <option value="first-weekend">First Shift (Wknd)</option>
+                    <option value="second-weekend">Second Shift (Wknd)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Guards:</label>
+                <select id="guardCount" onchange="updateGuardCount()"></select>
+            </div>
+            <div class="control-group">
+                <label>Date:</label>
+                <input type="date" id="datePicker" onchange="updateDate()" />
+            </div>
+            <button class="purple-button" onclick="showAnalytics()"><i class="fa fa-chart-pie"></i> Analytics</button>
+            <button class="blue-button" style="margin-left: auto;" onclick="randomizeGuards()"><i class="fa fa-random"></i> Shuffle Guards</button>
+            <button class="blue-button" onclick="randomizeRotation()"><i class="fa fa-sync-alt"></i> Randomize Rotation</button>
+            <button class="red-button" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+        </div>
+
+        <div id="rotation-container">
+            <div class="printable-content">
+                <div style="display: flex; justify-content: space-between;">
+                    <h2 id="scheduleDate"></h2>
+                    <h2 id="scheduleShift"></h2>
+                </div>
+                <table id="scheduleTable"></table>
+            </div>
+        </div>
+    </div>
+
+    <div class="guard-sliders" id="guardSliders"></div>
+</div>
+
+<div id="modalPopup" class="modal">
+    <div class="modal-content">
+        <div id="modalContent"></div>
+    </div>
+</div>
+
+<script>
+let shift='first';
+let guardNamesList={
+  'first':['Akol','Clayton','Friedman','Roldan','Ward','Velazquez','Washington'],
+  'second':['McGee','Riojas','Shivka','Tramble','Talamantes Alvarez','Nicholson','Bloodworth'],
+  'third':['Aria','Bejarano','Hayes','Rose','Salinas','Ruiz','Jordan'],
+  'first-weekend':['Johns','Velazquez','Bloodworth','Roldan','Irvin','Alvarez'],
+  'second-weekend':['Salinas','Bejarano','Wknd1']
+};
+let guardCount=3, guardNames=[], scheduleData=[], selectedDate=new Date();
+let guardAvailability=[];
+const SLOT_DURATION = 15;
+const SHIFT_SLOTS = { 'first':32, 'second':32, 'third':32, 'first-weekend':48, 'second-weekend':48 };
+const SHIFT_START = { 'first':6, 'second':14, 'third':22, 'first-weekend':6, 'second-weekend':18 };
+const roveTypes = [
+    { name: 'Long Rove', duration: 4, exclusive: true },
+    { name: 'Short Rove', duration: 2, exclusive: true },
+    { name: 'Perimeter', duration: 4, exclusive: false },
+    { name: 'Roof', duration: 2, exclusive: false },
+    { name: 'South/Vault', duration: 3, exclusive: true }
+];
+const roveTypeNames = roveTypes.map(r => r.name);
+
+function updateShift(){
+    shift=document.getElementById('shiftSelect').value;
+    updateGuardCountOptions();
+    guardNames=assignUniqueGuards();
+    resetAvailability();
+    generateSchedule();
+}
+
+function updateGuardCountOptions(){
+    let sel=document.getElementById('guardCount'); sel.innerHTML='';
+    let max = Math.max(guardNamesList[shift].length, 10);
+    for(let i=2; i<=max; i++){
+        let opt=document.createElement('option'); opt.value=i; opt.textContent=i+' Guards'; sel.appendChild(opt);
+    }
+    sel.value=guardCount;
+}
+
+function updateGuardCount(){
+    guardCount=parseInt(document.getElementById('guardCount').value);
+    guardNames=assignUniqueGuards();
+    resetAvailability();
+    generateSchedule();
+}
+
+function assignUniqueGuards(){
+    let arr=[...guardNamesList[shift]], a=[];
+    for(let i=0; i<guardCount; i++) a.push(arr[i] || 'Guard '+(i+1));
+    return a;
+}
+
+function resetAvailability(){
+    guardAvailability=[];
+    for(let i=0; i<guardCount; i++) guardAvailability.push({start:0, end:SHIFT_SLOTS[shift]});
+}
+
+function generateSchedule(){
+    scheduleData=[];
+    for(let i=0; i<SHIFT_SLOTS[shift]; i++){
+        let row=[];
+        for(let j=0; j<guardCount; j++) row.push({task:'Roving', duration:1});
+        scheduleData.push(row);
+    }
+    assignPosts();
+    assignBreaks();
+    assignSpecificRoves();
+    mergeCells();
+    renderSchedule();
+}
+
+function assignPosts(){
+    let total = SHIFT_SLOTS[shift];
+    for(let i=0; i<total; i+=8){
+        let gIndices = shuffle([...Array(guardCount).keys()]);
+        // Cosmos
+        if(shift !== 'third' && !shift.includes('weekend')){
+            let g = gIndices.pop();
+            for(let k=0; k<8 && (i+k)<total; k++) scheduleData[i+k][g].task = 'Cosmos';
+        }
+        // Southgate
+        let sg = gIndices.pop();
+        for(let k=0; k<8 && (i+k)<total; k++) scheduleData[i+k][sg].task = 'Southgate';
+    }
+}
+
+function assignBreaks(){
+    for(let g=0; g<guardCount; g++){
+        let count = (SHIFT_SLOTS[shift] >= 48) ? 3 : 2;
+        let assigned = 0;
+        for(let i=6; i<SHIFT_SLOTS[shift]-6 && assigned < count; i++){
+            if(scheduleData[i][g].task === 'Roving' && scheduleData[i+1][g].task === 'Roving'){
+                scheduleData[i][g].task = 'Break';
+                scheduleData[i+1][g].task = 'Break';
+                assigned++;
+                i += 8; // Spacer
+            }
+        }
+    }
+}
+
+function assignSpecificRoves() {
+    for (let g = 0; g < guardCount; g++) {
+        fillRovingGaps(g);
+    }
+}
+
+function fillRovingGaps(g) {
+    for (let i = 0; i < SHIFT_SLOTS[shift]; i++) {
+        if (scheduleData[i][g].task === 'Roving') {
+            let start = i;
+            let len = 0;
+            while (i < SHIFT_SLOTS[shift] && scheduleData[i][g].task === 'Roving') {
+                len++; i++;
+            }
+            let current = start;
+            while (current < start + len) {
+                let remaining = (start + len) - current;
+                let possible = roveTypes.filter(r => r.duration <= remaining);
+                if (possible.length > 0) {
+                    let r = possible[Math.floor(Math.random() * possible.length)];
+                    for (let k = 0; k < r.duration; k++) scheduleData[current + k][g].task = r.name;
+                    current += r.duration;
+                } else {
+                    current++;
+                }
+            }
+        }
+    }
+}
+
+function mergeCells(){
+    for(let g=0; g<guardCount; g++){
+        for(let i=0; i<SHIFT_SLOTS[shift]; i++){
+            let task = scheduleData[i][g].task;
+            if(task === 'Roving' || task === 'Unavailable') continue;
+            let start = i;
+            let count = 1;
+            while((i+1) < SHIFT_SLOTS[shift] && scheduleData[i+1][g].task === task){
+                scheduleData[i+1][g].duration = 0;
+                count++;
+                i++;
+            }
+            scheduleData[start][g].duration = count;
+        }
+    }
+}
+
+function renderSchedule(){
+    const table = document.getElementById('scheduleTable');
+    table.innerHTML = '';
+    
+    // Header
+    let thead = table.createTHead();
+    let headRow = thead.insertRow();
+    headRow.insertCell().textContent = 'Time';
+    guardNames.forEach((name, idx) => {
+        let cell = headRow.insertCell();
+        cell.textContent = name;
+    });
+
+    // Body
+    let tbody = table.createTBody();
+    for(let i=0; i<SHIFT_SLOTS[shift]; i++){
+        let row = tbody.insertRow();
+        let timeCell = row.insertCell();
+        timeCell.textContent = getTimeLabel(i);
+        
+        for(let g=0; g<guardCount; g++){
+            let data = scheduleData[i][g];
+            if(data.duration > 0){
+                let cell = row.insertCell();
+                cell.textContent = data.task;
+                cell.rowSpan = data.duration;
+                cell.className = data.task.toLowerCase().replace('/','');
+                if(data.task !== 'Unavailable' && data.task !== 'Roving') {
+                    cell.onclick = (e) => showSpecificRovePopup(i, g);
+                }
+            }
+        }
+    }
+
+    // Footer
+    let tfoot = table.createTFoot();
+    let footRow = tfoot.insertRow();
+    footRow.className = "schedule-footer";
+    footRow.insertCell(); // Time col
+    for(let g=0; g<guardCount; g++){
+        let cell = footRow.insertCell();
+        let group = document.createElement('div');
+        group.className = "footer-button-group";
+        
+        let clearBtn = document.createElement('button');
+        clearBtn.className = "grey-button";
+        clearBtn.innerHTML = '<i class="fa fa-eraser"></i> Clear';
+        clearBtn.onclick = () => clearIndividualRoves(g);
+        
+        let rollBtn = document.createElement('button');
+        rollBtn.className = "blue-button";
+        rollBtn.innerHTML = '<i class="fa fa-sync-alt"></i> Reroll';
+        rollBtn.onclick = () => rerollIndividualRoves(g);
+        
+        group.appendChild(clearBtn);
+        group.appendChild(rollBtn);
+        cell.appendChild(group);
+    }
+    
+    document.getElementById('scheduleDate').textContent = selectedDate.toDateString();
+    document.getElementById('scheduleShift').textContent = shift.toUpperCase();
+}
+
+function getTimeLabel(idx){
+    let h = SHIFT_START[shift] + Math.floor((idx * 15) / 60);
+    let m = (idx * 15) % 60;
+    let suffix = h >= 12 && h < 24 ? 'PM' : 'AM';
+    let displayH = h % 12 === 0 ? 12 : h % 12;
+    return `${displayH}:${m === 0 ? '00' : m} ${suffix}`;
+}
+
+function clearIndividualRoves(g) {
+    for(let i=0; i<SHIFT_SLOTS[shift]; i++){
+        if(roveTypeNames.includes(scheduleData[i][g].task)){
+            scheduleData[i][g].task = 'Roving';
+        }
+        scheduleData[i][g].duration = 1;
+    }
+    mergeCells();
+    renderSchedule();
+}
+
+function rerollIndividualRoves(g) {
+    clearIndividualRoves(g);
+    fillRovingGaps(g);
+    mergeCells();
+    renderSchedule();
+}
+
+function randomizeGuards() {
+    guardNames = shuffle([...guardNames]);
+    renderSchedule();
+}
+
+function randomizeRotation() {
+    generateSchedule();
+}
+
+function getTaskBlock(i, g) {
+    let start = i;
+    while (start > 0 && scheduleData[start][g].duration === 0) start--;
+    let duration = scheduleData[start][g].duration;
+    return { start, duration };
+}
+
+function showSpecificRovePopup(i, g) {
+    let block = getTaskBlock(i, g);
+    let task = scheduleData[block.start][g].task;
+    if(!roveTypeNames.includes(task)) return;
+
+    let mo = `<div class="modal-content">
+        <h3>${task} Options</h3>
+        <button class="grey-button" onclick="clearSpecificBlock(${block.start}, ${g}, ${block.duration})">Clear to Roving</button>
+        <button class="red-button" onclick="closeModal()">Cancel</button>
+    </div>`;
+    document.getElementById('modalContent').innerHTML = mo;
+    document.getElementById('modalPopup').classList.add('visible');
+}
+
+function clearSpecificBlock(start, g, duration) {
+    for(let k=0; k<duration; k++) {
+        scheduleData[start+k][g].task = 'Roving';
+        scheduleData[start+k][g].duration = 1;
+    }
+    closeModal();
+    mergeCells();
+    renderSchedule();
+}
+
+function closeModal() { document.getElementById('modalPopup').classList.remove('visible'); }
+
+function showAnalytics() {
+    let stats = {};
+    guardNames.forEach(n => stats[n] = 0);
+    
+    for(let g=0; g<guardCount; g++){
+        for(let i=0; i<SHIFT_SLOTS[shift]; i++){
+            let d = scheduleData[i][g];
+            if(d.duration > 0 && roveTypeNames.includes(d.task)) {
+                stats[guardNames[g]]++;
+            }
+        }
+    }
+
+    let html = '<h3>Shift Analytics</h3><ul style="list-style:none; padding:0;">';
+    for(let name in stats) {
+        html += `<li style="margin-bottom:10px;"><strong>${name}:</strong> ${stats[name]} Assigned Roves</li>`;
+    }
+    html += '</ul><button class="blue-button" onclick="closeModal()">Close</button>';
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('modalPopup').classList.add('visible');
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function updateDate() {
+    selectedDate = new Date(document.getElementById('datePicker').value + 'T00:00:00');
+    renderSchedule();
+}
+
+window.onload = () => {
+    updateShift();
+    document.getElementById('datePicker').valueAsDate = new Date();
+};
+</script>
+</body>
+</html>

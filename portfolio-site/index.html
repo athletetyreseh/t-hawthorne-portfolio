@@ -15,8 +15,8 @@
 
     <header class="site-header" data-header>
       <nav class="nav-shell" aria-label="Primary navigation">
-        <a class="brand-mark" href="#home" aria-label="Tyrese Hawthorne home">
-          <span class="brand-initials">TH</span>
+        <a class="brand-mark" href="index.html" aria-label="Tyrese Hawthorne home">
+          <img class="brand-photo" src="assets/headshot-tyrese-hawthorne.png" alt="Tyrese Hawthorne" />
           <span>
             <strong>Tyrese Hawthorne</strong>
             <small>Security Account Manager</small>
@@ -30,11 +30,10 @@
         </button>
 
         <div class="nav-links" data-nav-links>
-          <a href="#about">About</a>
+          <a href="about.html">About Me</a>
           <a href="#strengths">Strengths</a>
-          <a href="#experience">Experience</a>
-          <a href="#projects">Projects</a>
-          <a href="#writing">Writing</a>
+          <a href="tools/">Tools</a>
+          <a href="articles/">Articles</a>
           <a href="#certifications">Certifications</a>
           <a href="#resume">Resume</a>
           <a href="#contact">Contact</a>
@@ -45,73 +44,33 @@
     <main id="main">
       <!-- Home: update the headline and calls to action here. -->
       <section class="hero section-pad" id="home">
-        <div class="container hero-grid">
+        <div class="container hero-split">
+          <aside class="hero-profile reveal">
+            <img src="assets/headshot-tyrese-hawthorne.png" alt="Tyrese Hawthorne headshot" />
+            <div>
+              <span>Tyrese Hawthorne</span>
+              <strong>Security Operations Portfolio</strong>
+            </div>
+          </aside>
+
           <div class="hero-copy reveal">
             <p class="eyebrow">Security Operations Portfolio</p>
-            <h1>Security leadership built for complex sites, trusted teams, and accountable operations.</h1>
+            <h1>Security account management, field operations, and internal tools in one place.</h1>
             <p class="hero-lede">
-              Tyrese Hawthorne brings a field-tested approach to account management, physical security operations,
-              client communication, staffing coordination, incident response, and internal workflow development.
+              I build practical systems for security teams: daily coverage tools, staffing workflows, training materials,
+              incident-ready documentation, and clear communication for clients and leadership.
             </p>
             <div class="hero-actions">
-              <a class="button button-primary" href="#projects">View Projects</a>
-              <a class="button button-secondary" href="#contact">Contact Tyrese</a>
+              <a class="button button-primary" href="tools/">Use My Tools</a>
+              <a class="button button-secondary" href="articles/">Read Articles</a>
             </div>
-            <dl class="metric-row" aria-label="Professional focus areas">
-              <div>
-                <dt>Ops</dt>
-                <dd>Physical security coverage and post discipline</dd>
-              </div>
-              <div>
-                <dt>Teams</dt>
-                <dd>Staffing, scheduling, briefing, and accountability</dd>
-              </div>
-              <div>
-                <dt>Tools</dt>
-                <dd>Custom systems for faster daily decisions</dd>
-              </div>
-            </dl>
-          </div>
-
-          <div class="hero-visual reveal">
-            <div class="portrait-card">
-              <img src="assets/headshot-tyrese-hawthorne.png" alt="Professional headshot placeholder for Tyrese Hawthorne" />
-              <div class="portrait-caption">
-                <span>Tyrese Hawthorne</span>
-                <strong>Security Account Manager</strong>
-              </div>
+            <div class="focus-strip" aria-label="Primary focus areas">
+              <span>Operations</span>
+              <span>Leadership</span>
+              <span>Incident Response</span>
+              <span>Scheduling</span>
+              <span>Custom Tools</span>
             </div>
-            <div class="status-panel">
-              <p>Operational Profile</p>
-              <ul>
-                <li>Account leadership</li>
-                <li>Incident response coordination</li>
-                <li>Audit-ready documentation</li>
-                <li>AI-assisted workflow design</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- About: edit this copy to match Tyrese's final professional bio. -->
-      <section class="section-pad section-band" id="about">
-        <div class="container two-column">
-          <div class="section-heading reveal">
-            <p class="eyebrow">About</p>
-            <h2>Built at the intersection of security, service, and systems.</h2>
-          </div>
-          <div class="body-copy reveal">
-            <p>
-              Tyrese Hawthorne is a security operations professional focused on keeping high-traffic environments
-              organized, protected, and professionally represented. His work combines account management, supervisor
-              communication, team alignment, incident awareness, and practical process improvement.
-            </p>
-            <p>
-              This portfolio is designed for recruiters, clients, and leadership teams who need to see more than a job
-              title. It highlights how Tyrese approaches daily coverage, client expectations, officer readiness, site
-              communication, and the internal tools that help a security operation run with consistency.
-            </p>
           </div>
         </div>
       </section>
@@ -159,35 +118,40 @@
         </div>
       </section>
 
-      <!-- Experience Highlights: use concise leadership outcomes instead of long resume bullets. -->
-      <section class="section-pad section-band" id="experience">
+      <!-- Tools: every live internal tool should be reachable from this section. -->
+      <section class="section-pad section-band" id="tools">
         <div class="container">
           <div class="section-heading narrow reveal">
-            <p class="eyebrow">Experience Highlights</p>
-            <h2>Operational leadership that stays close to the details.</h2>
+            <p class="eyebrow">Tools</p>
+            <h2>Use the tools directly from the website.</h2>
+            <p>These are working internal tools and training resources. Open them in a new tab when you need the full screen.</p>
           </div>
 
-          <div class="timeline">
-            <article class="timeline-item reveal">
-              <span>Account Leadership</span>
-              <h3>Managed security operations through communication, staffing visibility, and client-facing accountability.</h3>
-              <p>Balanced day-to-day coverage needs with professional reporting, meeting preparation, and team alignment.</p>
+          <div class="tool-grid">
+            <article class="tool-card reveal">
+              <span>Supervisor Tool</span>
+              <h3>Guard Rotation Tool</h3>
+              <p>Plan daily post movement, breaks, roving assignments, escorts, and training coverage.</p>
+              <a class="button button-primary" href="tools/guard-rotation/" target="_blank" rel="noreferrer">Open Tool</a>
             </article>
-            <article class="timeline-item reveal">
-              <span>Team Coordination</span>
-              <h3>Supported supervisors and officers with clear expectations, meeting rhythms, and operational updates.</h3>
-              <p>Created consistent communication around current issues, site updates, hiring needs, and shift readiness.</p>
+            <article class="tool-card reveal">
+              <span>Staffing Tool</span>
+              <h3>Shift Scheduler</h3>
+              <p>Build weekly schedules, manage shifts, review staffing coverage, and support supervisor planning.</p>
+              <a class="button button-primary" href="tools/shift-scheduler/" target="_blank" rel="noreferrer">Open Tool</a>
             </article>
-            <article class="timeline-item reveal">
-              <span>Process Improvement</span>
-              <h3>Developed internal workflow concepts to improve scheduling, guard rotation, and information access.</h3>
-              <p>Focused on practical tools that help officers and supervisors understand where to be, what changed, and what needs attention.</p>
+            <article class="tool-card reveal">
+              <span>Training Resource</span>
+              <h3>Fire Drill Training Viewer</h3>
+              <p>Review the fire drill training deck as a browser-based resource for emergency readiness.</p>
+              <a class="button button-primary" href="tools/fire-drill-training/" target="_blank" rel="noreferrer">Open Viewer</a>
+              <a class="text-link" href="assets/fire-drill-training.pptx">Download PPTX</a>
             </article>
           </div>
         </div>
       </section>
 
-      <!-- Projects: screenshots and tool previews live in the assets folder. -->
+      <!-- Projects: screenshots and operational examples live in the assets folder. -->
       <section class="section-pad" id="projects">
         <div class="container">
           <div class="section-heading narrow reveal">
@@ -216,7 +180,7 @@
                 <span>Supervisor Tool</span>
                 <h3>Guard Rotation Tool</h3>
                 <p>Interactive post visibility for daily officer movement, rotation assignments, and coverage clarity.</p>
-                <p class="placeholder-note">Placeholder for final screenshot or live internal demo.</p>
+                <a href="tools/guard-rotation/" target="_blank" rel="noreferrer">Use this tool</a>
               </div>
             </article>
 
@@ -249,7 +213,7 @@
                 <span>Staffing Tool</span>
                 <h3>Shift Scheduler</h3>
                 <p>Scheduling support for organizing officer shifts, improving visibility, and reducing staffing confusion.</p>
-                <p class="placeholder-note">Placeholder for final screenshot or sanitized project walkthrough.</p>
+                <a href="tools/shift-scheduler/" target="_blank" rel="noreferrer">Use this tool</a>
               </div>
             </article>
 
@@ -274,29 +238,32 @@
         </div>
       </section>
 
-      <!-- Professional Writing: replace placeholders with published samples or PDF links later. -->
+      <!-- Articles: use these links on LinkedIn and replace placeholders with finished writing. -->
       <section class="section-pad section-band" id="writing">
         <div class="container">
           <div class="section-heading narrow reveal">
-            <p class="eyebrow">Professional Writing</p>
-            <h2>Clear operational writing for leadership, clients, and field teams.</h2>
+            <p class="eyebrow">Articles</p>
+            <h2>Writing with shareable links for LinkedIn.</h2>
           </div>
 
           <div class="card-grid writing-grid">
             <article class="writing-card reveal">
-              <span>Briefing Template</span>
-              <h3>Monthly Security Operations Brief</h3>
-              <p>Placeholder for a leadership-ready monthly recap covering incidents, staffing, training, risks, and next actions.</p>
+              <span>Operations</span>
+              <h3>Security Operations Briefing Structure</h3>
+              <p>A practical article format for reporting incidents, staffing, training, risks, and next actions.</p>
+              <a class="text-link" href="articles/security-operations-briefing/">Read article</a>
             </article>
             <article class="writing-card reveal">
               <span>Response Documentation</span>
               <h3>Incident Response Summary</h3>
               <p>Placeholder for polished incident documentation that separates facts, actions taken, escalation, and follow-up.</p>
+              <a class="text-link" href="articles/">View all articles</a>
             </article>
             <article class="writing-card reveal">
               <span>Audit Readiness</span>
               <h3>Post Inspection Notes</h3>
               <p>Placeholder for audit notes, post condition reviews, officer performance observations, and corrective actions.</p>
+              <a class="text-link" href="articles/">View all articles</a>
             </article>
           </div>
         </div>
