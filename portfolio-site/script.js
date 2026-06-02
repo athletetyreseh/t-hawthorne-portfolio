@@ -9,6 +9,8 @@ const yearNode = document.querySelector("[data-year]");
 const contactForm = document.querySelector("[data-contact-form]");
 const formNote = document.querySelector("[data-form-note]");
 const scrollProgress = document.querySelector("[data-scroll-progress]");
+const systemDetail = document.querySelector("[data-system-detail]");
+const systemButtons = Array.from(document.querySelectorAll("[data-system]"));
 
 if (yearNode) {
   yearNode.textContent = new Date().getFullYear();
@@ -86,6 +88,25 @@ const updateScrollProgress = () => {
 updateScrollProgress();
 window.addEventListener("scroll", updateScrollProgress, { passive: true });
 window.addEventListener("resize", updateScrollProgress);
+
+// Interactive systems grid: tap a platform to explain how it supports operations.
+if (systemDetail && systemButtons.length) {
+  const detailLabel = systemDetail.querySelector("span");
+  const detailTitle = systemDetail.querySelector("h3");
+  const detailText = systemDetail.querySelector("p");
+
+  systemButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const system = button.dataset.system || "Selected system";
+      const description = button.dataset.description || "Operational technology used in security environments.";
+
+      systemButtons.forEach((item) => item.classList.toggle("is-selected", item.dataset.system === system));
+      if (detailLabel) detailLabel.textContent = "Selected System";
+      if (detailTitle) detailTitle.textContent = system;
+      if (detailText) detailText.textContent = description;
+    });
+  });
+}
 
 // Static contact form helper: opens the user's email app without storing anything.
 if (contactForm) {
