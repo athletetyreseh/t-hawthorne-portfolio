@@ -8,7 +8,8 @@
       content="Tyrese Hawthorne portfolio for security account management, physical security operations, leadership, incident response, audits, staffing coordination, and internal workflow tools."
     />
     <title>Tyrese Hawthorne | Security Operations Portfolio</title>
-    <link rel="stylesheet" href="styles.css?v=20260601-5" />
+    <script>document.documentElement.classList.add("js");</script>
+    <link rel="stylesheet" href="styles.css?v=20260601-6" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -82,6 +83,7 @@
         </div>
       </nav>
     </header>
+    <div class="scroll-progress" data-scroll-progress></div>
 
     <main id="main">
       <!-- Home: update the headline and calls to action here. -->
@@ -125,10 +127,10 @@
             </div>
 
             <aside class="hero-showcase" aria-label="Portfolio feature image">
-              <img src="assets/account-manager-cityscape.jpg" alt="Tyrese Hawthorne account manager role announcement graphic" />
+              <img src="assets/stock-security-control-room.jpg" alt="Security control room with live monitoring screens" />
               <div class="showcase-card glass-card">
-                <span><svg class="icon"><use href="#icon-briefcase"></use></svg>Current Focus</span>
-                <strong>CityScape account management</strong>
+                <span><svg class="icon"><use href="#icon-briefcase"></use></svg>Operations Center</span>
+                <strong>Field leadership, staffing clarity, and calm response.</strong>
               </div>
             </aside>
           </div>
@@ -136,22 +138,28 @@
       </section>
 
       <section class="visual-band">
-        <div class="container visual-band-grid liquid-panel">
-          <article>
-            <svg class="icon-large"><use href="#icon-shield"></use></svg>
-            <span>Physical Security</span>
-            <strong>Post coverage, patrol flow, and site readiness.</strong>
-          </article>
-          <article>
-            <svg class="icon-large"><use href="#icon-clipboard"></use></svg>
-            <span>Account Management</span>
-            <strong>Clean communication for clients and leadership.</strong>
-          </article>
-          <article>
-            <svg class="icon-large"><use href="#icon-tool"></use></svg>
-            <span>Internal Tools</span>
-            <strong>Simple systems that reduce daily friction.</strong>
-          </article>
+        <div class="container image-collage">
+          <figure class="image-tile image-tile-large liquid-panel reveal">
+            <img src="assets/stock-glass-office-night.jpg" alt="Modern glass office building at night" />
+            <figcaption>
+              <span>Executive Presence</span>
+              <strong>Professional, polished, and client-facing.</strong>
+            </figcaption>
+          </figure>
+          <figure class="image-tile liquid-panel reveal">
+            <img src="assets/stock-monitoring-desk.jpg" alt="Security monitoring desk with surveillance screens" />
+            <figcaption>
+              <span>Monitoring</span>
+              <strong>Awareness across people, posts, and risk.</strong>
+            </figcaption>
+          </figure>
+          <figure class="image-tile liquid-panel reveal">
+            <img src="assets/stock-office-building-night.jpg" alt="Corporate office building at night" />
+            <figcaption>
+              <span>Site Readiness</span>
+              <strong>Coverage that supports real operations.</strong>
+            </figcaption>
+          </figure>
         </div>
       </section>
 
@@ -202,7 +210,7 @@
       <section class="section-pad section-band" id="tools">
         <div class="container">
           <div class="tool-feature reveal">
-            <img src="assets/security-operations-illustration.jpg" alt="Security operations command center illustration" />
+            <img src="assets/stock-monitoring-desk.jpg" alt="Security monitoring desk with active screens" />
             <div>
               <p class="eyebrow">Tools</p>
               <h2>Operational tools, one click away.</h2>
@@ -244,21 +252,7 @@
 
           <div class="project-grid">
             <article class="project-card reveal">
-              <div class="project-media mock-screen" aria-label="Guard rotation tool preview">
-                <div class="mock-topbar">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-                <div class="rotation-board">
-                  <div>Post A</div>
-                  <div>Post B</div>
-                  <div>Roving</div>
-                  <div>Break</div>
-                  <div>Escort</div>
-                  <div>Training</div>
-                </div>
-              </div>
+              <img class="project-image" src="assets/stock-security-control-room.jpg" alt="Security control room preview for guard rotation workflows" />
               <div class="project-content">
                 <span>Supervisor Tool</span>
                 <h3>Guard Rotation Tool</h3>
@@ -268,30 +262,7 @@
             </article>
 
             <article class="project-card reveal">
-              <div class="project-media mock-screen" aria-label="Shift scheduler preview">
-                <div class="mock-topbar">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-                <div class="schedule-board">
-                  <span>Mon</span>
-                  <span>Tue</span>
-                  <span>Wed</span>
-                  <span>Thu</span>
-                  <span>Fri</span>
-                  <b></b>
-                  <b></b>
-                  <b></b>
-                  <b></b>
-                  <b></b>
-                  <b></b>
-                  <b></b>
-                  <b></b>
-                  <b></b>
-                  <b></b>
-                </div>
-              </div>
+              <img class="project-image" src="assets/stock-glass-office-night.jpg" alt="Modern office building preview for shift scheduler workflows" />
               <div class="project-content">
                 <span>Staffing Tool</span>
                 <h3>Shift Scheduler</h3>
@@ -442,6 +413,6 @@
       </div>
     </footer>
 
-    <script src="script.js?v=20260601-5"></script>
+    <script src="script.js?v=20260601-6"></script>
   </body>
 </html>

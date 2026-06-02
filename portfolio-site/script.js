@@ -8,6 +8,7 @@ const revealItems = document.querySelectorAll(".reveal");
 const yearNode = document.querySelector("[data-year]");
 const contactForm = document.querySelector("[data-contact-form]");
 const formNote = document.querySelector("[data-form-note]");
+const scrollProgress = document.querySelector("[data-scroll-progress]");
 
 if (yearNode) {
   yearNode.textContent = new Date().getFullYear();
@@ -68,7 +69,23 @@ const revealObserver = new IntersectionObserver(
   }
 );
 
-revealItems.forEach((item) => revealObserver.observe(item));
+revealItems.forEach((item, index) => {
+  item.style.transitionDelay = `${Math.min(index % 6, 5) * 55}ms`;
+  revealObserver.observe(item);
+});
+
+// Slim scroll indicator for a more polished, app-like browsing feel.
+const updateScrollProgress = () => {
+  if (!scrollProgress) return;
+
+  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
+  scrollProgress.style.width = `${Math.min(Math.max(progress, 0), 100)}%`;
+};
+
+updateScrollProgress();
+window.addEventListener("scroll", updateScrollProgress, { passive: true });
+window.addEventListener("resize", updateScrollProgress);
 
 // Static contact form helper: opens the user's email app without storing anything.
 if (contactForm) {
