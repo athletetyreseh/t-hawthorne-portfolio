@@ -1050,7 +1050,7 @@ h3 {
 
 .app-orbit {
   position: relative;
-  min-height: 500px;
+  min-height: 180px;
   overflow: hidden;
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
@@ -1064,18 +1064,21 @@ h3 {
 
 .app-orbit-track {
   position: absolute;
-  inset: 2rem auto 2rem 1.5rem;
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: repeat(4, 88px);
-  grid-auto-columns: 92px;
+  top: 50%;
+  left: 0;
+  display: flex;
+  width: max-content;
   gap: 1.15rem;
-  align-content: center;
-  animation: appOrbit 30s linear infinite;
+  transform: translateY(-50%);
+  animation: appOrbit 26s linear infinite;
+  will-change: transform;
 }
 
-.app-orbit:hover .app-orbit-track {
-  animation-play-state: paused;
+.app-orbit-set {
+  display: flex;
+  gap: 1.15rem;
+  align-items: center;
+  padding-right: 1.15rem;
 }
 
 .app-bubble {
@@ -1514,11 +1517,11 @@ code {
 
 @keyframes appOrbit {
   0% {
-    transform: translateX(0);
+    transform: translate3d(0, -50%, 0);
   }
 
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, -50%, 0);
   }
 }
 
@@ -1602,7 +1605,7 @@ code {
   }
 
   .app-orbit {
-    min-height: 430px;
+    min-height: 170px;
   }
 
   .image-tile-large {
@@ -1748,13 +1751,16 @@ code {
   }
 
   .app-orbit {
-    min-height: 390px;
+    min-height: 158px;
   }
 
   .app-orbit-track {
-    grid-template-rows: repeat(4, 76px);
-    grid-auto-columns: 80px;
     gap: 0.85rem;
+  }
+
+  .app-orbit-set {
+    gap: 0.85rem;
+    padding-right: 0.85rem;
   }
 
   .app-bubble {

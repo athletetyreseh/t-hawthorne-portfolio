@@ -17,5 +17,11 @@ The system app grid stores locally downloaded favicons from Google's favicon ser
 - `assets/logos/verint.png` - https://www.google.com/s2/favicons?domain=verint.com&sz=128
 - `assets/logos/winteam.png` - https://www.google.com/s2/favicons?domain=teamsoftware.com&sz=128
 - `assets/logos/microsoft.png` - https://www.google.com/s2/favicons?domain=microsoft.com&sz=128
+- `assets/logos/keeper.png` - https://www.google.com/s2/favicons?domain=keepersecurity.com&sz=128
+- `assets/logos/guardian.png` - https://www.google.com/s2/favicons?domain=alertenterprise.com&sz=128
+- `assets/logos/openai.png` - https://www.google.com/s2/favicons?domain=openai.com&sz=128
+- `assets/logos/incident-reporting.png` - https://www.google.com/s2/favicons?domain=resolver.com&sz=128
+- `assets/logos/cctv.png` - https://www.google.com/s2/favicons?domain=axis.com&sz=128
+- `assets/logos/access-control.png` - https://www.google.com/s2/favicons?domain=hidglobal.com&sz=128
 
 Product names and marks are used for identification only and remain property of their respective owners.

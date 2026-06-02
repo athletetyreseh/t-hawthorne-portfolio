@@ -1,5 +1,5 @@
 // Edit these placeholders when final contact details are ready.
-const CONTACT_EMAIL = "tyrese@example.com";
+const CONTACT_EMAIL = "athletetyreseh@gmail.com";
 
 const navToggle = document.querySelector("[data-nav-toggle]");
 const navLinks = document.querySelector("[data-nav-links]");
