@@ -1,6 +1,43 @@
 // Edit these placeholders when final contact details are ready.
 const CONTACT_EMAIL = "athletetyreseh@gmail.com";
 
+const ensureSiteHeader = () => {
+  if (document.querySelector("[data-header]")) return;
+
+  document.body.insertAdjacentHTML(
+    "afterbegin",
+    `
+    <header class="site-header" data-header>
+      <nav class="nav-shell" aria-label="Primary navigation">
+        <a class="brand-mark" href="../index.html" aria-label="Tyrese Hawthorne home">
+          <img class="brand-logo" src="../assets/th-logo-mark.png" width="42" height="42" alt="" />
+          <span>
+            <strong>Tyrese Hawthorne</strong>
+            <small>Security Account Manager</small>
+          </span>
+        </a>
+        <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle>
+          <span class="menu-label">Menu</span>
+          <span class="menu-lines" aria-hidden="true"><span></span><span></span><span></span></span>
+        </button>
+        <div class="nav-links" data-nav-links>
+          <a href="../about.html">About Me</a>
+          <a href="../index.html#strengths">Strengths</a>
+          <a href="../index.html#systems">Systems</a>
+          <a href="../tools/">Tools</a>
+          <a href="../articles/">Articles</a>
+          <a href="../index.html#certifications">Certifications</a>
+          <a href="../index.html#resume">Resume</a>
+          <a href="../index.html#contact">Contact</a>
+        </div>
+      </nav>
+    </header>
+    <div class="scroll-progress" data-scroll-progress></div>`
+  );
+};
+
+ensureSiteHeader();
+
 const navToggle = document.querySelector("[data-nav-toggle]");
 const navLinks = document.querySelector("[data-nav-links]");
 const navItems = Array.from(document.querySelectorAll(".nav-links a"));
@@ -18,6 +55,13 @@ if (yearNode) {
 
 // Mobile navigation toggle.
 if (navToggle && navLinks) {
+  const closeNavigation = () => {
+    navLinks.classList.remove("open");
+    document.body.classList.remove("nav-open");
+    navToggle.setAttribute("aria-expanded", "false");
+    navToggle.setAttribute("aria-label", "Open navigation");
+  };
+
   navToggle.addEventListener("click", () => {
     const isOpen = navLinks.classList.toggle("open");
     document.body.classList.toggle("nav-open", isOpen);
@@ -27,11 +71,20 @@ if (navToggle && navLinks) {
 
   navItems.forEach((link) => {
     link.addEventListener("click", () => {
-      navLinks.classList.remove("open");
-      document.body.classList.remove("nav-open");
-      navToggle.setAttribute("aria-expanded", "false");
-      navToggle.setAttribute("aria-label", "Open navigation");
+      closeNavigation();
     });
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!navLinks.classList.contains("open")) return;
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (navLinks.contains(target) || navToggle.contains(target)) return;
+    closeNavigation();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeNavigation();
   });
 }
 

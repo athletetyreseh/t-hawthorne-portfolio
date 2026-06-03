@@ -6,6 +6,7 @@
   --charcoal: #182130;
   --blue: #2f7df6;
   --blue-strong: #5ea0ff;
+  --red: #a81726;
   --white: #f7fbff;
   --muted: #aeb9c8;
   --silver: #c8d2df;
@@ -15,7 +16,7 @@
   --ombre: linear-gradient(135deg, #7fb7ff 0%, #2f7df6 45%, #d9e6f7 100%);
   --shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
   --radius: 8px;
-  --header-height: 76px;
+  --header-height: 66px;
 }
 
 * {
@@ -160,12 +161,12 @@ textarea {
   opacity: 0.92;
 }
 
-/* Sticky executive-style navigation. */
+/* Compact TH-led navigation. */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(7, 11, 18, 0.76);
+  background: rgba(7, 11, 18, 0.5);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(18px) saturate(135%);
 }
@@ -197,12 +198,13 @@ textarea {
 .brand-mark {
   display: inline-flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.72rem;
   text-decoration: none;
   min-width: 0;
   max-width: min(360px, calc(100vw - 96px));
 }
 
+.brand-logo,
 .brand-photo {
   width: 42px;
   height: 42px;
@@ -216,7 +218,23 @@ textarea {
   background: var(--charcoal);
 }
 
+.brand-logo {
+  object-fit: contain;
+  padding: 0.28rem;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03)),
+    rgba(0, 0, 0, 0.28);
+}
+
 .site-header img.brand-photo {
+  display: block;
+  width: 42px !important;
+  height: 42px !important;
+  max-width: 42px !important;
+  max-height: 42px !important;
+}
+
+.site-header img.brand-logo {
   display: block;
   width: 42px !important;
   height: 42px !important;
@@ -241,30 +259,56 @@ textarea {
 }
 
 .nav-links {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+  position: fixed;
+  top: calc(var(--header-height) + 12px);
+  right: max(16px, calc((100vw - 1220px) / 2 + 16px));
+  z-index: 70;
+  display: grid;
+  width: min(370px, calc(100vw - 32px));
+  gap: 0.3rem;
+  padding: 0.85rem;
+  background: rgba(8, 13, 22, 0.96);
+  border: 1px solid rgba(222, 235, 250, 0.2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px) scale(0.98);
+  transform-origin: top right;
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
+  visibility: hidden;
 }
 
 .nav-links a {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
   color: var(--muted);
   text-decoration: none;
-  font-size: 0.88rem;
-  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  padding: 0.62rem 0.74rem;
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  transition: color 180ms ease, background 180ms ease;
+  transition: color 180ms ease, background 180ms ease, border-color 180ms ease;
 }
 
 .nav-links a:hover,
 .nav-links a.active {
   color: var(--white);
   background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .nav-toggle {
-  display: none;
-  width: 42px;
+  display: inline-grid;
+  grid-template-columns: auto 18px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.58rem;
+  width: auto;
   height: 42px;
+  min-width: 92px;
+  padding: 0 0.72rem;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.07);
@@ -273,24 +317,47 @@ textarea {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
-.nav-toggle span {
+.nav-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-label {
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.nav-toggle .menu-lines {
+  display: block;
+}
+
+.nav-toggle .menu-lines span {
   display: block;
   width: 18px;
   height: 2px;
-  margin: 4px auto;
   background: currentColor;
   transition: transform 180ms ease, opacity 180ms ease;
+  margin: 4px auto;
 }
 
-.nav-toggle[aria-expanded="true"] span:nth-child(1) {
+.nav-links.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  visibility: visible;
+}
+
+.nav-toggle[aria-expanded="true"] .menu-lines span:nth-child(1) {
   transform: translateY(6px) rotate(45deg);
 }
 
-.nav-toggle[aria-expanded="true"] span:nth-child(2) {
+.nav-toggle[aria-expanded="true"] .menu-lines span:nth-child(2) {
   opacity: 0;
 }
 
-.nav-toggle[aria-expanded="true"] span:nth-child(3) {
+.nav-toggle[aria-expanded="true"] .menu-lines span:nth-child(3) {
   transform: translateY(-6px) rotate(-45deg);
 }
 
@@ -432,6 +499,31 @@ h3 {
   margin-bottom: 1.75rem;
 }
 
+.signature-mark {
+  display: block;
+  width: min(100%, 300px);
+  height: auto;
+  filter: invert(1) brightness(1.28);
+  opacity: 0.64;
+  pointer-events: none;
+}
+
+.hero-signature {
+  max-width: min(285px, 58vw);
+  margin: -0.95rem 0 1.1rem;
+}
+
+.about-signature {
+  max-width: min(245px, 62vw);
+  margin-top: 1rem;
+}
+
+.contact-signature {
+  max-width: min(310px, 72vw);
+  margin-top: 1.15rem;
+  opacity: 0.58;
+}
+
 .hero-actions,
 .footer-grid,
 .contact-list {
@@ -540,9 +632,9 @@ h3 {
 
 .hero-showcase img {
   width: 100%;
-  aspect-ratio: 16 / 10.5;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
-  object-position: center;
+  object-position: center top;
   border: 1px solid rgba(222, 235, 250, 0.2);
   border-radius: var(--radius);
   box-shadow: 0 24px 55px rgba(0, 0, 0, 0.34);
@@ -1532,7 +1624,7 @@ code {
 /* Tablet and mobile layout rules. */
 @media (max-width: 980px) {
   .nav-toggle {
-    display: block;
+    display: inline-grid;
   }
 
   .nav-links {
@@ -1677,7 +1769,22 @@ code {
     flex-basis: 38px;
   }
 
+  .brand-logo {
+    width: 38px;
+    height: 38px;
+    max-width: 38px;
+    max-height: 38px;
+    flex-basis: 38px;
+  }
+
   .site-header img.brand-photo {
+    width: 38px !important;
+    height: 38px !important;
+    max-width: 38px !important;
+    max-height: 38px !important;
+  }
+
+  .site-header img.brand-logo {
     width: 38px !important;
     height: 38px !important;
     max-width: 38px !important;
@@ -1707,7 +1814,7 @@ code {
   }
 
   .hero-showcase img {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 4 / 5;
   }
 
   .image-tile {
