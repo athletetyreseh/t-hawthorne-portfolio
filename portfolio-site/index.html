@@ -5,622 +5,195 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Tyrese Hawthorne portfolio for security account management, physical security operations, leadership, incident response, audits, staffing coordination, and internal workflow tools."
+      content="Tyrese Hawthorne is a Security Account Manager focused on physical security operations, leadership, incident response, staffing, and security technology."
     />
-    <title>Tyrese Hawthorne | Security Operations Portfolio</title>
+    <meta name="theme-color" content="#050505" />
+    <title>Tyrese Hawthorne | Security Account Manager</title>
     <script>document.documentElement.classList.add("js");</script>
-    <link rel="stylesheet" href="styles.css?v=20260601-8" />
+    <link rel="stylesheet" href="styles.css?v=20260618-1" />
   </head>
-  <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+  <body class="home-page">
+    <a class="skip-link" href="#home">Skip to content</a>
 
-    <!-- Inline icon set: edit these SVG symbols to change site-wide icons without external libraries. -->
+    <!-- Local SVG icon set keeps the site dependency-free. -->
     <svg class="icon-sprite" aria-hidden="true" focusable="false">
-      <symbol id="icon-shield" viewBox="0 0 24 24">
-        <path d="M12 3 19 6v5c0 4.9-2.7 8.1-7 10-4.3-1.9-7-5.1-7-10V6l7-3Z" />
-        <path d="M9 12l2 2 4-5" />
-      </symbol>
-      <symbol id="icon-briefcase" viewBox="0 0 24 24">
-        <path d="M9 6V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1" />
-        <path d="M4 8h16v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z" />
-        <path d="M4 12h16" />
-      </symbol>
-      <symbol id="icon-radio" viewBox="0 0 24 24">
-        <path d="M8 16h8" />
-        <path d="M9 12h6" />
-        <path d="M7 20h10a2 2 0 0 0 2-2V9H5v9a2 2 0 0 0 2 2Z" />
-        <path d="m9 9 6-5" />
-      </symbol>
-      <symbol id="icon-calendar" viewBox="0 0 24 24">
-        <path d="M7 3v4M17 3v4" />
-        <path d="M4 8h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z" />
-        <path d="M8 12h3M13 12h3M8 16h3M13 16h3" />
-      </symbol>
-      <symbol id="icon-clipboard" viewBox="0 0 24 24">
-        <path d="M9 4h6l1 2h3v15H5V6h3l1-2Z" />
-        <path d="M9 12h6M9 16h4" />
-      </symbol>
-      <symbol id="icon-tool" viewBox="0 0 24 24">
-        <path d="M14 7a4 4 0 0 0-5 5L4 17v3h3l5-5a4 4 0 0 0 5-5l-3 3-3-3 3-3Z" />
-      </symbol>
-      <symbol id="icon-article" viewBox="0 0 24 24">
-        <path d="M6 3h9l3 3v15H6V3Z" />
-        <path d="M14 3v4h4M9 11h6M9 15h6M9 19h4" />
-      </symbol>
-      <symbol id="icon-arrow" viewBox="0 0 24 24">
-        <path d="M5 12h14M13 6l6 6-6 6" />
-      </symbol>
-      <symbol id="icon-spark" viewBox="0 0 24 24">
-        <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" />
-        <path d="m18 15 .8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8L18 15Z" />
-      </symbol>
+      <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v9H7v-7h10v7" /></symbol>
+      <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21c.8-5 3.5-7 8-7s7.2 2 8 7" /></symbol>
+      <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></symbol>
+      <symbol id="icon-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" /></symbol>
+      <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></symbol>
+      <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16" /></symbol>
+      <symbol id="icon-external" viewBox="0 0 24 24"><path d="M14 4h6v6m0-6-9 9" /><path d="M18 13v7H4V6h7" /></symbol>
+      <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 5-2.7 8.2-7 10-4.3-1.8-7-5-7-10V6l7-3Z" /><path d="m9 12 2 2 4-5" /></symbol>
+      <symbol id="icon-briefcase" viewBox="0 0 24 24"><path d="M9 6V4h6v2M4 8h16v12H4V8Z" /><path d="M4 12h16" /></symbol>
+      <symbol id="icon-tech" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="2" /><path d="M8 20h8m-4-4v4" /></symbol>
+      <symbol id="icon-leadership" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3" /><circle cx="5" cy="11" r="2" /><circle cx="19" cy="11" r="2" /><path d="M7 21v-3c0-3 1.8-5 5-5s5 2 5 5v3M2 20v-2c0-2 1-3 3-3m17 5v-2c0-2-1-3-3-3" /></symbol>
     </svg>
 
-    <header class="site-header" data-header>
-      <nav class="nav-shell" aria-label="Primary navigation">
-        <a class="brand-mark" href="index.html" aria-label="Tyrese Hawthorne home">
-          <img class="brand-logo" src="assets/th-logo-mark.png" width="42" height="42" alt="" />
-          <span>
-            <strong>Tyrese Hawthorne</strong>
-            <small>Security Account Manager</small>
-          </span>
-        </a>
-
-        <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle>
-          <span class="menu-label">Menu</span>
-          <span class="menu-lines" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
-        </button>
-
-        <div class="nav-links" data-nav-links>
-          <a href="#about">About Me</a>
-          <a href="#strengths">Strengths</a>
-          <a href="#systems">Systems</a>
-          <a href="tools/">Tools</a>
-          <a href="articles/">Articles</a>
-          <a href="#certifications">Certifications</a>
-          <a href="#resume">Resume</a>
-          <a href="#contact">Contact</a>
-        </div>
+    <aside class="side-rail" aria-label="Primary navigation">
+      <a class="rail-brand" href="#home" aria-label="Tyrese Hawthorne home">
+        <img src="assets/th-logo-mark.png" alt="TH" />
+      </a>
+      <nav class="rail-links">
+        <a href="#home" data-section-link="home" aria-label="Home"><svg><use href="#icon-home"></use></svg><span>Home</span></a>
+        <a href="#profile" data-section-link="profile" aria-label="Profile"><svg><use href="#icon-user"></use></svg><span>Profile</span></a>
+        <a href="#work" data-section-link="work" aria-label="Work"><svg><use href="#icon-grid"></use></svg><span>Work</span></a>
+        <a href="#contact" data-section-link="contact" aria-label="Contact"><svg><use href="#icon-mail"></use></svg><span>Contact</span></a>
       </nav>
-    </header>
-    <div class="scroll-progress" data-scroll-progress></div>
+      <span class="rail-index" data-section-index>01 / 04</span>
+    </aside>
 
-    <main id="main">
-      <!-- Home: update the headline and calls to action here. -->
-      <section class="hero section-pad" id="home">
-        <div class="container">
-          <div class="hero-panel liquid-panel reveal">
-            <div class="hero-copy">
-              <div class="hero-id">
-                <img
-                  class="hero-photo"
-                  src="assets/tyrese-halftone-portrait.jpg"
-                  width="88"
-                  height="88"
-                  alt="Tyrese Hawthorne in a security operations environment"
-                />
-                <div>
-                  <span>Tyrese Hawthorne</span>
-                  <strong>Security Account Manager</strong>
+    <nav class="mobile-dock" aria-label="Primary navigation">
+      <a href="#home" data-section-link="home"><svg><use href="#icon-home"></use></svg><span>Home</span></a>
+      <a href="#profile" data-section-link="profile"><svg><use href="#icon-user"></use></svg><span>Profile</span></a>
+      <a href="#work" data-section-link="work"><svg><use href="#icon-grid"></use></svg><span>Work</span></a>
+      <a href="#contact" data-section-link="contact"><svg><use href="#icon-mail"></use></svg><span>Contact</span></a>
+    </nav>
+
+    <main class="snap-story" id="main">
+      <section class="snap-section hero" id="home" data-section="home">
+        <div class="section-shell hero-layout">
+          <div class="hero-copy" data-animate="hero-copy">
+            <div class="hero-kicker"><span></span> Security operations leadership</div>
+            <img class="hero-monogram" src="assets/th-logo-mark.png" alt="" aria-hidden="true" />
+            <h1>Tyrese<br />Hawthorne</h1>
+            <p class="hero-role">Security Account Manager <span>/</span> Physical Security <span>/</span> Security Technology</p>
+            <p class="hero-summary">I lead people, operations, and systems that protect complex corporate environments.</p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#work">View selected work <svg><use href="#icon-arrow"></use></svg></a>
+              <a class="button button-quiet" href="https://docs.google.com/document/d/1NwKYqMsFKGn34Na5BACbRSdgicy_id2tIHYDeReZjJQ/edit?usp=drivesdk" target="_blank" rel="noreferrer">Resume <svg><use href="#icon-external"></use></svg></a>
+            </div>
+          </div>
+
+          <div class="hero-media" data-parallax-media>
+            <div class="portrait-frame">
+              <img src="assets/tyrese-halftone-portrait.jpg" alt="Tyrese Hawthorne" width="1012" height="1280" />
+              <span class="portrait-scan" aria-hidden="true"></span>
+            </div>
+            <div class="portrait-caption"><span>TH / 001</span><strong>Account leadership.<br />Operational clarity.</strong></div>
+          </div>
+
+          <a class="scroll-cue" href="#profile"><span>Scroll to profile</span><i></i></a>
+        </div>
+      </section>
+
+      <section class="snap-section profile-section" id="profile" data-section="profile">
+        <div class="section-shell profile-layout">
+          <div class="profile-visual" data-reveal>
+            <img src="assets/headshot-tyrese-hawthorne.png" alt="Professional headshot of Tyrese Hawthorne" />
+            <div class="profile-role-card">
+              <span>Current focus</span>
+              <strong>Security Account Management</strong>
+              <small>CityScape / Phoenix</small>
+            </div>
+          </div>
+
+          <div class="profile-copy" data-reveal>
+            <p class="section-number">02 / Profile</p>
+            <h2>Calm leadership.<br />Clear standards.</h2>
+            <p class="profile-intro">I connect field execution with client expectations, turning staffing, incident response, documentation, and technology into one accountable operation.</p>
+            <div class="capability-list">
+              <article><svg><use href="#icon-shield"></use></svg><div><h3>Operations</h3><p>Coverage, readiness, patrol flow, audits, and incident response.</p></div></article>
+              <article><svg><use href="#icon-leadership"></use></svg><div><h3>Leadership</h3><p>Officer development, supervisor alignment, and client communication.</p></div></article>
+              <article><svg><use href="#icon-tech"></use></svg><div><h3>Technology</h3><p>Access control, video, reporting, scheduling, and AI-assisted workflows.</p></div></article>
+            </div>
+            <div class="credential-strip">
+              <a href="assets/cpr-certification.pdf" target="_blank" rel="noreferrer"><span>Credential</span><strong>CPR Certified</strong></a>
+              <a href="about.html"><span>Profile</span><strong>Full background</strong></a>
+              <a href="security-leadership/"><span>Focus</span><strong>Leadership approach</strong></a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="snap-section work-section" id="work" data-section="work">
+        <div class="section-shell work-layout">
+          <header class="work-header" data-reveal>
+            <div><p class="section-number">03 / Selected Work</p><h2>Built for the field.</h2></div>
+            <div class="work-tabs" role="tablist" aria-label="Portfolio categories">
+              <button type="button" role="tab" aria-selected="true" aria-controls="panel-projects" id="tab-projects" data-work-tab="projects">Projects</button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="panel-systems" id="tab-systems" data-work-tab="systems">Systems</button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="panel-insights" id="tab-insights" data-work-tab="insights">Insights</button>
+            </div>
+          </header>
+
+          <div class="work-panels" data-reveal>
+            <section class="work-panel is-active" id="panel-projects" role="tabpanel" aria-labelledby="tab-projects" data-work-panel="projects">
+              <div class="project-showcase">
+                <a class="feature-project" href="tools/guard-rotation/" target="_blank" rel="noreferrer">
+                  <img src="assets/guard-rotation-preview.png" alt="Guard Rotation operational interface" />
+                  <div><span>01 / Live tool</span><h3>Guard Rotation</h3><p>Daily post movement, break coverage, escorts, and accountability.</p><strong>Launch tool <svg><use href="#icon-arrow"></use></svg></strong></div>
+                </a>
+                <div class="project-stack">
+                  <a href="tools/shift-scheduler/" target="_blank" rel="noreferrer"><img src="assets/shift-scheduler-preview.png" alt="Shift Scheduler operational interface" /><div><span>02 / Live tool</span><h3>Shift Scheduler</h3></div></a>
+                  <a href="tools/fire-drill-training/" target="_blank" rel="noreferrer"><img src="assets/fire-drill-preview.png" alt="Fire drill training viewer" /><div><span>03 / Training</span><h3>Fire Drill Viewer</h3></div></a>
                 </div>
               </div>
+            </section>
 
-              <p class="eyebrow">Security Operations Portfolio</p>
-              <h1>Tyrese Hawthorne</h1>
-              <p class="hero-role">Security Account Manager | Physical Security Operations | Security Technology</p>
-              <p class="hero-lede">
-                Managing security operations, staffing, incident response, compliance, and client relationships for large-scale
-                corporate environments.
-              </p>
-              <img
-                class="signature-mark hero-signature"
-                src="assets/tyrese-signature-transparent.png"
-                width="300"
-                height="242"
-                alt="Tyrese Hawthorne signature"
-              />
-              <div class="hero-actions">
-                <a class="button button-primary" href="tools/">
-                  <svg class="button-icon"><use href="#icon-tool"></use></svg>
-                  Use My Tools
-                </a>
-                <a class="button button-secondary" href="articles/">
-                  <svg class="button-icon"><use href="#icon-article"></use></svg>
-                  Read Articles
-                </a>
+            <section class="work-panel" id="panel-systems" role="tabpanel" aria-labelledby="tab-systems" data-work-panel="systems" hidden>
+              <div class="systems-stage">
+                <div class="system-loop" aria-label="Security systems">
+                  <div class="system-loop-track">
+                    <div class="system-loop-set">
+                      <button data-system="Lenel" data-description="Enterprise access control for credentials, doors, permissions, and secure movement."><img src="assets/logos/lenel.png" alt="" /><span>Lenel</span></button>
+                      <button data-system="Verint" data-description="Video intelligence used for monitoring, investigations, and incident review."><img src="assets/logos/verint.png" alt="" /><span>Verint</span></button>
+                      <button data-system="Access Keeper" data-description="Credential and secure-access workflow support."><img src="assets/logos/keeper.png" alt="" /><span>Keeper</span></button>
+                      <button data-system="Guardian" data-description="Security operations support for patrol, reporting, and guard-force workflows."><img src="assets/logos/guardian.png" alt="" /><span>Guardian</span></button>
+                      <button data-system="WinTeam" data-description="Workforce scheduling, labor tracking, billing, and security staffing administration."><img src="assets/logos/winteam.png" alt="" /><span>WinTeam</span></button>
+                      <button data-system="Microsoft Excel" data-description="Operational trackers, audit logs, schedules, reporting, and performance dashboards."><img src="assets/logos/microsoft.png" alt="" /><span>Excel</span></button>
+                      <button data-system="AI Workflows" data-description="Drafting, analysis, SOP organization, and internal tool development."><img src="assets/logos/openai.png" alt="" /><span>AI</span></button>
+                      <button data-system="Incident Reporting" data-description="Structured records for events, escalation, investigation, and follow-up."><img src="assets/logos/incident-reporting.png" alt="" /><span>Reports</span></button>
+                      <button data-system="CCTV Systems" data-description="Live monitoring, recorded review, incident verification, and investigations."><img src="assets/logos/cctv.png" alt="" /><span>CCTV</span></button>
+                      <button data-system="Access Control" data-description="Badging, entry permissions, secure zones, and visitor accountability."><img src="assets/logos/access-control.png" alt="" /><span>Access</span></button>
+                    </div>
+                    <div class="system-loop-set" aria-hidden="true"></div>
+                  </div>
+                </div>
+                <div class="system-detail" data-system-detail aria-live="polite"><span>Selected system</span><h3>Choose a system</h3><p>Tap a logo to see how it supports security operations.</p></div>
               </div>
-              <div class="hero-console" aria-label="Portfolio quick access">
-                <a href="#strengths">
-                  <span>01</span>
-                  <strong>Strengths</strong>
-                  <small>Client communication, response, staffing.</small>
-                </a>
-                <a href="#systems">
-                  <span>02</span>
-                  <strong>Systems</strong>
-                  <small>Access control, CCTV, reporting, AI.</small>
-                </a>
-                <a href="tools/">
-                  <span>03</span>
-                  <strong>Tools</strong>
-                  <small>Rotation, scheduling, training resources.</small>
-                </a>
-                <a href="#contact">
-                  <span>04</span>
-                  <strong>Contact</strong>
-                  <small>Email, LinkedIn, portfolio inquiry.</small>
-                </a>
+            </section>
+
+            <section class="work-panel" id="panel-insights" role="tabpanel" aria-labelledby="tab-insights" data-work-panel="insights" hidden>
+              <div class="insight-grid">
+                <a href="articles/security-operations-briefing/"><span>Featured article</span><h3>Security Operations Briefing Structure</h3><p>A practical framework for staffing, incidents, risk, and next actions.</p><strong>Read article <svg><use href="#icon-arrow"></use></svg></strong></a>
+                <a href="incident-response/"><span>Operational focus</span><h3>Incident Response</h3><p>Calm response, clean documentation, and clear escalation.</p><strong>Explore topic <svg><use href="#icon-arrow"></use></svg></strong></a>
+                <a href="security-technology/"><span>Technology focus</span><h3>Security Technology</h3><p>Access, video, reporting, scheduling, and practical automation.</p><strong>Explore topic <svg><use href="#icon-arrow"></use></svg></strong></a>
               </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="snap-section contact-section" id="contact" data-section="contact">
+        <div class="section-shell contact-layout">
+          <div class="contact-copy" data-reveal>
+            <p class="section-number">04 / Contact</p>
+            <h2>Let’s build a stronger operation.</h2>
+            <p>For security leadership roles, account management, operational consulting, or technology-focused collaboration.</p>
+            <div class="contact-actions">
+              <a href="mailto:athletetyreseh@gmail.com"><span>Email</span><strong>athletetyreseh@gmail.com</strong><svg><use href="#icon-arrow"></use></svg></a>
+              <a href="https://www.linkedin.com/in/tyrese-hawthorne-8a4735190" target="_blank" rel="noreferrer"><span>Network</span><strong>LinkedIn Profile</strong><svg><use href="#icon-external"></use></svg></a>
+              <a href="https://docs.google.com/document/d/1NwKYqMsFKGn34Na5BACbRSdgicy_id2tIHYDeReZjJQ/edit?usp=drivesdk" target="_blank" rel="noreferrer"><span>Experience</span><strong>View Resume</strong><svg><use href="#icon-download"></use></svg></a>
             </div>
-
-            <aside class="hero-showcase" aria-label="Portfolio feature image">
-              <img src="assets/tyrese-halftone-portrait.jpg" alt="Tyrese Hawthorne personal security operations portrait" />
-              <div class="showcase-card glass-card">
-                <span><svg class="icon"><use href="#icon-briefcase"></use></svg>TH Portfolio</span>
-                <strong>Black-site personal brand system.</strong>
-              </div>
-            </aside>
-          </div>
-        </div>
-      </section>
-
-      <section class="metrics-band" aria-label="By the numbers">
-        <div class="container metric-row executive-metrics reveal">
-          <div>
-            <dt>40+</dt>
-            <dd>Security officers managed</dd>
-          </div>
-          <div>
-            <dt>24/7</dt>
-            <dd>Operations oversight</dd>
-          </div>
-          <div>
-            <dt>1,000+</dt>
-            <dd>Reports reviewed</dd>
-          </div>
-          <div>
-            <dt>5,000+</dt>
-            <dd>Visitors processed annually</dd>
-          </div>
-        </div>
-      </section>
-
-      <section class="visual-band">
-        <div class="container image-collage">
-          <figure class="image-tile image-tile-large liquid-panel reveal">
-            <img src="assets/stock-glass-office-night.jpg" alt="Modern glass office building at night" />
-            <figcaption>
-              <span>Executive Presence</span>
-              <strong>Professional, polished, and client-facing.</strong>
-            </figcaption>
-          </figure>
-          <figure class="image-tile liquid-panel reveal">
-            <img src="assets/stock-monitoring-desk.jpg" alt="Security monitoring desk with surveillance screens" />
-            <figcaption>
-              <span>Monitoring</span>
-              <strong>Awareness across people, posts, and risk.</strong>
-            </figcaption>
-          </figure>
-          <figure class="image-tile liquid-panel reveal">
-            <img src="assets/stock-office-building-night.jpg" alt="Corporate office building at night" />
-            <figcaption>
-              <span>Site Readiness</span>
-              <strong>Coverage that supports real operations.</strong>
-            </figcaption>
-          </figure>
-        </div>
-      </section>
-
-      <section class="section-pad" id="about">
-        <div class="container about-panel liquid-panel reveal">
-          <div>
-            <p class="eyebrow">About Me</p>
-            <h2>Security leader with a practical technology mindset.</h2>
-            <p>
-              I focus on disciplined field operations, direct client communication, and systems that help teams move faster.
-              My work connects officer readiness, post accountability, incident documentation, and the daily details that keep
-              corporate environments protected.
-            </p>
-            <img
-              class="signature-mark about-signature"
-              src="assets/tyrese-signature-transparent.png"
-              width="260"
-              height="210"
-              alt="Tyrese Hawthorne signature"
-            />
-          </div>
-          <img src="assets/account-manager-cityscape.jpg" alt="Tyrese Hawthorne account manager announcement graphic" />
-        </div>
-      </section>
-
-      <!-- Core Strengths: add, remove, or rename cards as the portfolio grows. -->
-      <section class="section-pad" id="strengths">
-        <div class="container">
-          <div class="section-heading narrow reveal">
-            <p class="eyebrow">Core Strengths</p>
-            <h2>Built around calm execution.</h2>
+            <img class="closing-signature" src="assets/tyrese-signature-transparent.png" alt="Tyrese Hawthorne signature" />
           </div>
 
-          <div class="card-grid strengths-grid">
-            <article class="info-card reveal">
-              <span class="icon-card"><svg class="icon"><use href="#icon-clipboard"></use></svg></span>
-              <h3>Client Communication</h3>
-              <p>Clear updates, clean documentation, and reliable follow-through.</p>
-            </article>
-            <article class="info-card reveal">
-              <span class="icon-card"><svg class="icon"><use href="#icon-shield"></use></svg></span>
-              <h3>Physical Security Operations</h3>
-              <p>Coverage, access control awareness, patrol flow, and accountability.</p>
-            </article>
-            <article class="info-card reveal">
-              <span class="icon-card"><svg class="icon"><use href="#icon-radio"></use></svg></span>
-              <h3>Incident Response</h3>
-              <p>Structured response, escalation judgment, and report quality.</p>
-            </article>
-            <article class="info-card reveal">
-              <span class="icon-card"><svg class="icon"><use href="#icon-calendar"></use></svg></span>
-              <h3>Scheduling and Staffing</h3>
-              <p>Shift planning, coverage visibility, and rotation tracking.</p>
-            </article>
-            <article class="info-card reveal">
-              <span class="icon-card"><svg class="icon"><use href="#icon-article"></use></svg></span>
-              <h3>Security Audits</h3>
-              <p>Checklist-driven reviews, post inspections, and readiness improvements.</p>
-            </article>
-            <article class="info-card reveal">
-              <span class="icon-card"><svg class="icon"><use href="#icon-spark"></use></svg></span>
-              <h3>AI-Assisted Workflows</h3>
-              <p>Practical automation for drafting, organization, and daily workflows.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section-pad section-band" id="timeline">
-        <div class="container">
-          <div class="section-heading narrow reveal">
-            <p class="eyebrow">Career Timeline</p>
-            <h2>Progression from field execution to account leadership.</h2>
-          </div>
-
-          <div class="career-timeline">
-            <article class="timeline-step reveal">
-              <span>01</span>
-              <h3>Security Officer</h3>
-              <p>Post orders, patrol discipline, customer service, reporting, and site awareness.</p>
-            </article>
-            <article class="timeline-step reveal">
-              <span>02</span>
-              <h3>Security Supervisor</h3>
-              <p>Shift leadership, officer coaching, coverage adjustments, and incident escalation.</p>
-            </article>
-            <article class="timeline-step reveal">
-              <span>03</span>
-              <h3>Account Manager</h3>
-              <p>Client communication, staffing strategy, compliance follow-up, and operational improvement.</p>
-            </article>
-            <article class="timeline-step reveal">
-              <span>04</span>
-              <h3>Director Track</h3>
-              <p>Regional operations, security technology adoption, training programs, and executive reporting.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <!-- Tools: every live internal tool should be reachable from this section. -->
-      <section class="section-pad section-band" id="tools">
-        <div class="container">
-          <div class="tool-feature reveal">
-            <img src="assets/stock-monitoring-desk.jpg" alt="Security monitoring desk with active screens" />
-            <div>
-              <p class="eyebrow">Tools</p>
-              <h2>Operational tools, one click away.</h2>
-              <p>Fast access to working resources for rotations, staffing, and training.</p>
-            </div>
-          </div>
-
-          <div class="tool-grid">
-            <article class="tool-card reveal">
-              <span><svg class="icon"><use href="#icon-shield"></use></svg>Supervisor Tool</span>
-              <h3>Guard Rotation Tool</h3>
-              <p>Post movement, breaks, roving assignments, and escorts.</p>
-              <a class="button button-primary" href="tools/guard-rotation/" target="_blank" rel="noreferrer">Open Tool</a>
-            </article>
-            <article class="tool-card reveal">
-              <span><svg class="icon"><use href="#icon-calendar"></use></svg>Staffing Tool</span>
-              <h3>Shift Scheduler</h3>
-              <p>Weekly schedules, shift visibility, and staffing coverage.</p>
-              <a class="button button-primary" href="tools/shift-scheduler/" target="_blank" rel="noreferrer">Open Tool</a>
-            </article>
-            <article class="tool-card reveal">
-              <span><svg class="icon"><use href="#icon-article"></use></svg>Training Resource</span>
-              <h3>Fire Drill Training Viewer</h3>
-              <p>Emergency readiness training in a browser-based format.</p>
-              <a class="button button-primary" href="tools/fire-drill-training/" target="_blank" rel="noreferrer">Open Viewer</a>
-              <a class="text-link" href="assets/fire-drill-training.pptx">Download PPTX</a>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <!-- Projects: screenshots and operational examples live in the assets folder. -->
-      <section class="section-pad" id="projects">
-        <div class="container">
-          <div class="section-heading narrow reveal">
-            <p class="eyebrow">Projects</p>
-            <h2>Custom tools and operational materials for security teams.</h2>
-          </div>
-
-          <div class="project-grid">
-            <article class="project-card reveal">
-              <img class="project-image" src="assets/stock-security-control-room.jpg" alt="Security control room preview for guard rotation workflows" />
-              <div class="project-content">
-                <span>Supervisor Tool</span>
-                <h3>Guard Rotation Tool</h3>
-                <p>Designed a daily accountability platform for post movement, breaks, escorts, and roving assignments.</p>
-                <a href="tools/guard-rotation/" target="_blank" rel="noreferrer">Use this tool</a>
-              </div>
-            </article>
-
-            <article class="project-card reveal">
-              <img class="project-image" src="assets/stock-glass-office-night.jpg" alt="Modern office building preview for shift scheduler workflows" />
-              <div class="project-content">
-                <span>Staffing Tool</span>
-                <h3>Shift Scheduler</h3>
-                <p>Built scheduling support to improve shift visibility and reduce staffing confusion.</p>
-                <a href="tools/shift-scheduler/" target="_blank" rel="noreferrer">Use this tool</a>
-              </div>
-            </article>
-
-            <article class="project-card reveal">
-              <img class="project-image" src="assets/fire-drill-training-cover.png" alt="Fire drill training material preview" />
-              <div class="project-content">
-                <span>Training Material</span>
-                <h3>Fire Drill Training</h3>
-                <p>Created standardized training material for emergency readiness and response consistency.</p>
-              </div>
-            </article>
-
-            <article class="project-card reveal">
-              <img class="project-image" src="assets/monthly-meeting.png" alt="Monthly staff meeting slide preview" />
-              <div class="project-content">
-                <span>Team Communication</span>
-                <h3>Monthly Staff Meeting Briefings</h3>
-                <p>Developed briefing materials to align site teams on client needs and operational changes.</p>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section-pad section-band" id="systems">
-        <div class="container systems-layout">
-          <div class="section-heading reveal">
-            <p class="eyebrow">Systems & Technology</p>
-            <h2>Tools used across modern security operations.</h2>
-            <p>Tap an app bubble to see how that platform or system supports security work.</p>
-            <div class="system-detail glass-card" data-system-detail>
-              <span>Selected System</span>
-              <h3>Choose an app</h3>
-              <p>Click a system in the moving app grid to view its role in security operations.</p>
-            </div>
-          </div>
-
-          <div class="app-orbit reveal" aria-label="Security systems app grid">
-            <div class="app-orbit-track">
-              <div class="app-orbit-set">
-                <button class="app-bubble brand-lenel" type="button" data-system="Lenel" data-description="Enterprise access control used to manage credentials, doors, permissions, and secure facility movement."><img src="assets/logos/lenel.png" alt="" />Lenel</button>
-                <button class="app-bubble brand-verint" type="button" data-system="Verint" data-description="Video and security intelligence platform used for monitoring, investigations, and incident review."><img src="assets/logos/verint.png" alt="" />Verint</button>
-                <button class="app-bubble brand-keeper" type="button" data-system="Access Keeper" data-description="Credential and access management workflow support for controlled access and secure account handling."><img src="assets/logos/keeper.png" alt="" />Keeper</button>
-                <button class="app-bubble brand-guardian" type="button" data-system="Guardian" data-description="Security operations support for patrol visibility, reporting, or guard-force management workflows."><img src="assets/logos/guardian.png" alt="" />Guardian</button>
-                <button class="app-bubble brand-winteam" type="button" data-system="WinTeam" data-description="Workforce and operations management system for schedules, labor tracking, billing, and security staffing administration."><img src="assets/logos/winteam.png" alt="" />WinTeam</button>
-                <button class="app-bubble brand-excel" type="button" data-system="Microsoft Excel" data-description="Operational reporting, staffing trackers, audit logs, schedules, and performance dashboards."><img src="assets/logos/microsoft.png" alt="" />Excel</button>
-                <button class="app-bubble brand-ai" type="button" data-system="AI Workflow Automation" data-description="Drafting, data cleanup, SOP organization, reporting templates, and internal tool concepts."><img src="assets/logos/openai.png" alt="" />AI</button>
-                <button class="app-bubble brand-report" type="button" data-system="Incident Reporting Platforms" data-description="Structured documentation for events, escalations, follow-up actions, and client visibility."><img src="assets/logos/incident-reporting.png" alt="" />Reports</button>
-                <button class="app-bubble brand-cctv" type="button" data-system="CCTV Systems" data-description="Live monitoring and investigation support through camera coverage, review, and incident verification."><img src="assets/logos/cctv.png" alt="" />CCTV</button>
-                <button class="app-bubble brand-access" type="button" data-system="Access Control Systems" data-description="Badging, entry permissions, secure zones, visitor movement, and facility access accountability."><img src="assets/logos/access-control.png" alt="" />Access</button>
-              </div>
-              <div class="app-orbit-set" aria-hidden="true">
-                <button class="app-bubble brand-lenel" type="button" tabindex="-1" data-system="Lenel" data-description="Enterprise access control used to manage credentials, doors, permissions, and secure facility movement."><img src="assets/logos/lenel.png" alt="" />Lenel</button>
-                <button class="app-bubble brand-verint" type="button" tabindex="-1" data-system="Verint" data-description="Video and security intelligence platform used for monitoring, investigations, and incident review."><img src="assets/logos/verint.png" alt="" />Verint</button>
-                <button class="app-bubble brand-keeper" type="button" tabindex="-1" data-system="Access Keeper" data-description="Credential and access management workflow support for controlled access and secure account handling."><img src="assets/logos/keeper.png" alt="" />Keeper</button>
-                <button class="app-bubble brand-guardian" type="button" tabindex="-1" data-system="Guardian" data-description="Security operations support for patrol visibility, reporting, or guard-force management workflows."><img src="assets/logos/guardian.png" alt="" />Guardian</button>
-                <button class="app-bubble brand-winteam" type="button" tabindex="-1" data-system="WinTeam" data-description="Workforce and operations management system for schedules, labor tracking, billing, and security staffing administration."><img src="assets/logos/winteam.png" alt="" />WinTeam</button>
-                <button class="app-bubble brand-excel" type="button" tabindex="-1" data-system="Microsoft Excel" data-description="Operational reporting, staffing trackers, audit logs, schedules, and performance dashboards."><img src="assets/logos/microsoft.png" alt="" />Excel</button>
-                <button class="app-bubble brand-ai" type="button" tabindex="-1" data-system="AI Workflow Automation" data-description="Drafting, data cleanup, SOP organization, reporting templates, and internal tool concepts."><img src="assets/logos/openai.png" alt="" />AI</button>
-                <button class="app-bubble brand-report" type="button" tabindex="-1" data-system="Incident Reporting Platforms" data-description="Structured documentation for events, escalations, follow-up actions, and client visibility."><img src="assets/logos/incident-reporting.png" alt="" />Reports</button>
-                <button class="app-bubble brand-cctv" type="button" tabindex="-1" data-system="CCTV Systems" data-description="Live monitoring and investigation support through camera coverage, review, and incident verification."><img src="assets/logos/cctv.png" alt="" />CCTV</button>
-                <button class="app-bubble brand-access" type="button" tabindex="-1" data-system="Access Control Systems" data-description="Badging, entry permissions, secure zones, visitor movement, and facility access accountability."><img src="assets/logos/access-control.png" alt="" />Access</button>
-              </div>
-            </div>
-          </div>
-          <p class="trademark-note">Product names and marks are used for identification only and belong to their respective owners.</p>
-        </div>
-      </section>
-
-      <section class="section-pad" id="testimonials">
-        <div class="container">
-          <div class="section-heading narrow reveal">
-            <p class="eyebrow">Testimonials</p>
-            <h2>Credibility slots for real quotes.</h2>
-          </div>
-          <div class="testimonial-grid">
-            <article class="testimonial-card reveal">
-              <p>"Add a manager quote about reliability, communication, and leadership."</p>
-              <span>Manager Testimonial</span>
-            </article>
-            <article class="testimonial-card reveal">
-              <p>"Add a client quote about responsiveness, professionalism, and follow-through."</p>
-              <span>Client Testimonial</span>
-            </article>
-            <article class="testimonial-card reveal">
-              <p>"Add an officer quote about coaching, clarity, and team standards."</p>
-              <span>Team Testimonial</span>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <!-- Articles: use these links on LinkedIn and replace these summaries with finished writing. -->
-      <section class="section-pad section-band" id="writing">
-        <div class="container">
-          <div class="section-heading narrow reveal">
-            <p class="eyebrow">Articles</p>
-            <h2>Short operational writing, ready to share.</h2>
-          </div>
-
-          <div class="card-grid writing-grid">
-            <article class="writing-card reveal">
-              <span>Operations</span>
-              <h3>Security Operations Briefing Structure</h3>
-              <p>A clean format for staffing, incidents, risks, and next actions.</p>
-              <a class="text-link" href="articles/security-operations-briefing/">Read article</a>
-            </article>
-            <article class="writing-card reveal">
-              <span>Response Documentation</span>
-              <h3>Incident Response Summary</h3>
-              <p>How to separate facts, action taken, escalation, and follow-up.</p>
-              <a class="text-link" href="articles/">View all articles</a>
-            </article>
-            <article class="writing-card reveal">
-              <span>Audit Readiness</span>
-              <h3>Post Inspection Notes</h3>
-              <p>Post conditions, performance observations, and corrective actions.</p>
-              <a class="text-link" href="articles/">View all articles</a>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section-pad" id="focus-pages">
-        <div class="container">
-          <div class="section-heading narrow reveal">
-            <p class="eyebrow">Focus Pages</p>
-            <h2>Security leadership topics built for search and sharing.</h2>
-          </div>
-          <div class="authority-grid">
-            <a class="authority-card reveal" href="security-leadership/">Security Leadership</a>
-            <a class="authority-card reveal" href="security-audits/">Security Audits</a>
-            <a class="authority-card reveal" href="incident-response/">Incident Response</a>
-            <a class="authority-card reveal" href="physical-security-operations/">Physical Security Operations</a>
-            <a class="authority-card reveal" href="security-technology/">Security Technology</a>
-            <a class="authority-card reveal" href="ai-in-security/">AI in Security</a>
-          </div>
-        </div>
-      </section>
-
-      <!-- Certifications: add new credential cards as files become available. -->
-      <section class="section-pad" id="certifications">
-        <div class="container cert-layout">
-          <div class="section-heading reveal">
-            <p class="eyebrow">Certifications</p>
-            <h2>Credentials and training.</h2>
-            <p>Certification records, training material, and proof of readiness can live here as the portfolio grows.</p>
-          </div>
-
-          <div class="cert-list">
-            <article class="cert-card reveal">
-              <img src="assets/cpr-certification-preview.png" alt="CPR certification preview" />
-              <div>
-                <span>Certification</span>
-                <h3>CPR Certification</h3>
-                <p>Available credential preview with the full PDF linked for review.</p>
-                <a class="button button-secondary" href="assets/cpr-certification.pdf" target="_blank" rel="noreferrer">View PDF</a>
-              </div>
-            </article>
-
-            <article class="cert-placeholder reveal">
-              <span>Upcoming</span>
-              <h3>Security License or Guard Card</h3>
-              <p>License details and renewal information can be added here.</p>
-            </article>
-
-            <article class="cert-placeholder reveal">
-              <span>Upcoming</span>
-              <h3>Additional Training</h3>
-              <p>Emergency response, de-escalation, OSHA, FEMA, or site training.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <!-- Resume: when the PDF is ready, upload it to assets and update the button link. -->
-      <section class="section-pad section-band" id="resume">
-        <div class="container resume-panel resume-upgraded reveal">
-          <div class="resume-copy">
-            <p class="eyebrow">Resume</p>
-            <h2>Resume-ready profile for security leadership roles.</h2>
-            <p>For recruiters, clients, and hiring teams reviewing security operations experience.</p>
-            <div class="resume-achievements">
-              <span>Account Management</span>
-              <span>Incident Response</span>
-              <span>Staffing Coordination</span>
-              <span>Security Technology</span>
-            </div>
-          </div>
-          <div class="resume-viewer glass-card">
-            <span>Resume PDF</span>
-            <p>Open the current resume document directly from Google Docs.</p>
-            <a class="button button-primary" href="https://docs.google.com/document/d/1NwKYqMsFKGn34Na5BACbRSdgicy_id2tIHYDeReZjJQ/edit?usp=drivesdk" target="_blank" rel="noreferrer">
-              View Resume
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- Contact: update email and LinkedIn URLs when final contact details are ready. -->
-      <section class="section-pad" id="contact">
-        <div class="container contact-grid">
-          <div class="section-heading reveal">
-            <p class="eyebrow">Contact</p>
-            <h2>Connect with Tyrese Hawthorne.</h2>
-            <p>For security operations roles, client support, account management, or portfolio questions.</p>
-            <div class="contact-list">
-              <a href="mailto:athletetyreseh@gmail.com">athletetyreseh@gmail.com</a>
-              <a href="https://www.linkedin.com/in/tyrese-hawthorne-8a4735190" target="_blank" rel="noreferrer">LinkedIn Profile</a>
-              <a href="https://t-hawthorne.com">t-hawthorne.com</a>
-            </div>
-            <img
-              class="signature-mark contact-signature"
-              src="assets/tyrese-signature-transparent.png"
-              width="320"
-              height="258"
-              alt="Tyrese Hawthorne signature"
-            />
-          </div>
-
-          <form class="contact-form reveal" data-contact-form>
-            <label>
-              Name
-              <input type="text" name="name" autocomplete="name" placeholder="Your name" />
-            </label>
-            <label>
-              Email
-              <input type="email" name="email" autocomplete="email" placeholder="your.email@example.com" />
-            </label>
-            <label>
-              Message
-              <textarea name="message" rows="5" placeholder="Share the opportunity, client need, or question."></textarea>
-            </label>
-            <button class="button button-primary" type="submit">Prepare Email</button>
-            <p class="form-note" data-form-note>This static form opens your email app. No message is stored by the website.</p>
+          <form class="contact-form" data-contact-form data-reveal>
+            <div class="form-heading"><span>Direct inquiry</span><strong>Start a conversation</strong></div>
+            <label><span>Name</span><input type="text" name="name" autocomplete="name" required /></label>
+            <label><span>Email</span><input type="email" name="email" autocomplete="email" required /></label>
+            <label><span>Message</span><textarea name="message" rows="4" required></textarea></label>
+            <button class="button button-primary" type="submit">Prepare email <svg><use href="#icon-arrow"></use></svg></button>
+            <p class="form-note" data-form-note>This opens your email app; the website stores nothing.</p>
           </form>
+
+          <footer class="minimal-footer"><span>© <span data-year></span> Tyrese Hawthorne</span><a href="https://t-hawthorne.com">t-hawthorne.com</a></footer>
         </div>
       </section>
     </main>
 
-    <footer class="site-footer">
-      <div class="container footer-grid">
-        <p>&copy; <span data-year></span> Tyrese Hawthorne. Security Operations Portfolio.</p>
-        <a href="#home">Back to top</a>
-      </div>
-    </footer>
-
-    <script src="script.js?v=20260601-8"></script>
+    <div class="transition-curtain" aria-hidden="true"><img src="assets/th-logo-mark.png" alt="" /></div>
+    <script src="script.js?v=20260618-1"></script>
   </body>
 </html>
