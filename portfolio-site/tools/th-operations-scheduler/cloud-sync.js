@@ -60,10 +60,35 @@
     showOverlay(`
       <h2>Import your private schedule</h2>
       <p>No cloud schedule exists yet. Choose the private JSON migration file once; it will be stored in your authenticated cloud workspace.</p>
+      <label class="cloud-paste-label" for="cloudPasteJson">Or paste the private JSON</label>
+      <textarea id="cloudPasteJson" class="cloud-paste-json" spellcheck="false" autocomplete="off" placeholder="Paste scheduler JSON here"></textarea>
       <div class="cloud-card-actions">
         <button type="button" data-cloud-action="import">Choose private JSON</button>
+        <button class="secondary" type="button" data-cloud-action="paste-import">Import pasted JSON</button>
       </div>
     `);
+  };
+
+  const importPastedJson = async () => {
+    const input = $id("cloudPasteJson");
+    try {
+      const imported = JSON.parse(input?.value || "");
+      if (!imported || !Array.isArray(imported.rows) || !Array.isArray(imported.staff)) {
+        throw new Error("The pasted JSON is not a valid scheduler export.");
+      }
+      hydrating = true;
+      state = cloneState(imported);
+      mode = state.view?.mode || "working";
+      siteFilter = state.view?.siteFilter || "all";
+      selectedMobileDate = state.view?.rangeStart || state.dates?.[0] || selectedMobileDate;
+      render();
+      browserSave(true);
+      hydrating = false;
+      dirty = true;
+      await persistCloud(true);
+    } catch (error) {
+      showOverlay(`<h2>Import failed</h2><p>${escapeText(error.message)}</p><div class="cloud-card-actions"><button class="secondary" data-cloud-action="reload">Try again</button></div>`);
+    }
   };
 
   const showConflict = (serverRevision, updatedAt) => {
@@ -212,6 +237,7 @@
     const action = event.target.closest("[data-cloud-action]")?.dataset.cloudAction;
     const restoreId = event.target.closest("[data-restore-id]")?.dataset.restoreId;
     if (action === "import") $id("jsonFile")?.click();
+    if (action === "paste-import") await importPastedJson();
     if (action === "reload") await loadCloudState();
     if (action === "overwrite") await persistCloud(true);
     if (action === "close") hideOverlay();

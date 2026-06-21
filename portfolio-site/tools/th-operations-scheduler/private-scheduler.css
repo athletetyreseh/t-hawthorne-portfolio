@@ -86,6 +86,32 @@
   gap: 8px;
 }
 
+.cloud-paste-label {
+  display: block;
+  margin: 18px 0 7px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cloud-paste-json {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  font: 11px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.cloud-paste-json:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
 .cloud-card button,
 .history-row button {
   min-height: 34px;
@@ -399,4 +425,3 @@
   .cloud-overlay { display: none !important; }
   .app { display: flex !important; }
 }
-
