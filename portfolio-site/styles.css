@@ -785,7 +785,7 @@ svg {
 
 .project-stack {
   display: grid;
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   gap: 0.85rem;
 }
 
@@ -1248,6 +1248,10 @@ body:not(.home-page) {
   gap: 0.85rem;
 }
 
+.tool-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .tool-card,
 .writing-card,
 .info-card {
@@ -1611,6 +1615,10 @@ body:not(.home-page) {
     grid-template-rows: none;
   }
 
+  .project-stack a:last-child {
+    grid-column: 1 / -1;
+  }
+
   .project-stack a {
     min-height: 19svh;
   }
@@ -1732,6 +1740,14 @@ body:not(.home-page) {
 
   .feature-project {
     min-height: 30svh;
+  }
+
+  .project-stack {
+    grid-template-columns: 1fr;
+  }
+
+  .project-stack a:last-child {
+    grid-column: auto;
   }
 
   .project-stack a {
