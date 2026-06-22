@@ -52,17 +52,18 @@ const getVerificationKey = async (teamDomain, keyId) => {
   return key;
 };
 
-export const authenticateSchedulerRequest = async (context) => {
+export const authenticateAccessRequest = async (context) => {
   const ownerEmail = String(context.env.OWNER_EMAIL || "").trim().toLowerCase();
 
   if (context.env.SCHEDULER_DEV_BYPASS === "true") {
-    return { email: ownerEmail || "athletetyreseh@gmail.com" };
+    const email = String(context.env.PRIVATE_DEV_EMAIL || ownerEmail || "athletetyreseh@gmail.com").trim().toLowerCase();
+    return { email, isOwner: email === ownerEmail };
   }
 
   const teamDomain = normalizeTeamDomain(context.env.CF_ACCESS_TEAM_DOMAIN);
-  const audience = String(context.env.CF_ACCESS_AUD || "").trim();
-  if (!teamDomain || !audience || !ownerEmail) {
-    return { response: json({ error: "Scheduler authentication is not configured" }, 503) };
+  const audiences = String(context.env.CF_ACCESS_AUD || "").split(",").map((value) => value.trim()).filter(Boolean);
+  if (!teamDomain || !audiences.length || !ownerEmail) {
+    return { response: json({ error: "Private access is not configured" }, 503) };
   }
 
   const token = context.request.headers.get("Cf-Access-Jwt-Assertion");
@@ -87,15 +88,17 @@ export const authenticateSchedulerRequest = async (context) => {
     const now = Math.floor(Date.now() / 1000);
     const tokenAudience = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
     if (claims.iss !== teamDomain) throw new Error("Invalid token issuer");
-    if (!tokenAudience.includes(audience)) throw new Error("Invalid token audience");
+    if (!audiences.some((audience) => tokenAudience.includes(audience))) throw new Error("Invalid token audience");
     if (!claims.exp || claims.exp < now - 30) throw new Error("Expired access token");
     if (claims.nbf && claims.nbf > now + 30) throw new Error("Access token is not active");
 
     const email = String(claims.email || "").trim().toLowerCase();
-    if (email !== ownerEmail) return { response: json({ error: "This account is not authorized" }, 403) };
-    return { email };
+    if (!email) throw new Error("Access token has no email identity");
+    return { email, isOwner: email === ownerEmail, claims };
   } catch (error) {
-    console.error("Scheduler authentication failed", error);
+    console.error("Private access authentication failed", error);
     return { response: json({ error: "Invalid authentication" }, 403) };
   }
 };
+
+export const authenticateSchedulerRequest = authenticateAccessRequest;

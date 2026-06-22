@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Access Admin | Tyrese Hawthorne</title>
+  <link rel="stylesheet" href="../private.css" />
+</head>
+<body>
+  <header class="private-header"><nav class="private-nav"><a class="private-brand" href="../"><img src="../../assets/th-logo-mark.png" alt="TH" /><span><strong>Access Administration</strong><small>Private Workspace</small></span></a><div class="private-actions"><a href="../">Workspace</a><a href="/cdn-cgi/access/logout">Sign out</a></div></nav></header>
+  <main class="private-shell">
+    <section class="private-intro"><p class="eyebrow">Owner controls</p><h1>Private access administration.</h1><p>Approve requests and assign view or edit access independently for each private resource.</p></section>
+    <p class="status-message" id="adminStatus"></p>
+
+    <section class="section-bar"><div><h2>Pending requests</h2><p>Approve only people who should receive the requested operational access.</p></div></section>
+    <div class="data-panel" id="requestPanel"><div class="empty-state">Loading requests…</div></div>
+
+    <section class="section-bar"><div><h2>Users and permissions</h2><p>Users appear here after their first successful Cloudflare Access login.</p></div><button class="button secondary" id="refreshAdmin">Refresh</button></section>
+    <div class="data-panel"><div class="table-scroll"><table><thead><tr><th>User</th><th>Last active</th><th>Resource permissions</th></tr></thead><tbody id="userRows"><tr><td colspan="3">Loading users…</td></tr></tbody></table></div></div>
+  </main>
+  <script src="admin.js"></script>
+</body>
+</html>

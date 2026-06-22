@@ -5,12 +5,9 @@ const deniedResponse = (context) => {
   const destination = context.request.headers.get("Sec-Fetch-Dest");
   const acceptsHtml = (context.request.headers.get("Accept") || "").includes("text/html");
   if (destination === "document" || acceptsHtml) {
-    return Response.redirect(new URL("/private/?request=scheduler", context.request.url), 302);
+    return Response.redirect(new URL("/private/?request=fire_drill", context.request.url), 302);
   }
-  return new Response(JSON.stringify({ error: "Scheduler access has not been granted" }), {
-    status: 403,
-    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" }
-  });
+  return new Response("Forbidden", { status: 403, headers: { "Cache-Control": "no-store" } });
 };
 
 export async function onRequest(context) {
@@ -19,9 +16,7 @@ export async function onRequest(context) {
   const ownerEmail = ownerEmailFor(context);
   await ensurePrivateSchema(context.env.SCHEDULER_DB);
   context.data.privateUser = await ensurePrivateUser(context.env.SCHEDULER_DB, authentication.email, ownerEmail);
-  const allowed = await hasResourceAccess(context.env.SCHEDULER_DB, authentication.email, "scheduler", "edit", ownerEmail);
+  const allowed = await hasResourceAccess(context.env.SCHEDULER_DB, authentication.email, "fire_drill", "view", ownerEmail);
   if (!allowed) return deniedResponse(context);
-  // Every permitted operator edits the same owner-controlled schedule.
-  context.data.schedulerUser = ownerEmail;
   return context.next();
 }

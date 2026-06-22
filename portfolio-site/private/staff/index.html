@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Staff Directory | Tyrese Hawthorne</title>
+  <link rel="stylesheet" href="../private.css" />
+</head>
+<body>
+  <header class="private-header"><nav class="private-nav"><a class="private-brand" href="../"><img src="../../assets/th-logo-mark.png" alt="TH" /><span><strong>Staff Directory</strong><small>Private Workspace</small></span></a><div class="private-actions"><a href="../">Workspace</a><a href="/cdn-cgi/access/logout">Sign out</a></div></nav></header>
+  <main class="private-shell">
+    <section class="private-intro"><p class="eyebrow">Private staff records</p><h1>Staff operations directory.</h1><p>Maintain assignment context, contact details, availability status, and private management notes in one protected workspace.</p></section>
+    <p class="status-message" id="staffStatus"></p>
+    <div class="toolbar"><input id="staffSearch" type="search" placeholder="Search staff" aria-label="Search staff" /><select id="staffFilter" aria-label="Filter by status"><option value="all">All statuses</option><option value="active">Active</option><option value="leave">On leave</option><option value="inactive">Inactive</option></select><button class="button" id="addStaff">Add staff member</button></div>
+    <div class="data-panel"><div class="table-scroll"><table><thead><tr><th>Name</th><th>Assignment</th><th>Contact</th><th>Status</th><th>Updated</th><th></th></tr></thead><tbody id="staffRows"><tr><td colspan="6">Loading staff records…</td></tr></tbody></table></div></div>
+  </main>
+
+  <dialog id="staffDialog">
+    <form method="dialog" id="staffForm">
+      <div class="dialog-head"><h2 id="staffDialogTitle">Add staff member</h2><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
+      <div class="dialog-body">
+        <input type="hidden" name="id" />
+        <label class="field">Full name<input name="fullName" maxlength="120" required /></label>
+        <label class="field">Role / position<input name="roleTitle" maxlength="120" /></label>
+        <label class="field">Site / assignment<input name="site" maxlength="120" /></label>
+        <label class="field">Email<input name="email" type="email" maxlength="200" /></label>
+        <label class="field">Phone<input name="phone" type="tel" maxlength="40" /></label>
+        <label class="field">Status<select name="status"><option value="active">Active</option><option value="leave">On leave</option><option value="inactive">Inactive</option></select></label>
+        <label class="field">Private notes<textarea name="notes" maxlength="2000"></textarea></label>
+        <div class="dialog-actions"><button class="button secondary" value="cancel">Cancel</button><button class="button" value="save" id="saveStaff">Save record</button></div>
+      </div>
+    </form>
+  </dialog>
+  <script src="staff.js"></script>
+</body>
+</html>

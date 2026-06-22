@@ -37,3 +37,9 @@ Domain setup notes are in:
 ```txt
 portfolio-site/DOMAIN_SETUP.md
 ```
+
+Private workspace and Cloudflare Access configuration are documented in:
+
+```txt
+PRIVATE_ACCESS_SETUP.md
+```

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Private Workspace | Tyrese Hawthorne</title>
+  <link rel="stylesheet" href="private.css" />
+</head>
+<body>
+  <header class="private-header">
+    <nav class="private-nav" aria-label="Private workspace navigation">
+      <a class="private-brand" href="./"><img src="../assets/th-logo-mark.png" alt="TH" /><span><strong>Private Workspace</strong><small>Tyrese Hawthorne Operations</small></span></a>
+      <div class="private-actions"><a href="../">Public portfolio</a><a href="/cdn-cgi/access/logout">Sign out</a></div>
+    </nav>
+  </header>
+  <main class="private-shell">
+    <section class="private-intro">
+      <p class="eyebrow">Authenticated operations</p>
+      <h1>Your authorized tools, in one place.</h1>
+      <p>Access is assigned separately for each private resource. Request anything you need and return here after approval.</p>
+    </section>
+    <section class="account-strip" id="accountStrip" aria-live="polite"><div><strong>Checking your account</strong><span>Verifying private access…</span></div></section>
+    <p class="status-message" id="statusMessage"></p>
+    <section class="resource-grid" id="resourceGrid" aria-label="Private resources"></section>
+  </main>
+
+  <dialog id="requestDialog">
+    <form method="dialog" id="requestForm">
+      <div class="dialog-head"><h2 id="requestTitle">Request access</h2><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
+      <div class="dialog-body">
+        <input type="hidden" name="resourceKey" />
+        <input type="hidden" name="requestedLevel" />
+        <label class="field">Note for the administrator<textarea name="message" maxlength="500" placeholder="Briefly explain why you need access."></textarea></label>
+        <div class="dialog-actions"><button class="button secondary" value="cancel">Cancel</button><button class="button" value="submit" id="submitRequest">Send request</button></div>
+      </div>
+    </form>
+  </dialog>
+  <script src="private.js"></script>
+</body>
+</html>
