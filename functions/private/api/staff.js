@@ -8,6 +8,7 @@ import {
 
 const clean = (value, max) => String(value || "").trim().slice(0, max);
 const statusFor = (value) => ["active", "leave", "inactive"].includes(value) ? value : "active";
+const dateFor = (value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value || "")) ? String(value) : "";
 
 const staffPayload = (body) => ({
   fullName: clean(body.fullName, 120),
@@ -15,6 +16,8 @@ const staffPayload = (body) => ({
   site: clean(body.site, 120),
   email: clean(body.email, 200).toLowerCase(),
   phone: clean(body.phone, 40),
+  guardCardExpiration: dateFor(body.guardCardExpiration),
+  cprExpiration: dateFor(body.cprExpiration),
   status: statusFor(body.status),
   notes: clean(body.notes, 2000)
 });
@@ -24,10 +27,14 @@ export async function onRequestGet(context) {
     const access = await requireResourceAccess(context, "staff", "view");
     if (access.response) return access.response;
     const result = await context.env.SCHEDULER_DB.prepare(
-      `SELECT id, full_name, role_title, site, email, phone, status, notes, created_at, updated_at
+      `SELECT id, full_name, role_title, site, email, phone, guard_card_expiration, cpr_expiration, status, notes, created_at, updated_at
        FROM staff_records ORDER BY CASE status WHEN 'active' THEN 0 WHEN 'leave' THEN 1 ELSE 2 END, full_name COLLATE NOCASE`
     ).all();
-    return json({ staff: result.results || [], accessLevel: access.accessLevel });
+    return json({
+      staff: result.results || [],
+      accessLevel: access.accessLevel,
+      emailDeliveryConfigured: Boolean(context.env.RESEND_API_KEY && context.env.STAFF_EMAIL_FROM)
+    });
   } catch (error) {
     return privateErrorResponse(error);
   }
@@ -44,9 +51,9 @@ export async function onRequestPost(context) {
     const actor = context.data.privateUser.email;
     const result = await context.env.SCHEDULER_DB.prepare(
       `INSERT INTO staff_records
-       (full_name, role_title, site, email, phone, status, notes, created_at, created_by, updated_at, updated_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(record.fullName, record.roleTitle, record.site, record.email, record.phone, record.status, record.notes, now, actor, now, actor).run();
+       (full_name, role_title, site, email, phone, guard_card_expiration, cpr_expiration, status, notes, created_at, created_by, updated_at, updated_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(record.fullName, record.roleTitle, record.site, record.email, record.phone, record.guardCardExpiration, record.cprExpiration, record.status, record.notes, now, actor, now, actor).run();
     return json({ id: result.meta?.last_row_id }, 201);
   } catch (error) {
     return privateErrorResponse(error);
@@ -64,10 +71,28 @@ export async function onRequestPatch(context) {
     const record = staffPayload(body);
     if (!record.fullName) return json({ error: "Staff name is required" }, 400);
     const result = await context.env.SCHEDULER_DB.prepare(
-      `UPDATE staff_records SET full_name = ?, role_title = ?, site = ?, email = ?, phone = ?, status = ?, notes = ?, updated_at = ?, updated_by = ?
+      `UPDATE staff_records SET full_name = ?, role_title = ?, site = ?, email = ?, phone = ?, guard_card_expiration = ?, cpr_expiration = ?, status = ?, notes = ?, updated_at = ?, updated_by = ?
        WHERE id = ?`
-    ).bind(record.fullName, record.roleTitle, record.site, record.email, record.phone, record.status, record.notes, new Date().toISOString(), context.data.privateUser.email, id).run();
+    ).bind(record.fullName, record.roleTitle, record.site, record.email, record.phone, record.guardCardExpiration, record.cprExpiration, record.status, record.notes, new Date().toISOString(), context.data.privateUser.email, id).run();
     if (!result.meta?.changes) return json({ error: "Staff record was not found" }, 404);
+    return json({ ok: true });
+  } catch (error) {
+    return privateErrorResponse(error);
+  }
+}
+
+export async function onRequestDelete(context) {
+  try {
+    const access = await requireResourceAccess(context, "staff", "edit");
+    if (access.response) return access.response;
+    if (!requireSameOrigin(context.request)) return json({ error: "Invalid request origin" }, 403);
+    const body = await parseJson(context.request);
+    const id = Number(body.id);
+    if (!Number.isInteger(id) || id <= 0) return json({ error: "Valid staff record is required" }, 400);
+    await context.env.SCHEDULER_DB.batch([
+      context.env.SCHEDULER_DB.prepare("DELETE FROM staff_occurrences WHERE staff_id = ?").bind(id),
+      context.env.SCHEDULER_DB.prepare("DELETE FROM staff_records WHERE id = ?").bind(id)
+    ]);
     return json({ ok: true });
   } catch (error) {
     return privateErrorResponse(error);

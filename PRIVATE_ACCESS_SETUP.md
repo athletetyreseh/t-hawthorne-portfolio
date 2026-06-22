@@ -22,6 +22,8 @@ The Pages project requires:
 - `CF_ACCESS_TEAM_DOMAIN`: the Cloudflare Zero Trust team domain
 - `CF_ACCESS_AUD`: comma-separated application audience tags for all three Access applications
 - D1 binding `SCHEDULER_DB`: the existing scheduler database
+- `RESEND_API_KEY` (secret, optional): enables direct staff email delivery
+- `STAFF_EMAIL_FROM` (optional): verified sender such as `Tyrese Hawthorne <operations@t-hawthorne.com>`
 
 `SCHEDULER_DEV_BYPASS` must not be enabled in production.
 
@@ -38,4 +40,7 @@ The Pages project requires:
 - **Scheduler:** edit permission opens the shared owner schedule. It does not create a separate schedule for each user.
 - **Fire Drill Viewer:** view permission protects the HTML viewer, every slide image, and the PowerPoint download.
 - **Staff Directory:** view permission reads staff records; edit permission also creates and updates them.
+- **Staff Messaging:** with Resend configured, edit users can send one BCC message to up to 50 selected staff or separate messages to up to 100 selected staff. Without it, the interface opens BCC or individual drafts in the device mail client.
+- **Occurrences:** call off = 2 points, no call/no show = 4, late = 1, left early = 1, and documentation-only entries = 0. Points are assigned by the server rather than the browser.
+- **Exports:** roster and occurrence views generate local `.xlsx` files without transmitting export data to another service.
 - **Admin:** owner-only and cannot be delegated from the interface.

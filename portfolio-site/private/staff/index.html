@@ -4,31 +4,112 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex,nofollow,noarchive" />
-  <title>Staff Directory | Tyrese Hawthorne</title>
+  <title>Staff Operations | Tyrese Hawthorne</title>
   <link rel="stylesheet" href="../private.css" />
+  <link rel="stylesheet" href="staff.css" />
 </head>
-<body>
-  <header class="private-header"><nav class="private-nav"><a class="private-brand" href="../"><img src="../../assets/th-logo-mark.png" alt="TH" /><span><strong>Staff Directory</strong><small>Private Workspace</small></span></a><div class="private-actions"><a href="../">Workspace</a><a href="/cdn-cgi/access/logout">Sign out</a></div></nav></header>
-  <main class="private-shell">
-    <section class="private-intro"><p class="eyebrow">Private staff records</p><h1>Staff operations directory.</h1><p>Maintain assignment context, contact details, availability status, and private management notes in one protected workspace.</p></section>
-    <p class="status-message" id="staffStatus"></p>
-    <div class="toolbar"><input id="staffSearch" type="search" placeholder="Search staff" aria-label="Search staff" /><select id="staffFilter" aria-label="Filter by status"><option value="all">All statuses</option><option value="active">Active</option><option value="leave">On leave</option><option value="inactive">Inactive</option></select><button class="button" id="addStaff">Add staff member</button></div>
-    <div class="data-panel"><div class="table-scroll"><table><thead><tr><th>Name</th><th>Assignment</th><th>Contact</th><th>Status</th><th>Updated</th><th></th></tr></thead><tbody id="staffRows"><tr><td colspan="6">Loading staff records…</td></tr></tbody></table></div></div>
+<body class="staff-page">
+  <header class="private-header">
+    <nav class="private-nav">
+      <a class="private-brand" href="../"><img src="../../assets/th-logo-mark.png" alt="TH" /><span><strong>Staff Operations</strong><small>Private Workspace</small></span></a>
+      <div class="private-actions"><a href="../">Workspace</a><a href="/cdn-cgi/access/logout">Sign out</a></div>
+    </nav>
+  </header>
+
+  <main class="staff-shell">
+    <section class="staff-console" aria-label="Staff operations console">
+      <div class="staff-titlebar"><strong>TH Staff Operations</strong><span>Private roster and occurrence management</span></div>
+      <div class="staff-toolbar">
+        <button type="button" class="wt-button primary" id="addStaff">+ Add Officer</button>
+        <button type="button" class="wt-button" id="syncMaster">Sync Master Schedule</button>
+        <button type="button" class="wt-button" id="exportRoster">Export Roster XLSX</button>
+        <button type="button" class="wt-button" id="selectActive">Select Active</button>
+        <button type="button" class="wt-button" id="clearSelection">Clear Selection</button>
+        <span class="cloud-indicator" id="staffCloudState">Loading cloud data</span>
+      </div>
+      <div class="staff-summary" id="staffSummary">
+        <div><span>Active Staff</span><strong>0</strong></div>
+        <div><span>Selected</span><strong>0</strong></div>
+        <div><span>Credential Alerts</span><strong>0</strong></div>
+        <div><span>Total Points</span><strong>0</strong></div>
+      </div>
+      <nav class="staff-tabs" aria-label="Staff sections">
+        <button type="button" class="active" data-staff-tab="roster">Master Roster</button>
+        <button type="button" data-staff-tab="occurrences">Occurrence Tracker</button>
+        <button type="button" data-staff-tab="messaging">Staff Messaging</button>
+      </nav>
+      <p class="staff-status" id="staffStatus" aria-live="polite"></p>
+
+      <section class="staff-panel active" data-staff-panel="roster">
+        <div class="panel-tools">
+          <input id="staffSearch" type="search" placeholder="Search name, role, site, email, or phone" aria-label="Search staff" />
+          <select id="staffFilter" aria-label="Filter by status"><option value="all">All statuses</option><option value="active">Active</option><option value="leave">On leave</option><option value="inactive">Inactive</option></select>
+        </div>
+        <div class="staff-card-grid" id="staffCards"><div class="staff-empty">Loading staff records…</div></div>
+      </section>
+
+      <section class="staff-panel" data-staff-panel="occurrences" hidden>
+        <div class="panel-tools">
+          <select id="occurrenceStaffFilter" aria-label="Filter occurrences by officer"><option value="all">All staff</option></select>
+          <button type="button" class="wt-button primary" id="addOccurrence">+ Log Occurrence</button>
+          <button type="button" class="wt-button" id="exportOccurrenceView">Export Current XLSX</button>
+          <button type="button" class="wt-button" id="exportAllOccurrences">Export All XLSX</button>
+        </div>
+        <div class="occurrence-total" id="occurrenceTotal">0 occurrence points in this view</div>
+        <div class="wt-table-scroll"><table class="wt-table"><thead><tr><th>Officer</th><th>Date</th><th>Occurrence</th><th>Points</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="occurrenceRows"><tr><td colspan="6">Loading occurrences…</td></tr></tbody></table></div>
+      </section>
+
+      <section class="staff-panel" data-staff-panel="messaging" hidden>
+        <div class="message-layout">
+          <aside class="recipient-panel">
+            <div class="recipient-head"><div><strong>Recipients</strong><span id="recipientCount">0 selected</span></div><button class="wt-button" type="button" id="selectWithEmail">Select all with email</button></div>
+            <div class="recipient-list" id="recipientList"></div>
+          </aside>
+          <form class="message-composer" id="messageForm">
+            <div class="delivery-mode" role="radiogroup" aria-label="Delivery mode">
+              <label><input type="radio" name="mode" value="bcc" checked /> One group email using BCC</label>
+              <label><input type="radio" name="mode" value="separate" /> Separate email to each officer</label>
+            </div>
+            <label>Subject<input name="subject" maxlength="200" required /></label>
+            <label>Message<textarea name="body" maxlength="10000" required></textarea></label>
+            <div class="message-note" id="deliveryNote"></div>
+            <div class="message-actions"><button type="submit" class="wt-button primary" id="sendMessage">Send Email</button></div>
+            <div class="draft-links" id="draftLinks"></div>
+          </form>
+        </div>
+      </section>
+    </section>
   </main>
 
   <dialog id="staffDialog">
     <form method="dialog" id="staffForm">
-      <div class="dialog-head"><h2 id="staffDialogTitle">Add staff member</h2><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
-      <div class="dialog-body">
+      <div class="dialog-head"><h2 id="staffDialogTitle">Add officer</h2><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
+      <div class="dialog-body staff-form-grid">
         <input type="hidden" name="id" />
         <label class="field">Full name<input name="fullName" maxlength="120" required /></label>
         <label class="field">Role / position<input name="roleTitle" maxlength="120" /></label>
         <label class="field">Site / assignment<input name="site" maxlength="120" /></label>
-        <label class="field">Email<input name="email" type="email" maxlength="200" /></label>
-        <label class="field">Phone<input name="phone" type="tel" maxlength="40" /></label>
         <label class="field">Status<select name="status"><option value="active">Active</option><option value="leave">On leave</option><option value="inactive">Inactive</option></select></label>
-        <label class="field">Private notes<textarea name="notes" maxlength="2000"></textarea></label>
-        <div class="dialog-actions"><button class="button secondary" value="cancel">Cancel</button><button class="button" value="save" id="saveStaff">Save record</button></div>
+        <label class="field">Email address<input name="email" type="email" maxlength="200" /></label>
+        <label class="field">Phone number<input name="phone" type="tel" maxlength="40" /></label>
+        <label class="field">Guard card expiration<input name="guardCardExpiration" type="date" /></label>
+        <label class="field">CPR expiration<input name="cprExpiration" type="date" /></label>
+        <label class="field wide">Private management notes<textarea name="notes" maxlength="2000"></textarea></label>
+        <div class="dialog-actions wide"><button type="button" class="button danger" id="deleteStaff" hidden>Remove Officer</button><span class="dialog-spacer"></span><button class="button secondary" value="cancel">Cancel</button><button class="button" value="save" id="saveStaff">Save Record</button></div>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="occurrenceDialog">
+    <form method="dialog" id="occurrenceForm">
+      <div class="dialog-head"><h2 id="occurrenceDialogTitle">Log occurrence</h2><button class="dialog-close" value="cancel" aria-label="Close">×</button></div>
+      <div class="dialog-body">
+        <input type="hidden" name="id" />
+        <label class="field">Officer<select name="staffId" required></select></label>
+        <label class="field">Occurrence date<input name="occurrenceDate" type="date" required /></label>
+        <label class="field">Occurrence type<select name="occurrenceType" required><option value="call_off">Call off — 2 points</option><option value="no_call_no_show">No call / no show — 4 points</option><option value="late">Late arrival — 1 point</option><option value="left_early">Left early — 1 point</option><option value="documentation">Documentation only — 0 points</option></select></label>
+        <label class="field">Occurrence notes<textarea name="notes" maxlength="2000" required></textarea></label>
+        <div class="dialog-actions"><button type="button" class="button danger" id="deleteOccurrence" hidden>Delete Entry</button><span class="dialog-spacer"></span><button class="button secondary" value="cancel">Cancel</button><button class="button" value="save" id="saveOccurrence">Save Entry</button></div>
       </div>
     </form>
   </dialog>
