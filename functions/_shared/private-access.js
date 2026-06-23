@@ -12,8 +12,8 @@ export const RESOURCE_CATALOG = Object.freeze({
     requestLevel: "view"
   },
   staff: {
-    name: "Staff Directory",
-    description: "Private staff records, assignments, status, and operations notes.",
+    name: "Staff Operations",
+    description: "Private roster, contacts, credential dates, staff messaging, occurrence tracking, and XLSX exports.",
     url: "/private/staff/",
     requestLevel: "view"
   }

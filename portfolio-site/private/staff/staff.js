@@ -85,7 +85,7 @@
         <div class="officer-card-head"><input type="checkbox" data-select-staff="${item.id}" ${selected.has(item.id) ? "checked" : ""} aria-label="Select ${escapeHtml(item.full_name)}" /><div><strong>${escapeHtml(item.full_name)}</strong><span>${escapeHtml(item.role_title || "No role listed")} | ${escapeHtml(item.site || "No site listed")}</span></div><span class="officer-status">${escapeHtml(item.status)}</span></div>
         <div class="officer-contact"><div><span>Email</span>${item.email ? `<a href="mailto:${encodeURIComponent(item.email)}">${escapeHtml(item.email)}</a>` : "<strong>Not recorded</strong>"}</div><div><span>Phone</span>${item.phone ? `<a href="tel:${escapeHtml(item.phone)}">${escapeHtml(item.phone)}</a>` : "<strong>Not recorded</strong>"}</div></div>
         <div class="credential-grid"><div class="credential ${guardCard.className}"><span>Guard Card Expiration</span><strong>${escapeHtml(guardCard.label)}</strong></div><div class="credential ${cpr.className}"><span>CPR Expiration</span><strong>${escapeHtml(cpr.label)}</strong></div></div>
-        <div class="officer-card-actions">${accessLevel === "edit" ? `<button class="wt-button" data-edit-staff="${item.id}">Edit</button><button class="wt-button" data-log-occurrence="${item.id}">Log Occurrence</button>` : ""}<span class="points-chip">${pointsForStaff(item.id)} points</span></div>
+        <div class="officer-card-actions">${accessLevel === "edit" ? `<button class="wt-button" data-edit-staff="${item.id}">Edit</button><button class="wt-button" data-log-occurrence="${item.id}">Log Occurrence</button>` : ""}<button class="wt-button" data-export-occurrences="${item.id}">Export Occurrences</button><span class="points-chip">${pointsForStaff(item.id)} points</span></div>
       </article>`;
     }).join("");
     renderSummary();
@@ -105,8 +105,10 @@
 
   const renderOccurrences = () => {
     const visible = filteredOccurrences();
+    const filteredStaff = staff.find((item) => String(item.id) === elements.occurrenceFilter.value);
     const points = visible.reduce((sum, item) => sum + Number(item.points || 0), 0);
     elements.occurrenceTotal.textContent = `${points} occurrence point${points === 1 ? "" : "s"} in this view | ${visible.length} entr${visible.length === 1 ? "y" : "ies"}`;
+    document.getElementById("exportOccurrenceView").textContent = filteredStaff ? `Export ${filteredStaff.full_name} XLSX` : "Export Current View XLSX";
     elements.occurrenceRows.innerHTML = visible.length ? visible.map((item) => `<tr><td><strong>${escapeHtml(item.full_name)}</strong></td><td>${formatDate(item.occurrence_date)}</td><td>${escapeHtml(occurrenceLabels[item.occurrence_type] || item.occurrence_type)}</td><td><span class="occurrence-points">${item.points}</span></td><td>${escapeHtml(item.notes || "")}</td><td>${accessLevel === "edit" ? `<button class="wt-button" data-edit-occurrence="${item.id}">Edit</button>` : ""}</td></tr>`).join("") : '<tr><td colspan="6">No occurrences in this view.</td></tr>';
     renderSummary();
   };
@@ -128,15 +130,17 @@
     renderRecipients();
   };
 
-  document.querySelectorAll("[data-staff-tab]").forEach((button) => {
-    button.addEventListener("click", () => {
-      document.querySelectorAll("[data-staff-tab]").forEach((item) => item.classList.toggle("active", item === button));
-      document.querySelectorAll("[data-staff-panel]").forEach((panel) => {
-        const active = panel.dataset.staffPanel === button.dataset.staffTab;
-        panel.hidden = !active;
-        panel.classList.toggle("active", active);
-      });
+  const activateTab = (tabName) => {
+    document.querySelectorAll("[data-staff-tab]").forEach((item) => item.classList.toggle("active", item.dataset.staffTab === tabName));
+    document.querySelectorAll("[data-staff-panel]").forEach((panel) => {
+      const active = panel.dataset.staffPanel === tabName;
+      panel.hidden = !active;
+      panel.classList.toggle("active", active);
     });
+  };
+
+  document.querySelectorAll("[data-staff-tab]").forEach((button) => {
+    button.addEventListener("click", () => activateTab(button.dataset.staffTab));
   });
 
   elements.cards.addEventListener("change", (event) => {
@@ -150,8 +154,15 @@
   elements.cards.addEventListener("click", (event) => {
     const editId = Number(event.target.closest("[data-edit-staff]")?.dataset.editStaff);
     const occurrenceId = Number(event.target.closest("[data-log-occurrence]")?.dataset.logOccurrence);
+    const exportId = Number(event.target.closest("[data-export-occurrences]")?.dataset.exportOccurrences);
     if (editId) openStaff(staff.find((item) => item.id === editId));
     if (occurrenceId) openOccurrence(null, occurrenceId);
+    if (exportId) {
+      elements.occurrenceFilter.value = String(exportId);
+      renderOccurrences();
+      activateTab("occurrences");
+      exportOccurrenceView();
+    }
   });
   elements.occurrenceRows.addEventListener("click", (event) => {
     const id = Number(event.target.closest("[data-edit-occurrence]")?.dataset.editOccurrence);
@@ -313,7 +324,12 @@
     const rows = staff.map((item) => [item.full_name, item.role_title, item.site, item.email, item.phone, item.guard_card_expiration, item.cpr_expiration, item.status, item.notes, item.updated_at]);
     downloadXlsx("staff-master-roster.xlsx", "Staff Roster", [["Name", "Role", "Site", "Email", "Phone", "Guard Card Expiration", "CPR Expiration", "Status", "Notes", "Updated"], ...rows]);
   });
-  document.getElementById("exportOccurrenceView").addEventListener("click", () => exportOccurrences(filteredOccurrences(), "staff-occurrences-current.xlsx"));
+  const exportOccurrenceView = () => {
+    const filteredStaff = staff.find((item) => String(item.id) === elements.occurrenceFilter.value);
+    const slug = filteredStaff?.full_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    exportOccurrences(filteredOccurrences(), slug ? `${slug}-occurrences.xlsx` : "staff-occurrences-current.xlsx");
+  };
+  document.getElementById("exportOccurrenceView").addEventListener("click", exportOccurrenceView);
   document.getElementById("exportAllOccurrences").addEventListener("click", () => exportOccurrences(occurrences, "staff-occurrences-all.xlsx"));
 
   const exportOccurrences = (records, filename) => {
