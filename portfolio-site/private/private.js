@@ -25,7 +25,7 @@
       const pending = Boolean(resource.request);
       const badge = allowed ? `<span class="badge ${resource.accessLevel}">${resource.accessLevel} access</span>` : pending ? '<span class="badge pending">Request pending</span>' : '<span class="badge">Restricted</span>';
       const action = allowed
-        ? `<a class="button" href="${resource.url}">Open resource</a>`
+        ? `<a class="button" href="${resource.url}">Open ${escapeHtml(resource.name)}</a>`
         : pending
           ? '<button class="button secondary" disabled>Awaiting approval</button>'
           : `<button class="button secondary" data-request="${resource.key}">Request access</button>`;
