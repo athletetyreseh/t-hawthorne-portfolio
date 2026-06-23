@@ -8,6 +8,12 @@
   const requestedKey = new URLSearchParams(location.search).get("request");
   let session = null;
 
+  const resourceIcons = Object.freeze({
+    scheduler: '<path d="M4 5h16v15H4zM8 3v4m8-4v4M4 9h16M8 13h3m2 0h3m-8 4h3m2 0h3" />',
+    fire_drill: '<path d="M13 3c1 4-2 5-2 8 0 2 1 3 3 3 2 0 3-2 3-4 2 2 3 4 3 6 0 3-3 5-8 5s-8-2-8-6c0-3 2-6 6-9 0 3 1 4 3 5" />',
+    staff: '<circle cx="9" cy="8" r="3" /><circle cx="17" cy="10" r="2" /><path d="M3 20c.5-4 2.5-6 6-6s5.5 2 6 6m0-5c3 0 5 1.7 5 5" />'
+  });
+
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
   const setStatus = (message, tone = "") => { status.textContent = message; status.className = `status-message ${tone}`.trim(); };
 
@@ -23,7 +29,8 @@
         : pending
           ? '<button class="button secondary" disabled>Awaiting approval</button>'
           : `<button class="button secondary" data-request="${resource.key}">Request access</button>`;
-      return `<article class="resource-card ${requestedKey === resource.key ? "is-requested" : ""}" data-resource-card="${resource.key}"><span class="resource-index">${String(index + 1).padStart(2, "0")}</span><h2>${escapeHtml(resource.name)}</h2><p>${escapeHtml(resource.description)}</p>${badge}<div class="card-actions">${action}</div></article>`;
+      const icon = resourceIcons[resource.key] || resourceIcons.staff;
+      return `<article class="resource-card ${requestedKey === resource.key ? "is-requested" : ""}" data-resource-card="${resource.key}"><div class="resource-card-top"><span class="resource-icon"><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg></span><span class="resource-index">${String(index + 1).padStart(2, "0")}</span></div><h2>${escapeHtml(resource.name)}</h2><p>${escapeHtml(resource.description)}</p>${badge}<div class="card-actions">${action}</div></article>`;
     }).join("");
 
     if (requestedKey) {
