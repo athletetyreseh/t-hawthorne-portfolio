@@ -65,6 +65,14 @@ export const requestFromRow = (row) => ({
   resolvedBy: row.resolved_by
 });
 
+export const publicRequestFromRow = (row) => {
+  const request = requestFromRow(row);
+  request.message = "";
+  request.denialMessage = "";
+  request.resolvedBy = "";
+  return request;
+};
+
 export const acknowledgementFromRow = (row, includeSignature = false) => ({
   id: row.id,
   officerName: row.officer_name,
@@ -112,7 +120,41 @@ export const namesFromSchedule = (state) => {
   return [...names].sort((a, b) => a.localeCompare(b));
 };
 
-export const publicSchedulePayload = async (context, includeSignature = false) => {
+const publicAssignment = (assignment = {}) => ({
+  status: assignment.status || "blank",
+  name: cleanText(assignment.name, 120),
+  start: cleanText(assignment.start, 8),
+  end: cleanText(assignment.end, 8),
+  position: cleanText(assignment.position, 160)
+});
+
+const publicAssignments = (assignments = {}) => Object.fromEntries(
+  Object.entries(assignments).map(([key, assignment]) => [key, publicAssignment(assignment)])
+);
+
+const publicRow = (row = {}) => ({
+  id: row.id,
+  site: row.site || "",
+  post: row.post || "",
+  shiftName: row.shiftName || "",
+  shiftCode: row.shiftCode || "",
+  typeNum: row.typeNum || "",
+  typeLabel: row.typeLabel || "",
+  time: row.time || "",
+  scope: row.scope || "",
+  weekStart: row.weekStart || "",
+  hiddenWeeks: Array.isArray(row.hiddenWeeks) ? row.hiddenWeeks : [],
+  assignments: publicAssignments(row.assignments)
+});
+
+const publicState = (state) => state ? ({
+  dates: state.dates || [],
+  rows: (state.rows || []).map(publicRow),
+  view: state.view || {},
+  hiddenRowsByScope: state.hiddenRowsByScope || {}
+}) : null;
+
+export const publicSchedulePayload = async (context, includeSignature = false, includeRequestDetails = false) => {
   const database = context.env.SCHEDULER_DB;
   const ownerEmail = ownerEmailFor(context);
   await ensureOfficerScheduleSchema(database);
@@ -150,14 +192,14 @@ export const publicSchedulePayload = async (context, includeSignature = false) =
   return {
     revision,
     updatedAt,
-    schedule: state ? {
+    schedule: includeRequestDetails && state ? {
       dates: state.dates || [],
       rows: state.rows || [],
       view: state.view || {},
       hiddenRowsByScope: state.hiddenRowsByScope || {}
-    } : null,
+    } : publicState(state),
     officers,
-    requests: (requestsResult.results || []).map(requestFromRow),
+    requests: (requestsResult.results || []).map(includeRequestDetails ? requestFromRow : publicRequestFromRow),
     acknowledgements: (acknowledgementsResult.results || []).map((row) => acknowledgementFromRow(row, includeSignature))
   };
 };

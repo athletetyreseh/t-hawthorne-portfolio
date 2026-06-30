@@ -8,7 +8,7 @@ import {
 
 export async function onRequestGet(context) {
   try {
-    return json(await publicSchedulePayload(context, true));
+    return json(await publicSchedulePayload(context, true, true));
   } catch (error) {
     return privateErrorResponse(error);
   }

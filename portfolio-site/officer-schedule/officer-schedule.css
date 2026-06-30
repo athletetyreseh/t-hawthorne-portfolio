@@ -503,6 +503,26 @@ textarea {
   background: linear-gradient(180deg, #223047, #192437);
 }
 
+.table-shift.is-training,
+.shift-card.is-training {
+  border-left-color: #55c7e8;
+  background: linear-gradient(180deg, #264360, #1a3148);
+}
+
+.table-shift.is-schedule-pto,
+.shift-card.is-schedule-pto,
+.table-shift.is-pto,
+.shift-card.is-pto {
+  border-left-color: #8cc7ff;
+  background: linear-gradient(180deg, #203b59, #162a40);
+}
+
+.table-shift.is-unpaid,
+.shift-card.is-unpaid {
+  border-left-color: #6fa8dc;
+  background: linear-gradient(180deg, #1c334d, #13263b);
+}
+
 .table-shift strong,
 .table-shift span,
 .table-shift small {
@@ -576,12 +596,12 @@ textarea {
 }
 
 .shift-card.is-off {
-  border-left-color: #a87900;
-  background: #2c2718;
+  border-left-color: #8cc7ff;
+  background: linear-gradient(180deg, #203b59, #162a40);
 }
 
 .shift-card.is-approved {
-  border-left-color: var(--green);
+  border-left-color: #55c7e8;
 }
 
 .request-flag {

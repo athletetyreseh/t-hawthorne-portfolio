@@ -26,7 +26,7 @@
   let payload = null;
   let weekStart = weekStartMonday(new Date());
   let selectedOfficer = localStorage.getItem("th-officer-schedule-name") || "";
-  let viewMode = localStorage.getItem("th-officer-schedule-view") || "guard";
+  let viewMode = "whole";
   let signatureReady = false;
 
   const dom = {
@@ -253,30 +253,55 @@
 
   function renderTableShift(shift, dateKey) {
     const dayRequests = requestsForOfficer(shift.name).filter((request) => dateInRange(dateKey, request.startDate, request.endDate));
+    const dayOffRequests = dayRequests.filter((request) => ["pto", "unpaid"].includes(request.type) && ["pending", "approved"].includes(request.status));
     const changeRequests = dayRequests.filter((request) => ["late-in", "late-out"].includes(request.type) && request.status === "pending");
     const flag = changeRequests.length ? `<span class="request-flag" title="${escapeHtml(changeRequests.map((request) => requestLabels[request.type]).join(", "))}">${changeRequests.length}</span>` : "";
+    const offRequest = dayOffRequests.find((request) => request.status === "approved") || dayOffRequests[0];
+    if (offRequest) {
+      return `
+        <article class="table-shift is-public-off ${offRequest.type === "pto" ? "is-pto" : "is-unpaid"}">
+          ${flag}
+          <strong>${escapeHtml(requestLabels[offRequest.type])}</strong>
+          <span>${escapeHtml(offRequest.status)} request</span>
+          <small>${escapeHtml(shift.post || shift.site || "Scheduled day")}</small>
+        </article>
+      `;
+    }
     return `
-      <article class="table-shift">
+      <article class="table-shift ${shiftStatusClass(shift)}">
         ${flag}
         <strong>${escapeHtml(formatScheduleTime(shift.start, shift.end))}</strong>
         <span>${escapeHtml(shift.post)}</span>
-        <small>${escapeHtml(shift.shiftName || shift.shiftCode || "Shift")}</small>
+        <small>${escapeHtml(shiftPublicLabel(shift))}</small>
       </article>
     `;
   }
 
   function renderShiftCard(shift, dayOffRequests, changeRequests, showName = false) {
     const offRequest = dayOffRequests.find((request) => request.status === "approved") || dayOffRequests[0];
-    const statusClass = offRequest ? (offRequest.status === "approved" ? "is-off is-approved" : "is-off") : "";
+    const statusClass = offRequest ? `is-off ${offRequest.type === "pto" ? "is-pto" : "is-unpaid"} ${offRequest.status === "approved" ? "is-approved" : ""}` : shiftStatusClass(shift);
     const flag = changeRequests.length ? `<span class="request-flag" title="${escapeHtml(changeRequests.map((request) => requestLabels[request.type]).join(", "))}">${changeRequests.length}</span>` : "";
+    const specialLabel = shiftPublicLabel(shift);
     const body = offRequest
-      ? `${showName ? `<span class="guard-name">${escapeHtml(shift.name)}</span>` : ""}<h3>${escapeHtml(requestLabels[offRequest.type])}</h3><p>${escapeHtml(offRequest.status)} request for this shift</p><small>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</small>`
-      : `${showName ? `<span class="guard-name">${escapeHtml(shift.name)}</span>` : ""}<h3>${escapeHtml(formatScheduleTime(shift.start, shift.end))}</h3><p>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</p><small>${escapeHtml(shift.shiftName || shift.shiftCode || "Shift")}</small>`;
+      ? `${showName ? `<span class="guard-name">${escapeHtml(shift.name)}</span>` : ""}<h3>${escapeHtml(requestLabels[offRequest.type])}</h3><p>${escapeHtml(offRequest.status)} request</p><small>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</small>`
+      : `${showName ? `<span class="guard-name">${escapeHtml(shift.name)}</span>` : ""}<h3>${escapeHtml(formatScheduleTime(shift.start, shift.end))}</h3><p>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</p><small>${escapeHtml(specialLabel)}</small>`;
     return `<article class="shift-card ${statusClass}">${flag}${body}</article>`;
   }
 
   function renderDayOffOnly(request) {
-    return `<article class="shift-card is-off ${request.status === "approved" ? "is-approved" : ""}"><h3>${escapeHtml(requestLabels[request.type])}</h3><p>${escapeHtml(request.status)} request</p><small>${escapeHtml(request.message || "No assigned shift for this day")}</small></article>`;
+    return `<article class="shift-card is-off ${request.type === "pto" ? "is-pto" : "is-unpaid"} ${request.status === "approved" ? "is-approved" : ""}"><h3>${escapeHtml(requestLabels[request.type])}</h3><p>${escapeHtml(request.status)} request</p><small>Day off request</small></article>`;
+  }
+
+  function shiftStatusClass(shift) {
+    if (shift.status === "pto") return "is-schedule-pto";
+    if (shift.status === "training") return "is-training";
+    return "";
+  }
+
+  function shiftPublicLabel(shift) {
+    if (shift.status === "pto") return "PTO";
+    if (shift.status === "training") return "Training";
+    return shift.shiftName || shift.shiftCode || "Shift";
   }
 
   function shiftsForOfficer(officerName, dateKey) {
@@ -320,6 +345,7 @@
 
   function canCombineShift(first, second) {
     if (!first || !second || first.site !== second.site) return false;
+    if ((first.status || "assigned") !== (second.status || "assigned")) return false;
     const firstEnd = minutesFromTime(first.end);
     const secondStart = minutesFromTime(second.start);
     return firstEnd != null && secondStart != null && firstEnd === secondStart;
@@ -487,7 +513,7 @@
     dom.requestHistory.innerHTML = requests.length
       ? requests.map((request) => {
         const range = request.startDate === request.endDate ? fmtFullDate(request.startDate) : `${fmtFullDate(request.startDate)} - ${fmtFullDate(request.endDate)}`;
-        return `<article class="request-item"><div><h3>${escapeHtml(requestLabels[request.type])}</h3><p>${escapeHtml(range)}${request.requestedTime ? ` at ${escapeHtml(request.requestedTime)}` : ""}</p>${request.denialMessage ? `<small>${escapeHtml(request.denialMessage)}</small>` : ""}</div><span class="status-pill ${escapeHtml(request.status)}">${escapeHtml(request.status)}</span></article>`;
+        return `<article class="request-item"><div><h3>${escapeHtml(requestLabels[request.type])}</h3><p>${escapeHtml(range)}${request.requestedTime ? ` at ${escapeHtml(request.requestedTime)}` : ""}</p></div><span class="status-pill ${escapeHtml(request.status)}">${escapeHtml(request.status)}</span></article>`;
       }).join("")
       : '<div class="empty-state">No requests submitted yet.</div>';
   }
@@ -674,7 +700,6 @@
     selectedOfficer = guardName;
     viewMode = "guard";
     localStorage.setItem("th-officer-schedule-name", selectedOfficer);
-    localStorage.setItem("th-officer-schedule-view", viewMode);
     render();
     dom.weekBar.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -750,7 +775,6 @@
   dom.modeButtons.forEach((button) => {
     button.addEventListener("click", () => {
       viewMode = button.dataset.viewMode;
-      localStorage.setItem("th-officer-schedule-view", viewMode);
       render();
     });
   });
