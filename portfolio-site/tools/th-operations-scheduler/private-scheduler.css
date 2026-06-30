@@ -144,6 +144,251 @@
 .history-row span { display: block; }
 .history-row span { margin-top: 2px; color: #68798f; font-size: 11px; }
 
+.officer-admin-button {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 2100;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #0a2b55;
+  border-radius: 4px;
+  color: #fff;
+  background: #174b86;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+  font: 700 11px Tahoma, Arial, sans-serif;
+}
+
+.officer-admin-button span {
+  display: inline-grid;
+  min-width: 19px;
+  height: 19px;
+  place-items: center;
+  margin-left: 6px;
+  border-radius: 50%;
+  color: #174b86;
+  background: #fff;
+}
+
+.officer-admin-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2200;
+  width: min(420px, 100vw);
+  transform: translateX(105%);
+  transition: transform 160ms ease;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  color: #0f1e32;
+  background: #f8fbff;
+  border-left: 1px solid #8aa2c6;
+  box-shadow: -16px 0 45px rgba(0, 0, 0, 0.24);
+  font: 12px Arial, sans-serif;
+}
+
+.officer-admin-panel.open {
+  transform: translateX(0);
+}
+
+.officer-admin-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 16px;
+  color: #fff;
+  background: #123f74;
+}
+
+.officer-admin-head p {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.officer-admin-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.officer-admin-head button {
+  width: 30px;
+  height: 30px;
+  color: #fff;
+  background: rgba(255, 255, 255, .14);
+  border: 1px solid rgba(255, 255, 255, .28);
+}
+
+.officer-link-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  padding: 10px;
+  border-bottom: 1px solid #d5e1f2;
+  background: #edf4fc;
+}
+
+.officer-link-row input {
+  width: 100%;
+  height: 28px;
+  border: 1px solid #9eb3d0;
+  background: #fff;
+}
+
+.officer-link-row button,
+.officer-request-actions button,
+.officer-request-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 27px;
+  padding: 5px 8px;
+  color: #fff;
+  background: #174b86;
+  border: 1px solid #0a2b55;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.officer-request-actions .danger {
+  background: #b42338;
+  border-color: #86162a;
+}
+
+#officerAdminBody {
+  overflow: auto;
+  padding: 12px;
+}
+
+#officerAdminBody h3 {
+  margin: 4px 0 8px;
+  color: #173f73;
+  font-size: 13px;
+}
+
+.officer-request-card {
+  margin-bottom: 9px;
+  padding: 10px;
+  border: 1px solid #c9d7e7;
+  border-left: 4px solid #d28a00;
+  background: #fff;
+}
+
+.officer-request-card.approved { border-left-color: #137a46; }
+.officer-request-card.denied { border-left-color: #b42338; }
+
+.officer-request-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.officer-request-top span {
+  color: #52647c;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.officer-request-card p,
+.officer-request-card small {
+  display: block;
+  margin: 0 0 6px;
+  color: #52647c;
+}
+
+.officer-request-card .denial-note {
+  color: #8a1425;
+  font-weight: 700;
+}
+
+.officer-request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.officer-admin-empty {
+  padding: 12px;
+  color: #52647c;
+  border: 1px dashed #c9d7e7;
+  background: #fff;
+}
+
+.officer-signature-row {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid #d5e1f2;
+}
+
+.officer-signature-row small {
+  display: block;
+  margin-top: 2px;
+  color: #68798f;
+}
+
+.officer-signature-row img {
+  max-width: 120px;
+  max-height: 44px;
+  border: 1px solid #d5e1f2;
+  background: #fff;
+}
+
+.cell .officer-request-flag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 15;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: #ff5fa2;
+  border: 1px solid #b92867;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.cell .officer-dayoff-overlay {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 3px;
+  z-index: 14;
+  padding: 2px 3px;
+  color: #624600;
+  background: #fff1b8;
+  border: 1px solid #d2a600;
+  font-size: 10px;
+  font-weight: 900;
+  text-align: center;
+  pointer-events: none;
+}
+
+.cell .officer-dayoff-overlay.approved {
+  color: #0d5b37;
+  background: #dff5ea;
+  border-color: #58a77d;
+}
+
+.cell .officer-dayoff-overlay small {
+  display: block;
+  font-size: 8px;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
 .mobile-scheduler { display: none; }
 
 @keyframes thPulse {

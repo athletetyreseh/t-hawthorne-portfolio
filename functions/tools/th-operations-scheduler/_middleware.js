@@ -14,6 +14,16 @@ const deniedResponse = (context) => {
 };
 
 export async function onRequest(context) {
+  const pathname = new URL(context.request.url).pathname;
+  if (
+    pathname.startsWith("/tools/th-operations-scheduler/officers/") ||
+    pathname.endsWith("/tools/th-operations-scheduler/officers") ||
+    pathname.endsWith("/tools/th-operations-scheduler/api/officer-public")
+  ) {
+    await ensurePrivateSchema(context.env.SCHEDULER_DB);
+    return context.next();
+  }
+
   const authentication = await authenticateAccessRequest(context);
   if (authentication.response) return authentication.response;
   const ownerEmail = ownerEmailFor(context);
