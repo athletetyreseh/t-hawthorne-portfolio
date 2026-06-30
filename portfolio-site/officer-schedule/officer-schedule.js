@@ -11,10 +11,16 @@
     "late-out": "Early leave"
   };
   const timeLabels = {
-    pto: "Requested time",
-    unpaid: "Requested time",
+    pto: "",
+    unpaid: "",
     "late-in": "Late arrival time",
     "late-out": "Early leave time"
+  };
+  const timeHelp = {
+    pto: "",
+    unpaid: "",
+    "late-in": "Enter the time you are requesting to arrive.",
+    "late-out": "Enter the time you are requesting to leave."
   };
 
   let payload = null;
@@ -37,12 +43,15 @@
     nameSignButton: document.getElementById("nameSignButton"),
     requestButton: document.getElementById("requestButton"),
     signButton: document.getElementById("signButton"),
+    hoursSummary: document.getElementById("hoursSummary"),
     scheduleHead: document.getElementById("scheduleHead"),
     scheduleList: document.getElementById("scheduleList"),
     requestHistory: document.getElementById("requestHistory"),
     requestDialog: document.getElementById("requestDialog"),
     requestForm: document.getElementById("requestForm"),
     requestTimeLabel: document.getElementById("requestTimeLabel"),
+    requestTimeText: document.getElementById("requestTimeText"),
+    requestTimeHelp: document.getElementById("requestTimeHelp"),
     submitRequest: document.getElementById("submitRequest"),
     signatureDialog: document.getElementById("signatureDialog"),
     signatureForm: document.getElementById("signatureForm"),
@@ -109,6 +118,7 @@
     renderOfficerOptions();
     renderWeek();
     renderModeControls();
+    renderHoursSummary();
     renderSchedule();
     renderHistory();
   }
@@ -194,8 +204,8 @@
     const statusClass = offRequest ? (offRequest.status === "approved" ? "is-off is-approved" : "is-off") : "";
     const flag = changeRequests.length ? `<span class="request-flag" title="${escapeHtml(changeRequests.map((request) => requestLabels[request.type]).join(", "))}">${changeRequests.length}</span>` : "";
     const body = offRequest
-      ? `<h3>${showName ? `${escapeHtml(shift.name)} - ` : ""}${escapeHtml(requestLabels[offRequest.type])}</h3><p>${escapeHtml(offRequest.status)} request for this shift</p><small>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</small>`
-      : `<h3>${showName ? `${escapeHtml(shift.name)} · ` : ""}${escapeHtml(formatScheduleTime(shift.start, shift.end))}</h3><p>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</p><small>${escapeHtml(shift.shiftName || shift.shiftCode || "Shift")}</small>`;
+      ? `${showName ? `<span class="guard-name">${escapeHtml(shift.name)}</span>` : ""}<h3>${escapeHtml(requestLabels[offRequest.type])}</h3><p>${escapeHtml(offRequest.status)} request for this shift</p><small>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</small>`
+      : `${showName ? `<span class="guard-name">${escapeHtml(shift.name)}</span>` : ""}<h3>${escapeHtml(formatScheduleTime(shift.start, shift.end))}</h3><p>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</p><small>${escapeHtml(shift.shiftName || shift.shiftCode || "Shift")}</small>`;
     return `<article class="shift-card ${statusClass}">${flag}${body}</article>`;
   }
 
@@ -242,6 +252,62 @@
       });
     }
     return shifts.sort((a, b) => String(a.start).localeCompare(String(b.start)) || a.name.localeCompare(b.name));
+  }
+
+  function hoursForShift(shift) {
+    if (shift.status !== "assigned" || !shift.start || !shift.end) return 0;
+    const start = minutesFromTime(shift.start);
+    const end = minutesFromTime(shift.end);
+    if (start == null || end == null) return 0;
+    const normalizedEnd = end <= start ? end + 1440 : end;
+    return (normalizedEnd - start) / 60;
+  }
+
+  function minutesFromTime(value) {
+    const digits = String(value || "").replace(/\D/g, "");
+    if (digits.length < 3) return null;
+    const padded = digits.padStart(4, "0").slice(0, 4);
+    const hours = Number(padded.slice(0, 2));
+    const minutes = Number(padded.slice(2));
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+    return hours * 60 + minutes;
+  }
+
+  function weeklyHoursByOfficer() {
+    const totals = new Map();
+    for (const date of weekDates().map(iso)) {
+      for (const shift of shiftsForDate(date)) {
+        const key = normalizeName(shift.name);
+        const current = totals.get(key) || { name: shift.name, total: 0 };
+        current.total += hoursForShift(shift);
+        totals.set(key, current);
+      }
+    }
+    return [...totals.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  function renderHoursSummary() {
+    const totals = weeklyHoursByOfficer();
+    if (viewMode === "whole") {
+      dom.hoursSummary.innerHTML = totals.length
+        ? totals.map(renderHourTile).join("")
+        : '<div class="empty-state">No scheduled hours for this week.</div>';
+      return;
+    }
+    const officer = currentOfficer();
+    const total = totals.find((item) => normalizeName(item.name) === normalizeName(officer.name)) || { name: officer.name, total: 0 };
+    dom.hoursSummary.innerHTML = renderHourTile(total);
+  }
+
+  function renderHourTile(item) {
+    const total = roundHours(item.total);
+    const ot = roundHours(Math.max(0, item.total - 40));
+    return `<article class="hour-tile"><span>${escapeHtml(item.name || "Scheduled hours")}</span><strong>${total} hrs</strong><small>OT: <b class="ot-hours">${ot} hrs</b></small></article>`;
+  }
+
+  function roundHours(value) {
+    const rounded = Math.round(Number(value || 0) * 100) / 100;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
   }
 
   function visibleOfficers() {
@@ -328,9 +394,12 @@
 
   function updateRequestTimeLabel() {
     const type = dom.requestForm.elements.type.value;
-    const label = timeLabels[type] || "Requested time";
-    dom.requestTimeLabel.firstChild.textContent = label;
-    dom.requestForm.elements.requestedTime.toggleAttribute("required", type === "late-in" || type === "late-out");
+    const usesTime = type === "late-in" || type === "late-out";
+    dom.requestTimeLabel.classList.toggle("is-hidden", !usesTime);
+    dom.requestTimeText.textContent = timeLabels[type] || "";
+    dom.requestTimeHelp.textContent = timeHelp[type] || "";
+    dom.requestForm.elements.requestedTime.toggleAttribute("required", usesTime);
+    if (!usesTime) dom.requestForm.elements.requestedTime.value = "";
   }
 
   function weekTone() {
@@ -347,6 +416,7 @@
     event.preventDefault();
     const officer = currentOfficer();
     const data = new FormData(dom.requestForm);
+    const type = data.get("type");
     dom.submitRequest.disabled = true;
     try {
       const response = await fetch(API, {
@@ -355,10 +425,10 @@
         body: JSON.stringify({
           officerName: officer.name,
           officerEmail: officer.email,
-          type: data.get("type"),
+          type,
           startDate: data.get("startDate"),
           endDate: data.get("endDate"),
-          requestedTime: data.get("requestedTime"),
+          requestedTime: type === "late-in" || type === "late-out" ? data.get("requestedTime") : "",
           message: data.get("message")
         })
       });

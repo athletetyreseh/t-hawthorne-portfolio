@@ -5,9 +5,9 @@
   const PUBLIC_LINK = `${location.origin}/officer-schedule/`;
   const requestLabels = {
     pto: "PTO",
-    unpaid: "Unpaid",
-    "late-in": "Later in",
-    "late-out": "Early leave"
+    unpaid: "Unpaid Day Off",
+    "late-in": "Late Arrival",
+    "late-out": "Early Leave"
   };
 
   let officerData = { requests: [], acknowledgements: [], officers: [] };
@@ -101,7 +101,7 @@
   function renderRequest(request) {
     const range = request.startDate === request.endDate ? shortDate(request.startDate) : `${shortDate(request.startDate)} - ${shortDate(request.endDate)}`;
     const email = request.officerEmail || emailForOfficer(request.officerName);
-    const subject = encodeURIComponent("Schedule request update");
+    const subject = encodeURIComponent(emailSubjectForRequest(request));
     const body = encodeURIComponent(request.denialMessage || `Your ${requestLabels[request.type]} request for ${range} was reviewed.`);
     return `
       <article class="officer-request-card ${escapeHtml(request.status)}">
@@ -118,6 +118,24 @@
         </div>
       </article>
     `;
+  }
+
+  function emailSubjectForRequest(request) {
+    const label = requestLabels[request.type] || "Schedule";
+    const status = request.status === "approved" ? "Approved" : request.status === "denied" ? "Denied" : "Pending";
+    return `${label} Request ${status} ${subjectDateRange(request)}`;
+  }
+
+  function subjectDateRange(request) {
+    const start = subjectDate(request.startDate);
+    const end = subjectDate(request.endDate);
+    return start === end ? start : `${start} to ${end}`;
+  }
+
+  function subjectDate(value) {
+    if (!value) return "";
+    const [year, month, day] = String(value).split("-");
+    return `${month}-${day}-${year}`;
   }
 
   function renderSignatures() {
