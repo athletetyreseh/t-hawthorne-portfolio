@@ -44,3 +44,21 @@ export async function onRequestPatch(context) {
     return privateErrorResponse(error);
   }
 }
+
+export async function onRequestDelete(context) {
+  try {
+    if (!requireSameOrigin(context.request)) return json({ error: "Invalid request origin" }, 403);
+    await ensureOfficerScheduleSchema(context.env.SCHEDULER_DB);
+    const body = await parseJson(context.request, 10_000);
+    const id = cleanText(body.id, 80);
+    if (!id) return json({ error: "Request id is required" }, 400);
+
+    const result = await context.env.SCHEDULER_DB.prepare(
+      "DELETE FROM officer_schedule_requests WHERE id = ? AND owner_email = ?"
+    ).bind(id, context.data.schedulerUser).run();
+    if (!result.meta?.changes) return json({ error: "Request was not found" }, 404);
+    return json({ ok: true });
+  } catch (error) {
+    return privateErrorResponse(error);
+  }
+}

@@ -259,6 +259,12 @@
   border-color: #86162a;
 }
 
+.officer-request-actions .remove {
+  color: #7a1020;
+  background: #fff;
+  border-color: #b42338;
+}
+
 #officerAdminBody {
   overflow: auto;
   padding: 12px;
@@ -348,45 +354,26 @@
   top: 0;
   left: 0;
   z-index: 15;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   display: grid;
   place-items: center;
   color: #fff;
   background: #ff5fa2;
   border: 1px solid #b92867;
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 900;
   line-height: 1;
+  pointer-events: auto;
+}
+
+.cell .officer-request-flag.has-dayoff {
+  background: #ff3f95;
+  border-color: #9d1454;
 }
 
 .cell .officer-dayoff-overlay {
-  position: absolute;
-  left: 4px;
-  right: 4px;
-  bottom: 3px;
-  z-index: 14;
-  padding: 2px 3px;
-  color: #624600;
-  background: #fff1b8;
-  border: 1px solid #d2a600;
-  font-size: 10px;
-  font-weight: 900;
-  text-align: center;
-  pointer-events: none;
-}
-
-.cell .officer-dayoff-overlay.approved {
-  color: #0d5b37;
-  background: #dff5ea;
-  border-color: #58a77d;
-}
-
-.cell .officer-dayoff-overlay small {
-  display: block;
-  font-size: 8px;
-  line-height: 1.1;
-  text-transform: uppercase;
+  display: none;
 }
 
 .mobile-scheduler { display: none; }

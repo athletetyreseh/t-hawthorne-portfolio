@@ -115,6 +115,7 @@
         <div class="officer-request-actions">
           ${request.status === "pending" ? `<button type="button" data-approve-request="${escapeHtml(request.id)}">Approve</button><button class="danger" type="button" data-deny-request="${escapeHtml(request.id)}">Deny</button>` : ""}
           ${email ? `<a href="mailto:${escapeHtml(email)}?subject=${subject}&body=${body}">Email</a>` : ""}
+          <button class="remove" type="button" data-delete-request="${escapeHtml(request.id)}">Remove</button>
         </div>
       </article>
     `;
@@ -153,11 +154,13 @@
   async function handlePanelClick(event) {
     const approveId = event.target.closest("[data-approve-request]")?.dataset.approveRequest;
     const denyId = event.target.closest("[data-deny-request]")?.dataset.denyRequest;
+    const deleteId = event.target.closest("[data-delete-request]")?.dataset.deleteRequest;
     if (approveId) await resolveRequest(approveId, "approved", "");
     if (denyId) {
       const message = prompt("Message to officer explaining why this request is denied:");
       if (message && message.trim()) await resolveRequest(denyId, "denied", message.trim());
     }
+    if (deleteId) await deleteRequest(deleteId);
   }
 
   async function resolveRequest(id, status, denialMessage) {
@@ -175,6 +178,22 @@
     await loadOfficerData();
   }
 
+  async function deleteRequest(id) {
+    if (!confirm("Remove this request completely from the officer profile and request list?")) return;
+    const response = await fetch(ADMIN_API, {
+      method: "DELETE",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ id })
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      alert(payload.error || "Request could not be removed.");
+      return;
+    }
+    await loadOfficerData();
+  }
+
   function applyScheduleMarkers() {
     const table = document.getElementById("scheduleTable");
     if (!table || !officerData.requests.length || typeof state === "undefined") return;
@@ -187,11 +206,10 @@
       const requests = requestsForCell(assignment.name, cell.dataset.key);
       const dayOff = requests.find((request) => ["pto", "unpaid"].includes(request.type) && ["pending", "approved"].includes(request.status));
       const changes = requests.filter((request) => ["late-in", "late-out"].includes(request.type) && request.status === "pending");
-      if (changes.length) {
-        cell.insertAdjacentHTML("afterbegin", `<span class="officer-request-flag" title="${escapeHtml(changes.map((request) => requestLabels[request.type]).join(", "))}">${changes.length}</span>`);
-      }
-      if (dayOff) {
-        cell.insertAdjacentHTML("beforeend", `<span class="officer-dayoff-overlay ${escapeHtml(dayOff.status)}">${escapeHtml(requestLabels[dayOff.type])}<small>${escapeHtml(dayOff.status)}</small></span>`);
+      const markers = [...changes, ...(dayOff ? [dayOff] : [])];
+      if (markers.length) {
+        const title = markers.map((request) => `${requestLabels[request.type]} (${request.status})`).join(", ");
+        cell.insertAdjacentHTML("afterbegin", `<span class="officer-request-flag ${dayOff ? "has-dayoff" : ""}" title="${escapeHtml(title)}">${markers.length}</span>`);
       }
     });
   }
