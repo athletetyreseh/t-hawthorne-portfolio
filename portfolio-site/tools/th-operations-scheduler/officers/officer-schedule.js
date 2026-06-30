@@ -658,42 +658,24 @@
     }
   }
 
-  async function downloadSitePng(site) {
-    const section = document.getElementById(`site-${siteId(site)}`);
-    if (!section) return;
-    await downloadElementPng(section, `${siteId(site)}-${iso(weekStart)}.png`);
+  function downloadSitePng(site) {
+    try {
+      const canvas = renderSchedulePngCanvas(site);
+      downloadCanvasPng(canvas, `${siteId(site)}-${iso(weekStart)}.png`);
+    } catch (error) {
+      console.error(error);
+      setStatus(`Could not download ${site} schedule.`);
+    }
   }
 
-  async function downloadGuardPng(site, guardName) {
-    const row = [...dom.scheduleList.querySelectorAll("tr[data-site][data-guard]")]
-      .find((item) => item.dataset.site === site && item.dataset.guard === guardName);
-    const section = document.getElementById(`site-${siteId(site)}`);
-    if (!row || !section) return;
-    const wrapper = document.createElement("section");
-    wrapper.className = "site-schedule-section export-single-guard";
-    wrapper.innerHTML = `
-      <div class="site-schedule-head">
-        <div>
-          <p class="eyebrow">${escapeHtml(site)}</p>
-          <h2>${escapeHtml(guardName)} | Week of ${escapeHtml(fmtDate(weekStart))}</h2>
-        </div>
-      </div>
-      <div class="site-table-scroll">
-        <table class="whole-schedule-table">
-          ${section.querySelector("thead").outerHTML}
-          <tbody></tbody>
-        </table>
-      </div>
-    `;
-    wrapper.querySelector("tbody").append(row.cloneNode(true));
-    wrapper.querySelectorAll("button").forEach((button) => button.remove());
-    wrapper.style.position = "fixed";
-    wrapper.style.left = "-10000px";
-    wrapper.style.top = "0";
-    wrapper.style.width = `${Math.max(section.scrollWidth, 1100)}px`;
-    document.body.append(wrapper);
-    await downloadElementPng(wrapper, `${siteId(site)}-${guardName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${iso(weekStart)}.png`);
-    wrapper.remove();
+  function downloadGuardPng(site, guardName) {
+    try {
+      const canvas = renderSchedulePngCanvas(site, guardName);
+      downloadCanvasPng(canvas, `${siteId(site)}-${guardName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${iso(weekStart)}.png`);
+    } catch (error) {
+      console.error(error);
+      setStatus(`Could not download ${guardName}'s schedule.`);
+    }
   }
 
   function viewGuardSchedule(guardName) {
@@ -704,56 +686,175 @@
     dom.weekBar.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  async function downloadElementPng(element, fileName) {
-    const clone = element.cloneNode(true);
-    clone.querySelectorAll("button").forEach((button) => button.remove());
-    clone.querySelectorAll(".site-table-scroll").forEach((item) => {
-      item.style.overflow = "visible";
-    });
-    const width = Math.ceil(Math.max(element.scrollWidth, element.getBoundingClientRect().width, 900));
-    const height = Math.ceil(Math.max(element.scrollHeight, element.getBoundingClientRect().height, 300));
-    clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-    clone.style.width = `${width}px`;
-    clone.style.minHeight = `${height}px`;
-    clone.style.background = "#172233";
+  function renderSchedulePngCanvas(site, guardName = "") {
+    const dates = weekDates();
+    const guardFilter = normalizeName(guardName);
+    const guards = guardsForSite(site).filter((guard) => !guardFilter || normalizeName(guard.name) === guardFilter);
+    if (guardName && !guards.length) throw new Error("Guard was not found for this site.");
 
-    const css = stylesheetText();
-    const html = new XMLSerializer().serializeToString(clone);
-    const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-        <foreignObject width="100%" height="100%">
-          <div xmlns="http://www.w3.org/1999/xhtml">
-            <style>${css}</style>
-            ${html}
-          </div>
-        </foreignObject>
-      </svg>
-    `;
-    const image = new Image();
-    const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    try {
-      await new Promise((resolve, reject) => {
-        image.onload = resolve;
-        image.onerror = reject;
-        image.src = url;
+    const nameW = 230;
+    const dayW = 186;
+    const margin = 18;
+    const titleH = 54;
+    const headH = 48;
+    const rowGap = 0;
+    const rows = (guards.length ? guards : [{ name: "No assignments" }]).map((guard) => {
+      const cells = dates.map((date) => exportCellItems(site, guard.name, iso(date)));
+      const maxCards = Math.max(1, ...cells.map((items) => items.length));
+      return { guard, cells, height: Math.max(96, 18 + maxCards * 76) };
+    });
+    const width = margin * 2 + nameW + dayW * 7;
+    const height = margin * 2 + titleH + headH + rows.reduce((sum, row) => sum + row.height + rowGap, 0);
+    const scale = 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    const context = canvas.getContext("2d");
+    context.scale(scale, scale);
+
+    context.fillStyle = "#101721";
+    context.fillRect(0, 0, width, height);
+    context.fillStyle = "#eaf2ff";
+    context.font = "800 24px Arial, sans-serif";
+    context.fillText(`${site} Schedule`, margin, margin + 4);
+    context.fillStyle = "#9eb3cc";
+    context.font = "700 14px Arial, sans-serif";
+    context.fillText(`${guardName ? `${guardName} | ` : ""}Week of ${fmtDate(dates[0])} - ${fmtDate(dates[6])}`, margin, margin + 34);
+
+    let y = margin + titleH;
+    drawBox(context, margin, y, nameW, headH, "#223047", "#36577d");
+    drawCenteredText(context, "Guard", margin, y + 16, nameW, "#ffffff", "800 13px Arial, sans-serif");
+    dates.forEach((date, index) => {
+      const x = margin + nameW + index * dayW;
+      drawBox(context, x, y, dayW, headH, "#1f5f97", "#36577d");
+      drawCenteredText(context, dayNames[date.getDay()], x, y + 9, dayW, "#ffffff", "800 13px Arial, sans-serif");
+      drawCenteredText(context, fmtDate(date), x, y + 26, dayW, "#c3d9f0", "700 12px Arial, sans-serif");
+    });
+    y += headH;
+
+    for (const row of rows) {
+      const guard = row.guard;
+      const hours = weeklyHoursForGuard(guard.name, site);
+      drawBox(context, margin, y, nameW, row.height, "#182437", "#334761");
+      context.fillStyle = "#ffffff";
+      context.font = "800 13px Arial, sans-serif";
+      drawWrappedText(context, guard.name, margin + 10, y + 12, nameW - 20, 17, 3);
+      if (guards.length) {
+        context.fillStyle = hours.ot > 0 ? "#ffcc66" : "#eaf2ff";
+        context.font = "900 17px Arial, sans-serif";
+        context.fillText(`${roundHours(hours.total)} hrs`, margin + 10, y + 54);
+        context.fillStyle = "#7dbdf1";
+        context.font = "800 12px Arial, sans-serif";
+        context.fillText(`OT: ${roundHours(hours.ot)} hrs`, margin + 10, y + 75);
+      }
+
+      row.cells.forEach((items, index) => {
+        const x = margin + nameW + index * dayW;
+        drawBox(context, x, y, dayW, row.height, "#101a28", "#334761");
+        if (!items.length) {
+          drawBox(context, x + 8, y + 10, dayW - 16, 56, "#121b29", "#344762");
+          drawCenteredText(context, "OFF", x, y + 29, dayW, "#7f91a8", "800 13px Arial, sans-serif");
+          return;
+        }
+        let cardY = y + 9;
+        for (const item of items) {
+          drawExportShift(context, item, x + 8, cardY, dayW - 16, 66);
+          cardY += 76;
+        }
       });
-      const canvas = document.createElement("canvas");
-      canvas.width = width * 2;
-      canvas.height = height * 2;
-      const context = canvas.getContext("2d");
-      context.scale(2, 2);
-      context.fillStyle = "#172233";
-      context.fillRect(0, 0, width, height);
-      context.drawImage(image, 0, 0);
-      const pngUrl = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = pngUrl;
-      link.download = fileName;
-      link.click();
-    } finally {
-      URL.revokeObjectURL(url);
+      y += row.height + rowGap;
     }
+    return canvas;
+  }
+
+  function exportCellItems(site, guardName, dateKey) {
+    if (!guardName || guardName === "No assignments") return [];
+    return combineContinuousShifts(shiftsForOfficer(guardName, dateKey).filter((shift) => shift.site === site)).map((shift) => {
+      const dayRequests = requestsForOfficer(shift.name).filter((request) => dateInRange(dateKey, request.startDate, request.endDate));
+      const dayOffRequests = dayRequests.filter((request) => ["pto", "unpaid"].includes(request.type) && ["pending", "approved"].includes(request.status));
+      const offRequest = dayOffRequests.find((request) => request.status === "approved") || dayOffRequests[0];
+      if (offRequest) {
+        return {
+          status: offRequest.type,
+          title: requestLabels[offRequest.type],
+          detail: `${offRequest.status} request`,
+          note: shift.post || shift.site || "Scheduled day"
+        };
+      }
+      return {
+        status: shift.status || "assigned",
+        title: formatScheduleTime(shift.start, shift.end),
+        detail: shift.post,
+        note: shiftPublicLabel(shift)
+      };
+    });
+  }
+
+  function drawExportShift(context, item, x, y, width, height) {
+    const colors = exportShiftColors(item.status);
+    drawBox(context, x, y, width, height, colors.fill, colors.stroke);
+    context.fillStyle = colors.bar;
+    context.fillRect(x, y, 5, height);
+    context.fillStyle = "#ffffff";
+    context.font = "800 13px Arial, sans-serif";
+    drawWrappedText(context, item.title, x + 11, y + 8, width - 18, 15, 1);
+    context.fillStyle = "#c0cee1";
+    context.font = "700 11px Arial, sans-serif";
+    drawWrappedText(context, item.detail, x + 11, y + 29, width - 18, 13, 2);
+    context.fillStyle = "#91a7c0";
+    context.font = "800 10px Arial, sans-serif";
+    drawWrappedText(context, item.note, x + 11, y + 51, width - 18, 12, 1);
+  }
+
+  function exportShiftColors(status) {
+    if (status === "training") return { fill: "#264360", stroke: "#3f6f93", bar: "#55c7e8" };
+    if (status === "pto") return { fill: "#203b59", stroke: "#3c638c", bar: "#8cc7ff" };
+    if (status === "unpaid") return { fill: "#1c334d", stroke: "#355a80", bar: "#6fa8dc" };
+    return { fill: "#223047", stroke: "#334761", bar: "#1f6fb7" };
+  }
+
+  function drawBox(context, x, y, width, height, fill, stroke = "#334761") {
+    context.fillStyle = fill;
+    context.fillRect(x, y, width, height);
+    context.strokeStyle = stroke;
+    context.lineWidth = 1;
+    context.strokeRect(x, y, width, height);
+  }
+
+  function drawCenteredText(context, text, x, y, width, color, font) {
+    context.fillStyle = color;
+    context.font = font;
+    context.textAlign = "center";
+    context.fillText(String(text || ""), x + width / 2, y);
+    context.textAlign = "left";
+  }
+
+  function drawWrappedText(context, text, x, y, maxWidth, lineHeight, maxLines = 2) {
+    const words = String(text || "").split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = "";
+    for (const word of words) {
+      const next = line ? `${line} ${word}` : word;
+      if (context.measureText(next).width <= maxWidth || !line) {
+        line = next;
+      } else {
+        lines.push(line);
+        line = word;
+      }
+      if (lines.length === maxLines) break;
+    }
+    if (line && lines.length < maxLines) lines.push(line);
+    lines.forEach((value, index) => context.fillText(value, x, y + index * lineHeight));
+  }
+
+  function downloadCanvasPng(canvas, fileName) {
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = fileName;
+    link.rel = "noopener";
+    document.body.append(link);
+    link.click();
+    link.remove();
   }
 
   function stylesheetText() {
