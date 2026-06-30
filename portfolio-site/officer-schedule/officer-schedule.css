@@ -17,6 +17,10 @@
 
 * { box-sizing: border-box; }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   color: var(--ink);
@@ -415,11 +419,11 @@ textarea {
 .whole-schedule-table .guard-column,
 .whole-schedule-table .guard-cell {
   width: 178px;
-  background: #2a2740;
+  background: linear-gradient(180deg, #223047, #182437);
 }
 
 .whole-schedule-table .guard-cell {
-  color: #fff4cf;
+  color: #dceaff;
 }
 
 .guard-cell strong,
@@ -435,30 +439,58 @@ textarea {
 
 .guard-cell span {
   margin-top: 5px;
-  color: #ffdddd;
+  color: #eaf2ff;
   font-size: 14px;
   font-weight: 900;
 }
 
 .guard-cell span.has-ot {
-  color: #ff8a8a;
+  color: #ffcc66;
 }
 
 .guard-cell small {
   margin-top: 3px;
-  color: #ffd166;
+  color: #7dbdf1;
   font-weight: 800;
 }
 
-.guard-cell button {
-  min-height: 26px;
+.guard-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   margin-top: 8px;
-  padding: 3px 8px;
-  color: #cfe8ff;
-  background: #111b29;
-  border: 1px solid #3c5776;
+}
+
+.guard-actions button {
+  min-height: 30px;
   border-radius: 4px;
   font-size: 11px;
+}
+
+.guard-view-button {
+  padding: 0 10px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2579bf, #155084);
+  border: 1px solid #4f91ca;
+}
+
+.guard-download-button {
+  width: 32px;
+  padding: 0;
+  color: #d9efff;
+  background: #111b29;
+  border: 1px solid #3c5776;
+}
+
+.guard-download-button svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: middle;
 }
 
 .table-shift {

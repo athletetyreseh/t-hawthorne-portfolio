@@ -229,7 +229,7 @@
     const hours = weeklyHoursForGuard(guard.name, site);
     const cells = weekDates().map((date) => {
       const dateKey = iso(date);
-      const shifts = shiftsForOfficer(guard.name, dateKey).filter((shift) => shift.site === site);
+      const shifts = combineContinuousShifts(shiftsForOfficer(guard.name, dateKey).filter((shift) => shift.site === site));
       const cards = shifts.map((shift) => renderTableShift(shift, dateKey)).join("");
       return `<td>${cards || '<span class="off-word">OFF</span>'}</td>`;
     }).join("");
@@ -239,7 +239,12 @@
           <strong>${escapeHtml(guard.name)}</strong>
           <span class="${hours.ot > 0 ? "has-ot" : ""}">${roundHours(hours.total)} hrs</span>
           <small>OT: ${roundHours(hours.ot)} hrs</small>
-          <button type="button" data-download-guard="${escapeHtml(guard.name)}" data-download-guard-site="${escapeHtml(site)}">PNG</button>
+          <div class="guard-actions">
+            <button class="guard-view-button" type="button" data-view-guard="${escapeHtml(guard.name)}">View</button>
+            <button class="guard-download-button" type="button" data-download-guard="${escapeHtml(guard.name)}" data-download-guard-site="${escapeHtml(site)}" aria-label="Download ${escapeHtml(guard.name)} schedule">
+              <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" /></svg>
+            </button>
+          </div>
         </td>
         ${cells}
       </tr>
@@ -294,6 +299,35 @@
       });
     }
     return shifts.sort((a, b) => String(a.start).localeCompare(String(b.start)));
+  }
+
+  function combineContinuousShifts(shifts) {
+    const sorted = [...shifts].sort((a, b) => (minutesFromTime(a.start) ?? 0) - (minutesFromTime(b.start) ?? 0));
+    const combined = [];
+    for (const shift of sorted) {
+      const previous = combined[combined.length - 1];
+      if (previous && canCombineShift(previous, shift)) {
+        previous.end = shift.end || previous.end;
+        previous.post = uniqueJoin(previous.post, shift.post);
+        previous.shiftName = uniqueJoin(previous.shiftName || previous.shiftCode, shift.shiftName || shift.shiftCode);
+        previous.shiftCode = uniqueJoin(previous.shiftCode, shift.shiftCode);
+      } else {
+        combined.push({ ...shift });
+      }
+    }
+    return combined;
+  }
+
+  function canCombineShift(first, second) {
+    if (!first || !second || first.site !== second.site) return false;
+    const firstEnd = minutesFromTime(first.end);
+    const secondStart = minutesFromTime(second.start);
+    return firstEnd != null && secondStart != null && firstEnd === secondStart;
+  }
+
+  function uniqueJoin(...values) {
+    const parts = values.flatMap((value) => String(value || "").split(" + ")).map((value) => value.trim()).filter(Boolean);
+    return [...new Set(parts)].join(" + ");
   }
 
   function shiftsForDate(dateKey) {
@@ -376,13 +410,11 @@
   }
 
   function renderHoursSummary() {
-    const totals = weeklyHoursByOfficer();
     if (viewMode === "whole") {
-      dom.hoursSummary.innerHTML = totals.length
-        ? totals.map(renderHourTile).join("")
-        : '<div class="empty-state">No scheduled hours for this week.</div>';
+      dom.hoursSummary.innerHTML = "";
       return;
     }
+    const totals = weeklyHoursByOfficer();
     const officer = currentOfficer();
     const total = totals.find((item) => normalizeName(item.name) === normalizeName(officer.name)) || { name: officer.name, total: 0 };
     dom.hoursSummary.innerHTML = renderHourTile(total);
@@ -638,6 +670,15 @@
     wrapper.remove();
   }
 
+  function viewGuardSchedule(guardName) {
+    selectedOfficer = guardName;
+    viewMode = "guard";
+    localStorage.setItem("th-officer-schedule-name", selectedOfficer);
+    localStorage.setItem("th-officer-schedule-view", viewMode);
+    render();
+    dom.weekBar.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   async function downloadElementPng(element, fileName) {
     const clone = element.cloneNode(true);
     clone.querySelectorAll("button").forEach((button) => button.remove());
@@ -723,8 +764,10 @@
     const site = event.target.closest("[data-download-site]")?.dataset.downloadSite;
     const guard = event.target.closest("[data-download-guard]")?.dataset.downloadGuard;
     const guardSite = event.target.closest("[data-download-guard-site]")?.dataset.downloadGuardSite;
+    const viewGuard = event.target.closest("[data-view-guard]")?.dataset.viewGuard;
     if (site) downloadSitePng(site);
     if (guard && guardSite) downloadGuardPng(guardSite, guard);
+    if (viewGuard) viewGuardSchedule(viewGuard);
   });
   dom.requestForm.elements.type.addEventListener("change", updateRequestTimeLabel);
   const openSignatureDialog = () => {
