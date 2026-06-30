@@ -44,8 +44,10 @@
     requestButton: document.getElementById("requestButton"),
     signButton: document.getElementById("signButton"),
     hoursSummary: document.getElementById("hoursSummary"),
+    scheduleCard: document.querySelector(".schedule-card"),
     scheduleHead: document.getElementById("scheduleHead"),
     scheduleList: document.getElementById("scheduleList"),
+    historyPanel: document.querySelector(".history-panel"),
     requestHistory: document.getElementById("requestHistory"),
     requestDialog: document.getElementById("requestDialog"),
     requestForm: document.getElementById("requestForm"),
@@ -143,6 +145,9 @@
       button.classList.toggle("active", button.dataset.viewMode === viewMode);
     });
     dom.pickerPanel.classList.toggle("whole-mode", viewMode === "whole");
+    dom.pickerPanel.hidden = viewMode === "whole";
+    dom.hoursSummary.hidden = viewMode === "whole";
+    dom.historyPanel.hidden = viewMode === "whole";
   }
 
   function renderSchedule() {
@@ -152,16 +157,15 @@
     }
 
     const dates = weekDates();
-    dom.scheduleList.innerHTML = dates.map((date) => viewMode === "whole" ? renderWholeDayColumn(date) : renderGuardDayColumn(currentOfficer(), date)).join("");
     if (viewMode === "whole") {
-      dom.requestButton.disabled = true;
-      dom.signButton.disabled = true;
-      dom.nameSignButton.disabled = true;
-      dom.requestButton.textContent = "Select per guard to request";
-      dom.signButton.textContent = "Select per guard to sign";
-      dom.nameSignButton.innerHTML = "<span>Whole schedule</span><small>Switch to per guard to sign</small>";
+      dom.scheduleCard.classList.add("whole-schedule-card");
+      dom.scheduleHead.innerHTML = "";
+      dom.scheduleList.innerHTML = renderWholeSchedule();
       return;
     }
+    dom.scheduleCard.classList.remove("whole-schedule-card");
+    renderWeek();
+    dom.scheduleList.innerHTML = dates.map((date) => renderGuardDayColumn(currentOfficer(), date)).join("");
     const officer = currentOfficer();
     const signed = payload.acknowledgements.some((ack) => ack.officerName === officer.name && ack.weekStart === iso(weekStart));
     dom.requestButton.disabled = !officer.name;
@@ -187,16 +191,73 @@
     return `<div class="day-column" data-title="${dayNames[date.getDay()]} ${fmtDate(date)}">${cards || '<div class="off-empty">No assignment</div>'}</div>`;
   }
 
-  function renderWholeDayColumn(date) {
-    const dateKey = iso(date);
-    const shifts = shiftsForDate(dateKey);
-    const cards = shifts.map((shift) => {
-      const dayRequests = requestsForOfficer(shift.name).filter((request) => dateInRange(dateKey, request.startDate, request.endDate));
-      const dayOffRequests = dayRequests.filter((request) => ["pto", "unpaid"].includes(request.type) && ["pending", "approved"].includes(request.status));
-      const changeRequests = dayRequests.filter((request) => ["late-in", "late-out"].includes(request.type) && request.status === "pending");
-      return renderShiftCard(shift, dayOffRequests, changeRequests, true);
+  function renderWholeSchedule() {
+    return ["Cityscape", "Block 23"].map(renderSiteSchedule).join("");
+  }
+
+  function renderSiteSchedule(site) {
+    const guards = guardsForSite(site);
+    const safeId = siteId(site);
+    const body = guards.length
+      ? guards.map((guard) => renderSiteGuardRow(site, guard)).join("")
+      : `<tr><td colspan="8"><div class="empty-state">No ${escapeHtml(site)} assignments this week.</div></td></tr>`;
+    return `
+      <section class="site-schedule-section" id="site-${safeId}" data-site="${escapeHtml(site)}">
+        <div class="site-schedule-head">
+          <div>
+            <p class="eyebrow">${escapeHtml(site)}</p>
+            <h2>Per Guard Schedule</h2>
+          </div>
+          <button class="secondary-button" type="button" data-download-site="${escapeHtml(site)}">Download ${escapeHtml(site)} PNG</button>
+        </div>
+        <div class="site-table-scroll">
+          <table class="whole-schedule-table">
+            <thead>
+              <tr>
+                <th class="guard-column">Guard</th>
+                ${weekDates().map((date) => `<th>${dayNames[date.getDay()]}<small>${fmtDate(date)}</small></th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }
+
+  function renderSiteGuardRow(site, guard) {
+    const hours = weeklyHoursForGuard(guard.name, site);
+    const cells = weekDates().map((date) => {
+      const dateKey = iso(date);
+      const shifts = shiftsForOfficer(guard.name, dateKey).filter((shift) => shift.site === site);
+      const cards = shifts.map((shift) => renderTableShift(shift, dateKey)).join("");
+      return `<td>${cards || '<span class="off-word">OFF</span>'}</td>`;
     }).join("");
-    return `<div class="day-column" data-title="${dayNames[date.getDay()]} ${fmtDate(date)}">${cards || '<div class="off-empty">No assignments</div>'}</div>`;
+    return `
+      <tr data-guard="${escapeHtml(guard.name)}" data-site="${escapeHtml(site)}">
+        <td class="guard-cell">
+          <strong>${escapeHtml(guard.name)}</strong>
+          <span class="${hours.ot > 0 ? "has-ot" : ""}">${roundHours(hours.total)} hrs</span>
+          <small>OT: ${roundHours(hours.ot)} hrs</small>
+          <button type="button" data-download-guard="${escapeHtml(guard.name)}" data-download-guard-site="${escapeHtml(site)}">PNG</button>
+        </td>
+        ${cells}
+      </tr>
+    `;
+  }
+
+  function renderTableShift(shift, dateKey) {
+    const dayRequests = requestsForOfficer(shift.name).filter((request) => dateInRange(dateKey, request.startDate, request.endDate));
+    const changeRequests = dayRequests.filter((request) => ["late-in", "late-out"].includes(request.type) && request.status === "pending");
+    const flag = changeRequests.length ? `<span class="request-flag" title="${escapeHtml(changeRequests.map((request) => requestLabels[request.type]).join(", "))}">${changeRequests.length}</span>` : "";
+    return `
+      <article class="table-shift">
+        ${flag}
+        <strong>${escapeHtml(formatScheduleTime(shift.start, shift.end))}</strong>
+        <span>${escapeHtml(shift.post)}</span>
+        <small>${escapeHtml(shift.shiftName || shift.shiftCode || "Shift")}</small>
+      </article>
+    `;
   }
 
   function renderShiftCard(shift, dayOffRequests, changeRequests, showName = false) {
@@ -254,6 +315,23 @@
     return shifts.sort((a, b) => String(a.start).localeCompare(String(b.start)) || a.name.localeCompare(b.name));
   }
 
+  function guardsForSite(site) {
+    const guards = new Map();
+    for (const date of weekDates().map(iso)) {
+      for (const shift of shiftsForDate(date)) {
+        if (shift.site !== site) continue;
+        const key = normalizeName(shift.name);
+        if (!key || guards.has(key)) continue;
+        guards.set(key, { name: shift.name });
+      }
+    }
+    return [...guards.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  function siteId(site) {
+    return String(site || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  }
+
   function hoursForShift(shift) {
     if (shift.status !== "assigned" || !shift.start || !shift.end) return 0;
     const start = minutesFromTime(shift.start);
@@ -284,6 +362,17 @@
       }
     }
     return [...totals.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  function weeklyHoursForGuard(name, site = "") {
+    let total = 0;
+    for (const date of weekDates().map(iso)) {
+      for (const shift of shiftsForOfficer(name, date)) {
+        if (site && shift.site !== site) continue;
+        total += hoursForShift(shift);
+      }
+    }
+    return { total, ot: Math.max(0, total - 40) };
   }
 
   function renderHoursSummary() {
@@ -511,6 +600,108 @@
     }
   }
 
+  async function downloadSitePng(site) {
+    const section = document.getElementById(`site-${siteId(site)}`);
+    if (!section) return;
+    await downloadElementPng(section, `${siteId(site)}-${iso(weekStart)}.png`);
+  }
+
+  async function downloadGuardPng(site, guardName) {
+    const row = [...dom.scheduleList.querySelectorAll("tr[data-site][data-guard]")]
+      .find((item) => item.dataset.site === site && item.dataset.guard === guardName);
+    const section = document.getElementById(`site-${siteId(site)}`);
+    if (!row || !section) return;
+    const wrapper = document.createElement("section");
+    wrapper.className = "site-schedule-section export-single-guard";
+    wrapper.innerHTML = `
+      <div class="site-schedule-head">
+        <div>
+          <p class="eyebrow">${escapeHtml(site)}</p>
+          <h2>${escapeHtml(guardName)} | Week of ${escapeHtml(fmtDate(weekStart))}</h2>
+        </div>
+      </div>
+      <div class="site-table-scroll">
+        <table class="whole-schedule-table">
+          ${section.querySelector("thead").outerHTML}
+          <tbody></tbody>
+        </table>
+      </div>
+    `;
+    wrapper.querySelector("tbody").append(row.cloneNode(true));
+    wrapper.querySelectorAll("button").forEach((button) => button.remove());
+    wrapper.style.position = "fixed";
+    wrapper.style.left = "-10000px";
+    wrapper.style.top = "0";
+    wrapper.style.width = `${Math.max(section.scrollWidth, 1100)}px`;
+    document.body.append(wrapper);
+    await downloadElementPng(wrapper, `${siteId(site)}-${guardName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${iso(weekStart)}.png`);
+    wrapper.remove();
+  }
+
+  async function downloadElementPng(element, fileName) {
+    const clone = element.cloneNode(true);
+    clone.querySelectorAll("button").forEach((button) => button.remove());
+    clone.querySelectorAll(".site-table-scroll").forEach((item) => {
+      item.style.overflow = "visible";
+    });
+    const width = Math.ceil(Math.max(element.scrollWidth, element.getBoundingClientRect().width, 900));
+    const height = Math.ceil(Math.max(element.scrollHeight, element.getBoundingClientRect().height, 300));
+    clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+    clone.style.width = `${width}px`;
+    clone.style.minHeight = `${height}px`;
+    clone.style.background = "#172233";
+
+    const css = stylesheetText();
+    const html = new XMLSerializer().serializeToString(clone);
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+        <foreignObject width="100%" height="100%">
+          <div xmlns="http://www.w3.org/1999/xhtml">
+            <style>${css}</style>
+            ${html}
+          </div>
+        </foreignObject>
+      </svg>
+    `;
+    const image = new Image();
+    const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    try {
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = reject;
+        image.src = url;
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = width * 2;
+      canvas.height = height * 2;
+      const context = canvas.getContext("2d");
+      context.scale(2, 2);
+      context.fillStyle = "#172233";
+      context.fillRect(0, 0, width, height);
+      context.drawImage(image, 0, 0);
+      const pngUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = pngUrl;
+      link.download = fileName;
+      link.click();
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function stylesheetText() {
+    let css = "";
+    for (const sheet of document.styleSheets) {
+      try {
+        css += [...sheet.cssRules].map((rule) => rule.cssText).join("\n");
+      } catch {
+        // Ignore inaccessible browser/extension stylesheets.
+      }
+    }
+    return css;
+  }
+
   dom.refresh.addEventListener("click", () => loadSchedule(true));
   dom.previous.addEventListener("click", () => { weekStart = addDays(weekStart, -7); render(); });
   dom.next.addEventListener("click", () => { weekStart = addDays(weekStart, 7); render(); });
@@ -528,6 +719,13 @@
     render();
   });
   dom.requestButton.addEventListener("click", openRequestDialog);
+  dom.scheduleList.addEventListener("click", (event) => {
+    const site = event.target.closest("[data-download-site]")?.dataset.downloadSite;
+    const guard = event.target.closest("[data-download-guard]")?.dataset.downloadGuard;
+    const guardSite = event.target.closest("[data-download-guard-site]")?.dataset.downloadGuardSite;
+    if (site) downloadSitePng(site);
+    if (guard && guardSite) downloadGuardPng(guardSite, guard);
+  });
   dom.requestForm.elements.type.addEventListener("change", updateRequestTimeLabel);
   const openSignatureDialog = () => {
     setupSignaturePad();
