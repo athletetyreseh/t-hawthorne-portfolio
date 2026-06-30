@@ -7,7 +7,7 @@
     pto: "PTO",
     unpaid: "Unpaid",
     "late-in": "Later in",
-    "late-out": "Leave later"
+    "late-out": "Early leave"
   };
 
   let officerData = { requests: [], acknowledgements: [], officers: [] };

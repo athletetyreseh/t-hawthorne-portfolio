@@ -10,15 +10,18 @@
 <body>
   <main class="officer-app">
     <header class="hero">
-      <div>
-        <p class="eyebrow">Live officer schedule</p>
-        <h1>Weekly assignments</h1>
-        <p id="syncStatus">Loading schedule...</p>
+      <div class="brand-lockup">
+        <img src="/assets/ipsa-security-services.jpg" alt="IPSA Security Services" />
+        <div>
+          <p class="eyebrow">Live officer schedule</p>
+          <h1>Weekly assignments</h1>
+          <p id="syncStatus">Loading schedule...</p>
+        </div>
       </div>
       <button class="secondary-button" id="refreshButton" type="button">Refresh</button>
     </header>
 
-    <section class="control-bar" aria-label="Schedule controls">
+    <section class="control-bar" id="weekBar" aria-label="Schedule controls">
       <button class="icon-button" id="previousWeek" type="button" aria-label="Previous week">&lt;</button>
       <div class="week-label">
         <span>Week of</span>
@@ -26,6 +29,11 @@
       </div>
       <button class="icon-button" id="nextWeek" type="button" aria-label="Next week">&gt;</button>
       <button class="secondary-button" id="currentWeek" type="button">Current week</button>
+    </section>
+
+    <section class="view-mode-panel" aria-label="Schedule view">
+      <button class="mode-button active" id="perGuardMode" type="button" data-view-mode="guard">Per guard</button>
+      <button class="mode-button" id="wholeScheduleMode" type="button" data-view-mode="whole">Whole schedule</button>
     </section>
 
     <section class="officer-picker-panel">
@@ -64,10 +72,10 @@
         <button class="close-button" type="button" data-close-dialog aria-label="Close">x</button>
       </div>
       <div class="form-grid">
-        <label>Request type<select name="type" required><option value="pto">PTO</option><option value="unpaid">Unpaid day off</option><option value="late-in">Come in later</option><option value="late-out">Leave later</option></select></label>
+        <label>Request type<select name="type" required><option value="pto">PTO</option><option value="unpaid">Unpaid day off</option><option value="late-in">Come in later</option><option value="late-out">Early leave</option></select></label>
         <label>Start date<input type="date" name="startDate" required /></label>
         <label>End date<input type="date" name="endDate" required /></label>
-        <label>Requested time<input type="time" name="requestedTime" /></label>
+        <label id="requestTimeLabel">Requested time<input type="time" name="requestedTime" /></label>
         <label class="wide">Message<textarea name="message" rows="4" placeholder="Add details for the scheduler"></textarea></label>
       </div>
       <div class="dialog-actions">

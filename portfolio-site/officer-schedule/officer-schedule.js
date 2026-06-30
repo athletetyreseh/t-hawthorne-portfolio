@@ -8,12 +8,19 @@
     pto: "PTO",
     unpaid: "Unpaid day off",
     "late-in": "Come in later",
-    "late-out": "Leave later"
+    "late-out": "Early leave"
+  };
+  const timeLabels = {
+    pto: "Requested time",
+    unpaid: "Requested time",
+    "late-in": "Late arrival time",
+    "late-out": "Early leave time"
   };
 
   let payload = null;
   let weekStart = weekStartMonday(new Date());
   let selectedOfficer = localStorage.getItem("th-officer-schedule-name") || "";
+  let viewMode = localStorage.getItem("th-officer-schedule-view") || "guard";
   let signatureReady = false;
 
   const dom = {
@@ -22,8 +29,11 @@
     previous: document.getElementById("previousWeek"),
     next: document.getElementById("nextWeek"),
     current: document.getElementById("currentWeek"),
+    weekBar: document.getElementById("weekBar"),
     weekText: document.getElementById("weekText"),
+    modeButtons: document.querySelectorAll("[data-view-mode]"),
     officer: document.getElementById("officerSelect"),
+    pickerPanel: document.querySelector(".officer-picker-panel"),
     nameSignButton: document.getElementById("nameSignButton"),
     requestButton: document.getElementById("requestButton"),
     signButton: document.getElementById("signButton"),
@@ -32,6 +42,7 @@
     requestHistory: document.getElementById("requestHistory"),
     requestDialog: document.getElementById("requestDialog"),
     requestForm: document.getElementById("requestForm"),
+    requestTimeLabel: document.getElementById("requestTimeLabel"),
     submitRequest: document.getElementById("submitRequest"),
     signatureDialog: document.getElementById("signatureDialog"),
     signatureForm: document.getElementById("signatureForm"),
@@ -70,7 +81,7 @@
   }
 
   function currentOfficer() {
-    return payload?.officers?.find((officer) => officer.name === selectedOfficer) || payload?.officers?.[0] || { name: "", email: "" };
+    return visibleOfficers().find((officer) => officer.name === selectedOfficer) || visibleOfficers()[0] || { name: "", email: "" };
   }
 
   function setStatus(message) {
@@ -84,9 +95,7 @@
       const nextPayload = await response.json();
       if (!response.ok) throw new Error(nextPayload.error || "Schedule could not be loaded");
       payload = nextPayload;
-      if (!selectedOfficer || !payload.officers.some((officer) => officer.name === selectedOfficer)) {
-        selectedOfficer = payload.officers[0]?.name || "";
-      }
+      ensureSelectedOfficer();
       render();
       const when = payload.updatedAt ? new Date(payload.updatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "just now";
       setStatus(`Live schedule loaded. Last scheduler save: ${when}`);
@@ -96,22 +105,34 @@
   }
 
   function render() {
+    ensureSelectedOfficer();
     renderOfficerOptions();
     renderWeek();
+    renderModeControls();
     renderSchedule();
     renderHistory();
   }
 
   function renderOfficerOptions() {
-    dom.officer.innerHTML = payload?.officers?.length
-      ? payload.officers.map((officer) => `<option value="${escapeHtml(officer.name)}" ${officer.name === selectedOfficer ? "selected" : ""}>${escapeHtml(officer.name)}</option>`).join("")
-      : '<option value="">No officers found</option>';
+    const officers = visibleOfficers();
+    dom.officer.innerHTML = officers.length
+      ? officers.map((officer) => `<option value="${escapeHtml(officer.name)}" ${officer.name === selectedOfficer ? "selected" : ""}>${escapeHtml(officer.name)}</option>`).join("")
+      : '<option value="">No scheduled officers this week</option>';
+    dom.officer.disabled = !officers.length || viewMode === "whole";
   }
 
   function renderWeek() {
     const dates = weekDates();
     dom.weekText.textContent = `${fmtDate(dates[0])} - ${fmtDate(dates[6])}`;
     dom.scheduleHead.innerHTML = dates.map((date) => `<div class="day-head"><span>${dayNames[date.getDay()]}</span><strong>${fmtDate(date)}</strong></div>`).join("");
+    dom.weekBar.dataset.weekTone = weekTone();
+  }
+
+  function renderModeControls() {
+    dom.modeButtons.forEach((button) => {
+      button.classList.toggle("active", button.dataset.viewMode === viewMode);
+    });
+    dom.pickerPanel.classList.toggle("whole-mode", viewMode === "whole");
   }
 
   function renderSchedule() {
@@ -120,15 +141,28 @@
       return;
     }
 
-    const officer = currentOfficer();
     const dates = weekDates();
-    dom.scheduleList.innerHTML = dates.map((date) => renderDayColumn(officer, date)).join("");
+    dom.scheduleList.innerHTML = dates.map((date) => viewMode === "whole" ? renderWholeDayColumn(date) : renderGuardDayColumn(currentOfficer(), date)).join("");
+    if (viewMode === "whole") {
+      dom.requestButton.disabled = true;
+      dom.signButton.disabled = true;
+      dom.nameSignButton.disabled = true;
+      dom.requestButton.textContent = "Select per guard to request";
+      dom.signButton.textContent = "Select per guard to sign";
+      dom.nameSignButton.innerHTML = "<span>Whole schedule</span><small>Switch to per guard to sign</small>";
+      return;
+    }
+    const officer = currentOfficer();
     const signed = payload.acknowledgements.some((ack) => ack.officerName === officer.name && ack.weekStart === iso(weekStart));
+    dom.requestButton.disabled = !officer.name;
+    dom.signButton.disabled = !officer.name;
+    dom.nameSignButton.disabled = !officer.name;
+    dom.requestButton.textContent = "Request PTO / change";
     dom.signButton.textContent = signed ? "Update signature" : "Sign read receipt";
     dom.nameSignButton.innerHTML = `<span>${escapeHtml(officer.name || "Select officer")}</span><small>${signed ? "Signed for this week" : "Tap name to sign"}</small>`;
   }
 
-  function renderDayColumn(officer, date) {
+  function renderGuardDayColumn(officer, date) {
     const dateKey = iso(date);
     const shifts = shiftsForOfficer(officer.name, dateKey);
     const dayRequests = requestsForOfficer(officer.name).filter((request) => dateInRange(dateKey, request.startDate, request.endDate));
@@ -143,13 +177,25 @@
     return `<div class="day-column" data-title="${dayNames[date.getDay()]} ${fmtDate(date)}">${cards || '<div class="off-empty">No assignment</div>'}</div>`;
   }
 
-  function renderShiftCard(shift, dayOffRequests, changeRequests) {
+  function renderWholeDayColumn(date) {
+    const dateKey = iso(date);
+    const shifts = shiftsForDate(dateKey);
+    const cards = shifts.map((shift) => {
+      const dayRequests = requestsForOfficer(shift.name).filter((request) => dateInRange(dateKey, request.startDate, request.endDate));
+      const dayOffRequests = dayRequests.filter((request) => ["pto", "unpaid"].includes(request.type) && ["pending", "approved"].includes(request.status));
+      const changeRequests = dayRequests.filter((request) => ["late-in", "late-out"].includes(request.type) && request.status === "pending");
+      return renderShiftCard(shift, dayOffRequests, changeRequests, true);
+    }).join("");
+    return `<div class="day-column" data-title="${dayNames[date.getDay()]} ${fmtDate(date)}">${cards || '<div class="off-empty">No assignments</div>'}</div>`;
+  }
+
+  function renderShiftCard(shift, dayOffRequests, changeRequests, showName = false) {
     const offRequest = dayOffRequests.find((request) => request.status === "approved") || dayOffRequests[0];
     const statusClass = offRequest ? (offRequest.status === "approved" ? "is-off is-approved" : "is-off") : "";
     const flag = changeRequests.length ? `<span class="request-flag" title="${escapeHtml(changeRequests.map((request) => requestLabels[request.type]).join(", "))}">${changeRequests.length}</span>` : "";
     const body = offRequest
-      ? `<h3>${escapeHtml(requestLabels[offRequest.type])}</h3><p>${escapeHtml(offRequest.status)} request for this shift</p><small>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</small>`
-      : `<h3>${escapeHtml(formatScheduleTime(shift.start, shift.end))}</h3><p>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</p><small>${escapeHtml(shift.shiftName || shift.shiftCode || "Shift")}</small>`;
+      ? `<h3>${showName ? `${escapeHtml(shift.name)} - ` : ""}${escapeHtml(requestLabels[offRequest.type])}</h3><p>${escapeHtml(offRequest.status)} request for this shift</p><small>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</small>`
+      : `<h3>${showName ? `${escapeHtml(shift.name)} · ` : ""}${escapeHtml(formatScheduleTime(shift.start, shift.end))}</h3><p>${escapeHtml(shift.site)} | ${escapeHtml(shift.post)}</p><small>${escapeHtml(shift.shiftName || shift.shiftCode || "Shift")}</small>`;
     return `<article class="shift-card ${statusClass}">${flag}${body}</article>`;
   }
 
@@ -166,6 +212,7 @@
       if (!assignment || normalizeName(assignment.name) !== normalized) continue;
       if (["blank", "blocked"].includes(assignment.status || "blank")) continue;
       shifts.push({
+        name: assignment.name || "",
         site: row.site || "",
         post: assignment.position || row.post || "",
         shiftName: row.shiftName || "",
@@ -176,6 +223,50 @@
       });
     }
     return shifts.sort((a, b) => String(a.start).localeCompare(String(b.start)));
+  }
+
+  function shiftsForDate(dateKey) {
+    const shifts = [];
+    for (const row of activeRows()) {
+      const assignment = row.assignments?.[dateKey];
+      if (!assignment?.name || ["blank", "blocked"].includes(assignment.status || "blank")) continue;
+      shifts.push({
+        name: assignment.name,
+        site: row.site || "",
+        post: assignment.position || row.post || "",
+        shiftName: row.shiftName || "",
+        shiftCode: row.shiftCode || "",
+        status: assignment.status || "assigned",
+        start: assignment.start || "",
+        end: assignment.end || ""
+      });
+    }
+    return shifts.sort((a, b) => String(a.start).localeCompare(String(b.start)) || a.name.localeCompare(b.name));
+  }
+
+  function visibleOfficers() {
+    const byName = new Map((payload?.officers || []).map((officer) => [normalizeName(officer.name), officer]));
+    const scheduled = new Map();
+    for (const date of weekDates().map(iso)) {
+      for (const shift of shiftsForDate(date)) {
+        const key = normalizeName(shift.name);
+        if (!key || scheduled.has(key)) continue;
+        scheduled.set(key, byName.get(key) || { name: shift.name, email: "" });
+      }
+    }
+    return [...scheduled.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  function ensureSelectedOfficer() {
+    const officers = visibleOfficers();
+    if (!officers.length) {
+      selectedOfficer = "";
+      return;
+    }
+    if (!officers.some((officer) => officer.name === selectedOfficer)) {
+      selectedOfficer = officers[0].name;
+      localStorage.setItem("th-officer-schedule-name", selectedOfficer);
+    }
   }
 
   function activeRows() {
@@ -200,6 +291,10 @@
   }
 
   function renderHistory() {
+    if (viewMode === "whole") {
+      dom.requestHistory.innerHTML = '<div class="empty-state">Switch to per guard to view one officer request history.</div>';
+      return;
+    }
     const officer = currentOfficer();
     const requests = requestsForOfficer(officer.name).slice(0, 8);
     dom.requestHistory.innerHTML = requests.length
@@ -220,12 +315,31 @@
   }
 
   function openRequestDialog() {
+    if (viewMode === "whole") return;
+    if (!currentOfficer().name) return;
     const today = iso(weekStart);
     dom.requestForm.elements.startDate.value = today;
     dom.requestForm.elements.endDate.value = today;
     dom.requestForm.elements.requestedTime.value = "";
     dom.requestForm.elements.message.value = "";
+    updateRequestTimeLabel();
     dom.requestDialog.showModal();
+  }
+
+  function updateRequestTimeLabel() {
+    const type = dom.requestForm.elements.type.value;
+    const label = timeLabels[type] || "Requested time";
+    dom.requestTimeLabel.firstChild.textContent = label;
+    dom.requestForm.elements.requestedTime.toggleAttribute("required", type === "late-in" || type === "late-out");
+  }
+
+  function weekTone() {
+    const current = weekStartMonday(new Date());
+    const diff = Math.round((weekStart - current) / (7 * 24 * 60 * 60 * 1000));
+    if (diff < 0) return "past";
+    if (diff === 0) return "current";
+    if (diff === 1) return "next";
+    return "future";
   }
 
   async function submitRequest(event) {
@@ -331,12 +445,20 @@
   dom.previous.addEventListener("click", () => { weekStart = addDays(weekStart, -7); render(); });
   dom.next.addEventListener("click", () => { weekStart = addDays(weekStart, 7); render(); });
   dom.current.addEventListener("click", () => { weekStart = weekStartMonday(new Date()); render(); });
+  dom.modeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      viewMode = button.dataset.viewMode;
+      localStorage.setItem("th-officer-schedule-view", viewMode);
+      render();
+    });
+  });
   dom.officer.addEventListener("change", () => {
     selectedOfficer = dom.officer.value;
     localStorage.setItem("th-officer-schedule-name", selectedOfficer);
     render();
   });
   dom.requestButton.addEventListener("click", openRequestDialog);
+  dom.requestForm.elements.type.addEventListener("change", updateRequestTimeLabel);
   const openSignatureDialog = () => {
     setupSignaturePad();
     clearSignature();
