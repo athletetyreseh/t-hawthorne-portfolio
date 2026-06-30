@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <title>Officer Schedule | TH Operations</title>
-  <link rel="stylesheet" href="officer-schedule.css?v=20260630-6" />
+  <link rel="stylesheet" href="officer-schedule.css?v=20260630-7" />
 </head>
 <body>
   <main class="officer-app">
@@ -15,16 +15,19 @@
         <h1>Weekly assignments</h1>
         <p id="syncStatus">Loading schedule...</p>
       </div>
-      <button class="secondary-button" id="refreshButton" type="button">Refresh</button>
+      <button class="secondary-button refresh-button" id="refreshButton" type="button" aria-label="Refresh schedule">
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" /></svg>
+        <span class="button-label">Refresh</span>
+      </button>
     </header>
 
     <section class="control-bar" id="weekBar" aria-label="Schedule controls">
-      <button class="icon-button" id="previousWeek" type="button" aria-label="Previous week">&lt;</button>
+      <button class="icon-button" id="previousWeek" type="button" aria-label="Previous week"><svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m15 18-6-6 6-6" /></svg></button>
       <div class="week-label">
         <span>Week of</span>
         <strong id="weekText"></strong>
       </div>
-      <button class="icon-button" id="nextWeek" type="button" aria-label="Next week">&gt;</button>
+      <button class="icon-button" id="nextWeek" type="button" aria-label="Next week"><svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m9 18 6-6-6-6" /></svg></button>
       <button class="secondary-button" id="currentWeek" type="button">Current week</button>
     </section>
 
@@ -101,6 +104,6 @@
     </form>
   </dialog>
 
-  <script src="officer-schedule.js?v=20260630-6"></script>
+  <script src="officer-schedule.js?v=20260630-7"></script>
 </body>
 </html>

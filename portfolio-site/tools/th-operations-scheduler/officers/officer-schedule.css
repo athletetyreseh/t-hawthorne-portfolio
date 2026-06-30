@@ -260,6 +260,28 @@ textarea {
   border: 1px solid #3c5776;
 }
 
+.refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.refresh-button svg,
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.refresh-button svg {
+  display: none;
+}
+
 .icon-button {
   width: 44px;
   padding: 0;
@@ -749,22 +771,97 @@ form {
 }
 
 @media (max-width: 840px) {
-  .hero,
   .officer-picker-panel,
-  .control-bar,
-  .view-mode-panel,
   .schedule-head,
   .schedule-list {
     grid-template-columns: 1fr;
+  }
+
+  .officer-app {
+    padding: 14px 12px 30px;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 1fr) 42px;
+    gap: 10px;
+    align-items: start;
+    padding: 18px 0 10px;
+  }
+
+  h1 {
+    font-size: clamp(30px, 10vw, 44px);
+  }
+
+  #syncStatus {
+    font-size: 12px;
+  }
+
+  .refresh-button {
+    width: 42px;
+    min-height: 42px;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .refresh-button svg {
+    display: block;
+  }
+
+  .refresh-button .button-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .control-bar {
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    gap: 6px;
+    padding: 7px;
+  }
+
+  .control-bar .week-label {
+    min-width: 0;
+  }
+
+  .control-bar #currentWeek {
+    grid-column: 1 / -1;
+    min-height: 34px;
+  }
+
+  .view-mode-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    padding: 5px;
+  }
+
+  .mode-button {
+    min-height: 38px;
+    padding: 0 8px;
+    font-size: 13px;
   }
 
   .quick-actions {
     justify-content: stretch;
   }
 
-  .quick-actions button,
-  .control-bar button {
+  .quick-actions button {
     width: 100%;
+  }
+
+  .icon-button {
+    width: 42px;
+    min-height: 34px;
+  }
+
+  .week-label span {
+    font-size: 10px;
+  }
+
+  .week-label strong {
+    font-size: 13px;
   }
 
   .day-head {
