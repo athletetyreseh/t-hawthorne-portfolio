@@ -5,16 +5,45 @@
   // layer adds authenticated cloud persistence without creating a second UI.
   const API_ROOT = new URL("api/", window.location.href);
   const SAVE_DELAY = 1000;
+  const ACTIVE_TAB_KEY = "thOperationsSchedulerActiveTab";
+  const ACTIVE_TAB_TTL = 15000;
+  const tabId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const browserSave = save;
   let revision = null;
   let saveTimer = 0;
   let saving = false;
   let dirty = false;
   let hydrating = true;
+  let lastCloudHash = "";
+  let lastFocusCloudLoad = 0;
 
   const $id = (id) => document.getElementById(id);
   const cloneState = (value) => JSON.parse(JSON.stringify(value));
+  const cloudHash = (value) => {
+    const copy = cloneState(value || {});
+    delete copy.view;
+    delete copy.lastSaved;
+    return JSON.stringify(copy);
+  };
   const escapeText = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+
+  const readActiveTab = () => {
+    try { return JSON.parse(localStorage.getItem(ACTIVE_TAB_KEY) || "null"); }
+    catch { return null; }
+  };
+
+  const claimActiveTab = () => {
+    if (document.visibilityState !== "visible") return;
+    try {
+      localStorage.setItem(ACTIVE_TAB_KEY, JSON.stringify({ id: tabId, updatedAt: Date.now() }));
+    } catch {}
+  };
+
+  const isActiveSchedulerTab = () => {
+    if (document.visibilityState !== "visible" || !document.hasFocus()) return false;
+    const active = readActiveTab();
+    return active?.id === tabId && Date.now() - Number(active.updatedAt || 0) < ACTIVE_TAB_TTL;
+  };
 
   const showCurrentWeek = () => {
     const currentMonday = iso(weekStartMonday(new Date()));
@@ -109,6 +138,7 @@
     showCurrentWeek();
     render();
     browserSave(true);
+    lastCloudHash = cloudHash(state);
     hydrating = false;
     dirty = false;
     hideOverlay();
@@ -153,14 +183,23 @@
   };
 
   const scheduleCloudSave = () => {
+    const currentHash = cloudHash(state);
+    if (currentHash === lastCloudHash) {
+      dirty = false;
+      clearTimeout(saveTimer);
+      setStatus(`Cloud saved · r${revision || 0}`, "saved");
+      return;
+    }
     dirty = true;
     clearTimeout(saveTimer);
     setStatus("Saved locally", "saving");
+    if (!isActiveSchedulerTab()) return;
     saveTimer = window.setTimeout(() => persistCloud(false), SAVE_DELAY);
   };
 
-  const persistCloud = async (force = false) => {
+  const persistCloud = async (force = false, retryCount = 0) => {
     if (hydrating || !state.rows?.length) return;
+    if (!force && !isActiveSchedulerTab()) return;
     if (saving) {
       dirty = true;
       return;
@@ -170,22 +209,35 @@
     dirty = false;
     setStatus("Saving to cloud", "saving");
     const snapshot = cloneState(state);
+    const snapshotHash = cloudHash(snapshot);
+    if (!force && snapshotHash === lastCloudHash) {
+      saving = false;
+      setStatus(`Cloud saved · r${revision || 0}`, "saved");
+      return;
+    }
+    const shouldForce = force || isActiveSchedulerTab();
 
     try {
       const response = await fetch(new URL("state", API_ROOT), {
         method: "PUT",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ state: snapshot, baseRevision: revision, force })
+        body: JSON.stringify({ state: snapshot, baseRevision: revision, force: shouldForce })
       });
       const payload = await parseJsonResponse(response);
       if (response.status === 409) {
+        revision = Number(payload.revision || revision || 0);
+        if (isActiveSchedulerTab() && retryCount < 2) {
+          saving = false;
+          return persistCloud(true, retryCount + 1);
+        }
         showConflict(payload.revision, payload.updatedAt);
         setStatus("Save conflict", "error");
         return;
       }
       if (!response.ok) throw new Error(payload.error || `Cloud save failed (${response.status})`);
       revision = Number(payload.revision || revision || 1);
+      lastCloudHash = snapshotHash;
       hideOverlay();
       setStatus(`Cloud saved · r${revision}`, "saved");
     } catch (error) {
@@ -226,13 +278,28 @@
     applyCloudState(payload);
   };
 
+  const refreshCloudOnActivation = () => {
+    claimActiveTab();
+    if (hydrating || saving || cloudOverlay.hidden === false) return;
+    if (dirty) {
+      persistCloud(false);
+      return;
+    }
+    if (Date.now() - lastFocusCloudLoad < 2500) return;
+    lastFocusCloudLoad = Date.now();
+    loadCloudState();
+  };
+
   cloudOverlay.addEventListener("click", async (event) => {
     const action = event.target.closest("[data-cloud-action]")?.dataset.cloudAction;
     const restoreId = event.target.closest("[data-restore-id]")?.dataset.restoreId;
     if (action === "import") $id("jsonFile")?.click();
     if (action === "paste-import") await importPastedJson();
     if (action === "reload") await loadCloudState();
-    if (action === "overwrite") await persistCloud(true);
+    if (action === "overwrite") {
+      claimActiveTab();
+      await persistCloud(true);
+    }
     if (action === "close") hideOverlay();
     if (restoreId) {
       try { await restoreVersion(Number(restoreId)); }
@@ -261,9 +328,20 @@
 
   window.addEventListener("online", () => { if (dirty) persistCloud(false); else loadCloudState(); });
   window.addEventListener("offline", () => setStatus("Offline · saved locally", "offline"));
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") browserSave(true); });
+  window.addEventListener("focus", refreshCloudOnActivation);
+  document.addEventListener("pointerdown", claimActiveTab, true);
+  document.addEventListener("keydown", claimActiveTab, true);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      clearTimeout(saveTimer);
+      browserSave(true);
+      return;
+    }
+    refreshCloudOnActivation();
+  });
 
   setStatus("Loading cloud", "saving");
+  claimActiveTab();
   showCurrentWeek();
   render();
   loadCloudState();

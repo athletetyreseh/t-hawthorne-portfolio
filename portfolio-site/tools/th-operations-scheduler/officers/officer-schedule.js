@@ -2,7 +2,7 @@
   "use strict";
 
   const API = "/officer-schedule/api";
-  const POLL_MS = 8000;
+  const POLL_MS = 2000;
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const requestLabels = {
     pto: "PTO",
@@ -28,6 +28,7 @@
   let selectedOfficer = localStorage.getItem("th-officer-schedule-name") || "";
   let viewMode = "whole";
   let signatureReady = false;
+  let loading = false;
 
   const dom = {
     status: document.getElementById("syncStatus"),
@@ -100,10 +101,14 @@
   }
 
   async function loadSchedule(showLoading = false) {
+    if (loading) return;
+    loading = true;
     if (showLoading) setStatus("Loading schedule...");
     try {
       const response = await fetch(API, { cache: "no-store", headers: { Accept: "application/json" } });
-      const nextPayload = await response.json();
+      const text = await response.text();
+      let nextPayload = {};
+      try { nextPayload = text ? JSON.parse(text) : {}; } catch { nextPayload = { error: text || "Schedule could not be loaded" }; }
       if (!response.ok) throw new Error(nextPayload.error || "Schedule could not be loaded");
       payload = nextPayload;
       ensureSelectedOfficer();
@@ -111,7 +116,9 @@
       const when = payload.updatedAt ? new Date(payload.updatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "just now";
       setStatus(`Live schedule loaded. Last scheduler save: ${when}`);
     } catch (error) {
-      setStatus(error.message);
+      setStatus(payload ? `Live update delayed. Retrying...` : error.message);
+    } finally {
+      loading = false;
     }
   }
 
@@ -393,12 +400,17 @@
   }
 
   function hoursForShift(shift) {
-    if (shift.status !== "assigned" || !shift.start || !shift.end) return 0;
+    if (!isPaidOfficerShift(shift) || !shift.start || !shift.end) return 0;
     const start = minutesFromTime(shift.start);
     const end = minutesFromTime(shift.end);
     if (start == null || end == null) return 0;
     const normalizedEnd = end <= start ? end + 1440 : end;
     return (normalizedEnd - start) / 60;
+  }
+
+  // The officer view totals paid time, independent of the private scheduler's billing totals.
+  function isPaidOfficerShift(shift) {
+    return ["assigned", "escort", "pto", "sick", "training"].includes(shift.status || "assigned");
   }
 
   function minutesFromTime(value) {
@@ -910,5 +922,9 @@
   });
 
   loadSchedule(true);
+  window.addEventListener("focus", () => loadSchedule(false));
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") loadSchedule(false);
+  });
   window.setInterval(() => loadSchedule(false), POLL_MS);
 })();

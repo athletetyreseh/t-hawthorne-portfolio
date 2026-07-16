@@ -1,4 +1,4 @@
-import { json, ownerEmailFor, parseJson } from "./private-access.js";
+import { ensurePrivateSchema, json, ownerEmailFor, parseJson } from "./private-access.js";
 
 export const REQUEST_TYPES = new Set(["pto", "unpaid", "late-in", "late-out"]);
 export const REQUEST_STATUSES = new Set(["pending", "approved", "denied"]);
@@ -84,23 +84,31 @@ export const acknowledgementFromRow = (row, includeSignature = false) => ({
 
 export const loadSchedulerState = async (database, ownerEmail) => {
   const row = await database.prepare(
-    "SELECT state_json, revision, updated_at FROM scheduler_state WHERE owner_email = ?"
+    "SELECT owner_email, state_json, revision, updated_at FROM scheduler_state WHERE owner_email = ?"
   ).bind(ownerEmail).first();
-  if (!row) return { state: null, revision: 0, updatedAt: "" };
+  const scheduleRow = row || await database.prepare(
+    "SELECT owner_email, state_json, revision, updated_at FROM scheduler_state ORDER BY updated_at DESC LIMIT 1"
+  ).first();
+  if (!scheduleRow) return { ownerEmail, state: null, revision: 0, updatedAt: "" };
   try {
-    return { state: JSON.parse(row.state_json), revision: row.revision, updatedAt: row.updated_at };
+    return { ownerEmail: scheduleRow.owner_email || ownerEmail, state: JSON.parse(scheduleRow.state_json), revision: scheduleRow.revision, updatedAt: scheduleRow.updated_at };
   } catch {
-    return { state: null, revision: row.revision, updatedAt: row.updated_at };
+    return { ownerEmail: scheduleRow.owner_email || ownerEmail, state: null, revision: scheduleRow.revision, updatedAt: scheduleRow.updated_at };
   }
 };
 
 export const loadStaffDirectory = async (database) => {
-  const result = await database.prepare(
-    "SELECT full_name, email FROM staff_records WHERE status != 'inactive' ORDER BY full_name COLLATE NOCASE"
-  ).all();
-  const staff = result.results || [];
-  const byName = new Map(staff.map((item) => [String(item.full_name || "").trim().toLowerCase(), String(item.email || "").trim().toLowerCase()]));
-  return { staff, byName };
+  try {
+    const result = await database.prepare(
+      "SELECT full_name, email FROM staff_records WHERE status != 'inactive' ORDER BY full_name COLLATE NOCASE"
+    ).all();
+    const staff = result.results || [];
+    const byName = new Map(staff.map((item) => [String(item.full_name || "").trim().toLowerCase(), String(item.email || "").trim().toLowerCase()]));
+    return { staff, byName };
+  } catch (error) {
+    console.error("Officer schedule staff lookup failed", error);
+    return { staff: [], byName: new Map() };
+  }
 };
 
 export const namesFromSchedule = (state) => {
@@ -156,10 +164,11 @@ const publicState = (state) => state ? ({
 
 export const publicSchedulePayload = async (context, includeSignature = false, includeRequestDetails = false) => {
   const database = context.env.SCHEDULER_DB;
-  const ownerEmail = ownerEmailFor(context);
+  const configuredOwnerEmail = context.data.schedulerUser || ownerEmailFor(context);
+  await ensurePrivateSchema(database);
   await ensureOfficerScheduleSchema(database);
-  const [{ state, revision, updatedAt }, directory] = await Promise.all([
-    loadSchedulerState(database, ownerEmail),
+  const [{ ownerEmail, state, revision, updatedAt }, directory] = await Promise.all([
+    loadSchedulerState(database, configuredOwnerEmail),
     loadStaffDirectory(database)
   ]);
 
