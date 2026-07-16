@@ -533,8 +533,8 @@ textarea {
 
 .table-shift.is-escort,
 .shift-card.is-escort {
-  border-left-color: #d7bd45;
-  background: linear-gradient(180deg, #fff6bf, #eadb83);
+  border-left-color: #a39b5c;
+  background: linear-gradient(180deg, #3a4550, #2c3540);
 }
 
 .table-shift.is-escort strong,
@@ -543,7 +543,7 @@ textarea {
 .shift-card.is-escort h3,
 .shift-card.is-escort p,
 .shift-card.is-escort small {
-  color: #5d4900;
+  color: #e3dfbc;
 }
 
 .table-shift.is-schedule-pto,

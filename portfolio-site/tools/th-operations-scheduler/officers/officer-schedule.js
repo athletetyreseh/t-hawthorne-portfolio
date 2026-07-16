@@ -165,9 +165,11 @@
 
     const dates = weekDates();
     if (viewMode === "whole") {
+      const scrollPositions = wholeScheduleScrollPositions();
       dom.scheduleCard.classList.add("whole-schedule-card");
       dom.scheduleHead.innerHTML = "";
       dom.scheduleList.innerHTML = renderWholeSchedule();
+      restoreWholeScheduleScrollPositions(scrollPositions);
       return;
     }
     dom.scheduleCard.classList.remove("whole-schedule-card");
@@ -200,6 +202,20 @@
 
   function renderWholeSchedule() {
     return ["Cityscape", "Block 23"].map(renderSiteSchedule).join("");
+  }
+
+  function wholeScheduleScrollPositions() {
+    return new Map([...dom.scheduleList.querySelectorAll(".site-schedule-section")].map((section) => [
+      section.dataset.site,
+      section.querySelector(".site-table-scroll")?.scrollLeft || 0
+    ]));
+  }
+
+  function restoreWholeScheduleScrollPositions(positions) {
+    for (const section of dom.scheduleList.querySelectorAll(".site-schedule-section")) {
+      const scrollLeft = positions.get(section.dataset.site);
+      if (scrollLeft) section.querySelector(".site-table-scroll").scrollLeft = scrollLeft;
+    }
   }
 
   function renderSiteSchedule(site) {
@@ -821,7 +837,7 @@
   }
 
   function exportShiftColors(status) {
-    if (status === "escort") return { fill: "#fff6bf", stroke: "#d7bd45", bar: "#b99314" };
+    if (status === "escort") return { fill: "#3a4550", stroke: "#8f8a5a", bar: "#a39b5c" };
     if (status === "training") return { fill: "#264360", stroke: "#3f6f93", bar: "#55c7e8" };
     if (status === "pto") return { fill: "#203b59", stroke: "#3c638c", bar: "#8cc7ff" };
     if (status === "unpaid") return { fill: "#1c334d", stroke: "#355a80", bar: "#6fa8dc" };
