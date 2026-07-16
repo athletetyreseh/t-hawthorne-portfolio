@@ -531,6 +531,21 @@ textarea {
   background: linear-gradient(180deg, #264360, #1a3148);
 }
 
+.table-shift.is-escort,
+.shift-card.is-escort {
+  border-left-color: #d7bd45;
+  background: linear-gradient(180deg, #fff6bf, #eadb83);
+}
+
+.table-shift.is-escort strong,
+.table-shift.is-escort span,
+.table-shift.is-escort small,
+.shift-card.is-escort h3,
+.shift-card.is-escort p,
+.shift-card.is-escort small {
+  color: #5d4900;
+}
+
 .table-shift.is-schedule-pto,
 .shift-card.is-schedule-pto,
 .table-shift.is-pto,

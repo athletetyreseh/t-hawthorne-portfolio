@@ -300,12 +300,14 @@
   }
 
   function shiftStatusClass(shift) {
+    if (shift.status === "escort") return "is-escort";
     if (shift.status === "pto") return "is-schedule-pto";
     if (shift.status === "training") return "is-training";
     return "";
   }
 
   function shiftPublicLabel(shift) {
+    if (shift.status === "escort") return "Escort";
     if (shift.status === "pto") return "PTO";
     if (shift.status === "training") return "Training";
     return shift.shiftName || shift.shiftCode || "Shift";
@@ -819,6 +821,7 @@
   }
 
   function exportShiftColors(status) {
+    if (status === "escort") return { fill: "#fff6bf", stroke: "#d7bd45", bar: "#b99314" };
     if (status === "training") return { fill: "#264360", stroke: "#3f6f93", bar: "#55c7e8" };
     if (status === "pto") return { fill: "#203b59", stroke: "#3c638c", bar: "#8cc7ff" };
     if (status === "unpaid") return { fill: "#1c334d", stroke: "#355a80", bar: "#6fa8dc" };
