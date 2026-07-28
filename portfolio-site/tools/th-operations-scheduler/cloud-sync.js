@@ -361,12 +361,21 @@
   };
   const notesField = () => {
     const input = $id("detailNotes");
-    if (!input || input.tagName === "TEXTAREA") return;
-    const textarea = document.createElement("textarea");
-    textarea.id = "detailNotes";
-    textarea.placeholder = "Add a note for this shift";
-    textarea.value = hasShiftNote({ note: input.value }) ? input.value : "";
-    input.replaceWith(textarea);
+    if (!input) return;
+    let textarea = input;
+    if (input.tagName !== "TEXTAREA") {
+      textarea = document.createElement("textarea");
+      textarea.id = "detailNotes";
+      textarea.placeholder = "Add a note for this shift";
+      textarea.value = hasShiftNote({ note: input.value }) ? input.value : "";
+      input.replaceWith(textarea);
+    }
+    if (textarea.closest(".scheduler-notepad")) return;
+    const panel = document.createElement("section");
+    panel.className = "scheduler-notepad";
+    panel.innerHTML = "<label for=\"detailNotes\">Shift notes</label><p>Use this space to explain changes or add information for Danielle.</p>";
+    textarea.closest(".sd-mini-grid")?.insertAdjacentElement("afterend", panel);
+    panel.append(textarea);
   };
   const tagButton = document.createElement("button");
   tagButton.type = "button";
@@ -374,6 +383,7 @@
   tagButton.id = "tagBoxAction";
   const contextMenu = $id("ctx");
   contextMenu?.querySelector('[data-act="edit"]')?.insertAdjacentElement("afterend", tagButton);
+  tagButton.textContent = "Tag";
 
   document.addEventListener("contextmenu", (event) => {
     const cell = event.target.closest("#scheduleTable .cell");
