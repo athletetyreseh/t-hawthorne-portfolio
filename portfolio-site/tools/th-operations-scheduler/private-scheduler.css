@@ -58,6 +58,55 @@
   background: #0fb3c3;
 }
 
+#detailBack .detailbox {
+  height: min(66dvh, 620px) !important;
+}
+
+#detailBack .sd-top {
+  grid-template-columns: 82px minmax(260px, 1fr) 82px minmax(180px, 0.75fr) 82px minmax(160px, 0.6fr) !important;
+}
+
+#detailGuardEdit {
+  width: min(300px, 34vw) !important;
+  min-width: 220px;
+  height: 28px !important;
+}
+
+#detailGuardCustom {
+  min-width: 145px;
+  height: 28px !important;
+}
+
+.scheduler-notepad {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #9eb1ce;
+  background: #f7fbff;
+}
+
+.scheduler-notepad label {
+  display: block;
+  margin-bottom: 2px;
+  color: #0b2e63;
+  font-weight: 700;
+}
+
+.scheduler-notepad p {
+  margin: 0 0 7px;
+  color: #47617f;
+}
+
+.scheduler-notepad textarea {
+  display: block;
+  width: 100%;
+  min-height: 112px;
+  resize: vertical;
+  padding: 7px 8px;
+  border: 1px solid #718cb6;
+  background: #fff;
+  font: 12px/1.4 Tahoma, Arial, sans-serif;
+}
+
 .private-access-badge {
   display: inline-flex;
   align-items: center;
