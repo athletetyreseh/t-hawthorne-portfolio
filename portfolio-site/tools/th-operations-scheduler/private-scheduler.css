@@ -34,6 +34,7 @@
   height: 8px;
   background: #32e5f0;
   clip-path: polygon(0 0, 73% 0, 100% 50%, 73% 100%, 0 100%, 23% 50%);
+  filter: drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000);
 }
 
 .shift-change-marker.is-tagged.with-pto {
@@ -41,7 +42,7 @@
 }
 
 .shift-change-marker.is-tagged.with-pto::after {
-  background: linear-gradient(90deg, #32e5f0 0 50%, #ff3f95 50% 100%);
+  background: #32e5f0;
 }
 
 .shift-change-marker.has-note {
