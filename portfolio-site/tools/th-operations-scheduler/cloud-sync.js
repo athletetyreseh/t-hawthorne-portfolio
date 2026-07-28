@@ -382,8 +382,20 @@
   tagButton.dataset.act = "tag";
   tagButton.id = "tagBoxAction";
   const contextMenu = $id("ctx");
-  contextMenu?.querySelector('[data-act="edit"]')?.insertAdjacentElement("afterend", tagButton);
+  contextMenu?.prepend(tagButton);
   tagButton.textContent = "Tag";
+
+  const keepContextMenuOnScreen = () => {
+    if (!contextMenu || contextMenu.style.display !== "block") return;
+    const padding = 8;
+    const rect = contextMenu.getBoundingClientRect();
+    const left = Math.max(padding, Math.min(rect.left, window.innerWidth - rect.width - padding));
+    const top = Math.max(padding, Math.min(rect.top, window.innerHeight - rect.height - padding));
+    if (Math.round(rect.left) !== Math.round(left)) contextMenu.style.left = `${left}px`;
+    if (Math.round(rect.top) !== Math.round(top)) contextMenu.style.top = `${top}px`;
+  };
+  new MutationObserver(() => requestAnimationFrame(keepContextMenuOnScreen))
+    .observe(contextMenu, { attributes: true, attributeFilter: ["style"] });
 
   document.addEventListener("contextmenu", (event) => {
     const cell = event.target.closest("#scheduleTable .cell");
@@ -391,6 +403,9 @@
     const assignment = assignmentForCell(cell);
     tagButton.textContent = assignment?.tagged ? "Remove Tag" : "Tag Box";
   }, true);
+  document.addEventListener("contextmenu", (event) => {
+    if (event.target.closest("#scheduleTable .cell")) requestAnimationFrame(keepContextMenuOnScreen);
+  });
   document.addEventListener("click", (event) => {
     if (event.target.closest("#tagBoxAction") !== tagButton) return;
     event.preventDefault();
