@@ -326,6 +326,80 @@
   historyButton.addEventListener("click", showHistory);
   saveButton?.insertAdjacentElement("afterend", historyButton);
 
+  // Scheduler change markers: tags identify post-submission changes, while notes
+  // identify the reason for a shift. A tag intentionally takes visual precedence.
+  const automaticNotes = new Set(["ASSIGNED", "OPEN", "ESCORT", "SICK", "PTO", "TRAINING", "BLANK", "BLOCKED"]);
+  const hasShiftNote = (assignment) => {
+    const note = String(assignment?.note || "").trim();
+    return Boolean(note) && !automaticNotes.has(note.toUpperCase());
+  };
+  const assignmentForCell = (cell) => {
+    const row = getRow(cell.dataset.row);
+    if (!row) return null;
+    return mode === "master" ? row.master[cell.dataset.key] : row.assignments[cell.dataset.key];
+  };
+  const decorateShiftCells = () => {
+    document.querySelectorAll("#scheduleTable .cell").forEach((cell) => {
+      const assignment = assignmentForCell(cell);
+      const tagged = assignment?.tagged === true;
+      const noted = hasShiftNote(assignment);
+      const existing = cell.querySelector(".shift-change-marker");
+      if (!tagged && !noted) {
+        existing?.remove();
+        return;
+      }
+      const className = `shift-change-marker ${tagged ? "is-tagged" : "has-note"}`;
+      const markerText = tagged && noted ? "1" : "";
+      if (existing?.className === className && existing.textContent === markerText) return;
+      existing?.remove();
+      const marker = document.createElement("span");
+      marker.className = className;
+      marker.title = tagged ? (noted ? "Tagged change with a note" : "Tagged change") : "Shift note";
+      marker.textContent = markerText;
+      cell.append(marker);
+    });
+  };
+  const notesField = () => {
+    const input = $id("detailNotes");
+    if (!input || input.tagName === "TEXTAREA") return;
+    const textarea = document.createElement("textarea");
+    textarea.id = "detailNotes";
+    textarea.placeholder = "Add a note for this shift";
+    textarea.value = hasShiftNote({ note: input.value }) ? input.value : "";
+    input.replaceWith(textarea);
+  };
+  const tagButton = document.createElement("button");
+  tagButton.type = "button";
+  tagButton.dataset.act = "tag";
+  tagButton.id = "tagBoxAction";
+  const contextMenu = $id("ctx");
+  contextMenu?.querySelector('[data-act="edit"]')?.insertAdjacentElement("afterend", tagButton);
+
+  document.addEventListener("contextmenu", (event) => {
+    const cell = event.target.closest("#scheduleTable .cell");
+    if (!cell) return;
+    const assignment = assignmentForCell(cell);
+    tagButton.textContent = assignment?.tagged ? "Remove Tag" : "Tag Box";
+  }, true);
+  document.addEventListener("click", (event) => {
+    if (event.target.closest("#tagBoxAction") !== tagButton) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const current = ctxCell || selected;
+    const row = current && getRow(current.row);
+    if (!row) return;
+    const assignment = mode === "master" ? row.master[current.key] : row.assignments[current.key];
+    if (!assignment || assignment.status === "blank" || assignment.status === "blocked") return;
+    withUndo(() => { assignment.tagged = !assignment.tagged; });
+    contextMenu.style.display = "none";
+    render();
+  }, true);
+  new MutationObserver(() => {
+    decorateShiftCells();
+    notesField();
+  }).observe(document.body, { childList: true, subtree: true });
+  decorateShiftCells();
+
   window.addEventListener("online", () => { if (dirty) persistCloud(false); else loadCloudState(); });
   window.addEventListener("offline", () => setStatus("Offline · saved locally", "offline"));
   window.addEventListener("focus", refreshCloudOnActivation);
