@@ -1030,3 +1030,35 @@
   .cloud-overlay { display: none !important; }
   .app { display: flex !important; }
 }
+
+/* Keep shift details compact until the Notes cell icon is opened. */
+#detailBack .detailbox {
+  height: 33vh !important;
+  min-height: 0 !important;
+}
+
+#detailBack .detailbox.notes-open {
+  height: min(66dvh, 620px) !important;
+}
+
+.scheduler-notepad {
+  display: none;
+}
+
+.scheduler-notepad.is-open {
+  display: block;
+}
+
+.scheduler-notes-toggle {
+  width: 100%;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.scheduler-notes-toggle:hover {
+  background: #e6f4ff;
+}
