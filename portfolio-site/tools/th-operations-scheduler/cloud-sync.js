@@ -343,13 +343,14 @@
       const assignment = assignmentForCell(cell);
       const tagged = assignment?.tagged === true;
       const noted = hasShiftNote(assignment);
+      const hasPtoRequest = Boolean(cell.querySelector(".officer-request-flag.has-dayoff"));
       const existing = cell.querySelector(".shift-change-marker");
       if (!tagged && !noted) {
         existing?.remove();
         return;
       }
-      const className = `shift-change-marker ${tagged ? "is-tagged" : "has-note"}`;
-      const markerText = tagged && noted ? "1" : "";
+      const className = `shift-change-marker ${tagged ? "is-tagged" : "has-note"}${tagged && hasPtoRequest ? " with-pto" : ""}`;
+      const markerText = "";
       if (existing?.className === className && existing.textContent === markerText) return;
       existing?.remove();
       const marker = document.createElement("span");
