@@ -343,6 +343,7 @@
       const assignment = assignmentForCell(cell);
       const tagged = assignment?.tagged === true;
       const noted = hasShiftNote(assignment);
+      const notePreview = noted ? String(assignment.note).trim() : "";
       const hasPtoRequest = Boolean(cell.querySelector(".officer-request-flag.has-dayoff"));
       const existing = cell.querySelector(".shift-change-marker");
       if (!tagged && !noted) {
@@ -351,11 +352,13 @@
       }
       const className = `shift-change-marker ${tagged ? "is-tagged" : "has-note"}${tagged && hasPtoRequest ? " with-pto" : ""}`;
       const markerText = "";
-      if (existing?.className === className && existing.textContent === markerText) return;
+      if (existing?.className === className && existing.textContent === markerText && existing.dataset.notePreview === notePreview) return;
       existing?.remove();
       const marker = document.createElement("span");
       marker.className = className;
-      marker.title = tagged ? (noted ? "Tagged change with a note" : "Tagged change") : "Shift note";
+      if (notePreview) marker.dataset.notePreview = notePreview;
+      marker.title = tagged ? (noted ? "Tagged change — hover to view note" : "Tagged change") : "Shift note";
+      marker.setAttribute("aria-label", notePreview || marker.title);
       marker.textContent = markerText;
       cell.append(marker);
     });
