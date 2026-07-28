@@ -11,22 +11,35 @@
 
 .shift-change-marker {
   position: absolute;
-  z-index: 5;
-  top: 2px;
-  left: 2px;
+  z-index: 16;
+  top: 0;
+  left: 0;
   display: grid;
-  width: 8px;
-  height: 8px;
+  width: 14px;
+  height: 14px;
   place-items: center;
   border: 1px solid;
   border-radius: 1px;
-  font: 700 7px/1 Tahoma, Arial, sans-serif;
+  font: 700 8px/1 Tahoma, Arial, sans-serif;
 }
 
 .shift-change-marker.is-tagged {
   color: #073d49;
   background: #32e5f0;
   border-color: #10b7c8;
+}
+
+.shift-change-marker.is-tagged::after {
+  content: "";
+  width: 10px;
+  height: 8px;
+  background: #073d49;
+  clip-path: polygon(0 0, 73% 0, 100% 50%, 73% 100%, 0 100%, 23% 50%);
+}
+
+.shift-change-marker.is-tagged.with-pto {
+  background: linear-gradient(90deg, #32e5f0 0 50%, #ff3f95 50% 100%);
+  border-color: #498b9f;
 }
 
 .shift-change-marker.has-note {
