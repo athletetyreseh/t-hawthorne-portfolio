@@ -18,34 +18,36 @@
   width: 14px;
   height: 14px;
   place-items: center;
-  border: 1px solid;
-  border-radius: 1px;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
   font: 700 8px/1 Tahoma, Arial, sans-serif;
 }
 
 .shift-change-marker.is-tagged {
-  color: #073d49;
-  background: #32e5f0;
-  border-color: #10b7c8;
+  color: transparent;
 }
 
 .shift-change-marker.is-tagged::after {
   content: "";
   width: 10px;
   height: 8px;
-  background: #073d49;
+  background: #32e5f0;
   clip-path: polygon(0 0, 73% 0, 100% 50%, 73% 100%, 0 100%, 23% 50%);
 }
 
 .shift-change-marker.is-tagged.with-pto {
+  background: transparent;
+}
+
+.shift-change-marker.is-tagged.with-pto::after {
   background: linear-gradient(90deg, #32e5f0 0 50%, #ff3f95 50% 100%);
-  border-color: #498b9f;
 }
 
 .shift-change-marker.has-note {
   color: #4b3700;
-  background: #f4cb35;
-  border-color: #bb9200;
+  background: #f4cb35 !important;
+  border: 1px solid #bb9200;
 }
 
 #ctx #tagBoxAction {
@@ -59,9 +61,9 @@
 #ctx #tagBoxAction::before {
   content: "";
   display: inline-block;
-  width: 18px;
-  height: 15px;
-  flex: 0 0 18px;
+  width: 13px;
+  height: 11px;
+  flex: 0 0 13px;
   background: #32e5f0;
   clip-path: polygon(0 0, 73% 0, 100% 50%, 73% 100%, 0 100%, 23% 50%);
   filter: drop-shadow(0 0 1px #0b94a4);
