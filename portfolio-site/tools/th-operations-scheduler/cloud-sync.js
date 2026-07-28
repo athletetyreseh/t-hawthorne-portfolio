@@ -363,20 +363,32 @@
   const notesField = () => {
     const input = $id("detailNotes");
     if (!input) return;
-    let textarea = input;
-    if (input.tagName !== "TEXTAREA") {
-      textarea = document.createElement("textarea");
-      textarea.id = "detailNotes";
-      textarea.placeholder = "Add a note for this shift";
-      textarea.value = hasShiftNote({ note: input.value }) ? input.value : "";
-      input.replaceWith(textarea);
-    }
-    if (textarea.closest(".scheduler-notepad")) return;
+    if (input.type === "hidden") return;
+    input.type = "hidden";
+    input.value = hasShiftNote({ note: input.value }) ? input.value : "";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "scheduler-notes-toggle";
+    toggle.title = "Open shift notes";
+    toggle.setAttribute("aria-label", "Open shift notes");
+    toggle.textContent = "📝";
+    input.insertAdjacentElement("afterend", toggle);
     const panel = document.createElement("section");
     panel.className = "scheduler-notepad";
     panel.innerHTML = "<label for=\"detailNotes\">Shift notes</label><p>Use this space to explain changes or add information for Danielle.</p>";
-    textarea.closest(".sd-mini-grid")?.insertAdjacentElement("afterend", panel);
+    const textarea = document.createElement("textarea");
+    textarea.placeholder = "Add a note for this shift";
+    textarea.value = input.value;
+    textarea.addEventListener("input", () => { input.value = textarea.value; });
     panel.append(textarea);
+    input.closest(".sd-mini-grid")?.insertAdjacentElement("afterend", panel);
+    toggle.addEventListener("click", () => {
+      const open = panel.classList.toggle("is-open");
+      toggle.setAttribute("aria-expanded", String(open));
+      toggle.title = open ? "Close shift notes" : "Open shift notes";
+      input.closest("#detailBack .detailbox")?.classList.toggle("notes-open", open);
+      if (open) textarea.focus();
+    });
   };
   const tagButton = document.createElement("button");
   tagButton.type = "button";
