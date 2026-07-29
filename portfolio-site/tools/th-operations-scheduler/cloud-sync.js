@@ -368,7 +368,7 @@
       }
       const className = `shift-change-marker ${tagged ? "is-tagged" : "has-note"}${tagged && hasPtoRequest ? " with-pto" : ""}`;
       const markerText = "";
-      if (existing?.className === className && existing.textContent === markerText && existing.dataset.notePreview === notePreview) return;
+      if (existing?.className === className && existing.textContent === markerText && (existing.dataset.notePreview || "") === notePreview) return;
       existing?.remove();
       const marker = document.createElement("span");
       marker.className = className;
