@@ -338,6 +338,22 @@
     if (!row) return null;
     return mode === "master" ? row.master[cell.dataset.key] : row.assignments[cell.dataset.key];
   };
+  const noteHover = document.createElement("div");
+  noteHover.id = "schedulerNoteHover";
+  noteHover.setAttribute("role", "tooltip");
+  document.body.append(noteHover);
+  const hideNoteHover = () => { noteHover.style.display = "none"; };
+  const showNoteHover = (marker) => {
+    const note = marker.dataset.notePreview;
+    if (!note) return;
+    const rect = marker.getBoundingClientRect();
+    noteHover.textContent = note;
+    noteHover.style.display = "block";
+    const maxLeft = Math.max(8, window.innerWidth - noteHover.offsetWidth - 8);
+    const maxTop = Math.max(8, window.innerHeight - noteHover.offsetHeight - 8);
+    noteHover.style.left = `${Math.min(maxLeft, Math.max(8, rect.left))}px`;
+    noteHover.style.top = `${Math.min(maxTop, rect.bottom + 5)}px`;
+  };
   const decorateShiftCells = () => {
     document.querySelectorAll("#scheduleTable .cell").forEach((cell) => {
       const assignment = assignmentForCell(cell);
@@ -357,8 +373,12 @@
       const marker = document.createElement("span");
       marker.className = className;
       if (notePreview) marker.dataset.notePreview = notePreview;
-      marker.title = tagged ? (noted ? "Tagged change — hover to view note" : "Tagged change") : "Shift note";
+      marker.title = tagged && !noted ? "Tagged change" : "Shift note";
       marker.setAttribute("aria-label", notePreview || marker.title);
+      if (notePreview) {
+        marker.addEventListener("mouseenter", () => showNoteHover(marker));
+        marker.addEventListener("mouseleave", hideNoteHover);
+      }
       marker.textContent = markerText;
       cell.append(marker);
     });
