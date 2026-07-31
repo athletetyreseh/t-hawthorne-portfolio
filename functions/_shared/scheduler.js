@@ -101,7 +101,7 @@ export const createRestorePoint = async (database, ownerEmail, currentRow, now) 
 
 // Both the browser sync endpoint and the command endpoint use this one write
 // path. Keeping the compare-and-swap and restore-history behavior together is
-// important: a voice command must not be able to bypass normal cloud sync.
+// important: a direct automation command must not bypass normal cloud sync.
 export const saveSchedulerState = async (database, ownerEmail, state, { baseRevision = null, force = false, historyAlways = false } = {}) => {
   const serialized = serializeValidatedState(state);
   const now = new Date().toISOString();

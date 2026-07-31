@@ -7,7 +7,7 @@ import {
 } from "../../../_shared/scheduler.js";
 
 // Undo restores the newest recoverable state using the same restore code as
-// the UI. The confirmation and revision check prevent a voice transcript from
+// the UI. The confirmation and revision check prevent an automation request from
 // silently reverting schedule work or overwriting a newer change.
 export async function onRequestPost(context) {
   try {

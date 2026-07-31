@@ -326,6 +326,126 @@
   historyButton.addEventListener("click", showHistory);
   saveButton?.insertAdjacentElement("afterend", historyButton);
 
+  // A compact, always-visible entry point keeps the existing scheduler grid
+  // intact until an operator or browser-driven agent asks for AI context.
+  const aiControlButton = $id("aiControl") || document.createElement("button");
+  aiControlButton.id = "aiControl";
+  aiControlButton.type = "button";
+  aiControlButton.classList.add("toolbtn", "ai-control-button");
+  if (!aiControlButton.textContent.trim()) aiControlButton.textContent = "AI Control";
+  aiControlButton.title = "AI Control — automation guide and agent context";
+  aiControlButton.setAttribute("aria-label", "Open AI Control: scheduler automation guide and agent context");
+  aiControlButton.setAttribute("aria-controls", "aiControlPanel");
+  aiControlButton.setAttribute("aria-expanded", "false");
+  const toolbar = document.querySelector(".toolstrip");
+  const helpButton = $id("tbHelp");
+  if (toolbar && !aiControlButton.isConnected) toolbar.insertBefore(aiControlButton, helpButton || null);
+
+  const aiControlPanel = document.createElement("aside");
+  aiControlPanel.id = "aiControlPanel";
+  aiControlPanel.className = "ai-control-panel";
+  aiControlPanel.setAttribute("aria-label", "AI Control capability guide");
+  aiControlPanel.setAttribute("aria-hidden", "true");
+  aiControlPanel.setAttribute("inert", "");
+  aiControlPanel.innerHTML = `
+    <header class="ai-control-head">
+      <div><p>Scheduler automation</p><h2>AI Control</h2></div>
+      <button type="button" class="ai-control-close" data-ai-control-close aria-label="Close AI Control">×</button>
+    </header>
+    <div class="ai-control-body">
+      <h3>What an agent can do</h3>
+      <p><strong>Code-first:</strong> for every precise routine change, use the private command API—not the visual grid. Use one batch command for multi-cell or multi-day work. The manual scheduler is a fallback only when the command API is genuinely unavailable.</p>
+      <ul>
+        <li>Assignments and times; statuses including sick, PTO, escort, open, training, blank, and blocked.</li>
+        <li>Tags, notes, roster entries, posts, rows/boxes, and batches of up to 50 changes.</li>
+        <li>Every successful agent/API mutation automatically adds or retains a visible change tag on affected entries or rows—no separate tag command needed. Results and history identify those tags.</li>
+        <li>For cleanup, use one <code>batch</code> of explicit <code>untag</code> commands to keep only the selected tags; the result reports the cleared targets.</li>
+        <li>History lookup plus confirmation-gated undo and destructive operations.</li>
+      </ul>
+
+      <h3>Deterministic targets and safety</h3>
+      <p>Use <code>rowId</code> when known, or exact <code>site</code> + <code>post</code>, plus <code>shift</code> whenever needed, and an ISO <code>date</code>. Read the current revision first and send it as <code>baseRevision</code>.</p>
+      <p>Ambiguous or missing targets are rejected rather than guessed. Exact routine edits (time, assignment, status, note, normal tagging) need no confirmation. Clearing, blocking, removing a roster entry, clearing a week, rollover, and undo require one explicit <code>confirm: true</code>; a batch-level confirmation covers destructive items inside that batch. Direct changes create recoverable restore points.</p>
+
+      <h3>Example structured requests</h3>
+      <pre class="ai-control-example">POST api/commands
+{ "baseRevision": 42, "command": {
+  "kind": "assign",
+  "target": { "rowId": "city-lobby-a", "date": "2026-08-03" },
+  "officer": "Alex Morgan", "start": "0630", "end": "1430"
+} }</pre>
+      <pre class="ai-control-example">POST api/commands
+{ "baseRevision": 43, "command": {
+  "kind": "batch", "commands": [
+    { "kind": "set_status", "target": { "rowId": "city-lobby-a", "date": "2026-08-03" }, "status": "sick", "officer": "Alex Morgan" },
+    { "kind": "set_note", "target": { "rowId": "city-lobby-a", "date": "2026-08-04" }, "note": "Coverage follow-up required." }
+  ]
+} }</pre>
+      <pre class="ai-control-example">POST api/commands — keep only selected tags
+{ "baseRevision": 44, "command": { "kind": "batch", "commands": [
+  { "kind": "untag", "target": { "rowId": "city-lobby-a", "date": "2026-08-03" } },
+  { "kind": "untag", "target": { "rowId": "city-lobby-b", "date": "2026-08-03" } }
+] } }</pre>
+
+      <h3>Machine-readable agent context</h3>
+      <p>Load this schedule-data-free manifest before acting. It describes supported commands, exact target fields, endpoint paths, code-first execution, automatic tags, and confirmation safety.</p>
+      <textarea id="aiControlManifest" class="ai-control-manifest" readonly aria-label="Copyable scheduler capability manifest">{"capabilityManifest":"/tools/th-operations-scheduler/api/capabilities","scheduleDataIncluded":false,"agentRules":{"codeFirst":"Use api/commands; batch multi-cell or multi-day work; visual UI only if unavailable","autoTag":"Every successful mutation automatically tags affected entries or rows; explicit batch untag reports cleared targets","confirmation":"Routine exact edits need no confirmation; destructive commands require confirm:true"},"nextSteps":["GET api/capabilities","GET api/state","POST api/commands with baseRevision"]}</textarea>
+      <div class="ai-control-actions">
+        <button type="button" data-ai-control-copy>Copy agent context</button>
+        <a id="aiControlManifestLink" href="${escapeText(new URL("capabilities", API_ROOT).href)}" target="_blank" rel="noreferrer">Open manifest endpoint</a>
+      </div>
+      <p class="ai-control-notice" id="aiControlNotice">Manifest content contains no schedule rows, staff, or private state.</p>
+    </div>`;
+  document.body.append(aiControlPanel);
+
+  const setAiControlOpen = (open) => {
+    aiControlPanel.classList.toggle("open", open);
+    aiControlPanel.setAttribute("aria-hidden", String(!open));
+    aiControlPanel.toggleAttribute("inert", !open);
+    aiControlButton.setAttribute("aria-expanded", String(open));
+    if (open) aiControlPanel.querySelector("[data-ai-control-close]")?.focus();
+    else aiControlButton.focus();
+  };
+  const loadAiControlManifest = async () => {
+    const field = $id("aiControlManifest");
+    const notice = $id("aiControlNotice");
+    if (!field || field.dataset.loaded === "true") return;
+    try {
+      const response = await fetch(new URL("capabilities", API_ROOT), { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
+      const payload = await parseJsonResponse(response);
+      if (!response.ok) throw new Error(payload.error || `Manifest load failed (${response.status})`);
+      field.value = JSON.stringify(payload, null, 2);
+      field.dataset.loaded = "true";
+      if (notice) notice.textContent = "Loaded the authenticated, schedule-data-free manifest. Copy it into a trusted agent's context.";
+    } catch (error) {
+      if (notice) notice.textContent = `Manifest could not be refreshed: ${error.message}. The endpoint path and safe loading sequence remain available above.`;
+    }
+  };
+  aiControlButton.addEventListener("click", () => {
+    const open = !aiControlPanel.classList.contains("open");
+    setAiControlOpen(open);
+    if (open) loadAiControlManifest();
+  });
+  aiControlPanel.addEventListener("click", async (event) => {
+    if (event.target.closest("[data-ai-control-close]")) return setAiControlOpen(false);
+    if (!event.target.closest("[data-ai-control-copy]")) return;
+    const field = $id("aiControlManifest");
+    const notice = $id("aiControlNotice");
+    if (!field) return;
+    try {
+      await navigator.clipboard.writeText(field.value);
+      if (notice) notice.textContent = "Agent context copied.";
+    } catch {
+      field.focus();
+      field.select();
+      document.execCommand("copy");
+      if (notice) notice.textContent = "Agent context selected and copied when browser permissions allow it.";
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && aiControlPanel.classList.contains("open")) setAiControlOpen(false);
+  });
+
   // Scheduler change markers: tags identify post-submission changes, while notes
   // identify the reason for a shift. A tag intentionally takes visual precedence.
   const automaticNotes = new Set(["ASSIGNED", "OPEN", "ESCORT", "SICK", "PTO", "TRAINING", "BLANK", "BLOCKED"]);
@@ -381,6 +501,21 @@
       }
       marker.textContent = markerText;
       cell.append(marker);
+    });
+    document.querySelectorAll("#scheduleTable tr[data-row]").forEach((tableRow) => {
+      const row = getRow(tableRow.dataset.row);
+      const existing = tableRow.querySelector(".agent-row-marker");
+      if (!row?.agentTagged) {
+        existing?.remove();
+        return;
+      }
+      if (existing) return;
+      const marker = document.createElement("span");
+      marker.className = "agent-row-marker";
+      marker.title = "Changed by an agent";
+      marker.setAttribute("aria-label", "Changed by an agent");
+      marker.textContent = "AI";
+      tableRow.querySelector(".postcell")?.append(marker);
     });
   };
   const notesField = () => {

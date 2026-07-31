@@ -32,7 +32,7 @@ export const parseSchedulerSnapshot = (serialized) => {
   }
 };
 
-// Bounded summaries keep a voice agent's answer useful without returning an
+// Bounded summaries keep an automation agent's answer useful without returning an
 // entire private schedule in every history list response.
 export const summarizeSchedulerChanges = (before, after, maxChanges = 100) => {
   const changes = [];
@@ -53,8 +53,8 @@ export const summarizeSchedulerChanges = (before, after, maxChanges = 100) => {
       add({ type: left ? "row_removed" : "row_added", target: targetFor(row, "", "row") });
       continue;
     }
-    const beforeRow = { site: left.site || "", post: left.post || "", shift: left.shiftCode || left.shiftName || "", hiddenWeeks: left.hiddenWeeks || [], masterHidden: left.masterHidden === true };
-    const afterRow = { site: right.site || "", post: right.post || "", shift: right.shiftCode || right.shiftName || "", hiddenWeeks: right.hiddenWeeks || [], masterHidden: right.masterHidden === true };
+    const beforeRow = { site: left.site || "", post: left.post || "", shift: left.shiftCode || left.shiftName || "", hiddenWeeks: left.hiddenWeeks || [], masterHidden: left.masterHidden === true, agentTagged: left.agentTagged === true };
+    const afterRow = { site: right.site || "", post: right.post || "", shift: right.shiftCode || right.shiftName || "", hiddenWeeks: right.hiddenWeeks || [], masterHidden: right.masterHidden === true, agentTagged: right.agentTagged === true };
     if (!same(beforeRow, afterRow)) add({ type: "row_updated", target: targetFor(right, "", "row"), before: beforeRow, after: afterRow });
     for (const mode of ["working", "master"]) {
       const leftAssignments = mode === "working" ? left.assignments || {} : left.master || {};

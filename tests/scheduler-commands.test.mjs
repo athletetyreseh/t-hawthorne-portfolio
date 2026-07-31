@@ -46,8 +46,9 @@ test("unassign preserves time and creates an open gap", () => {
   const state = schedule();
   const result = executeSchedulerCommand(state, { kind: "unassign", target: { ...target, shift: "B" } });
   assert.deepEqual(result.state.rows[1].assignments["2026-08-03"], {
-    status: "open", name: "", start: "1400", end: "2200", note: "OPEN"
+    status: "open", name: "", start: "1400", end: "2200", note: "OPEN", tagged: true
   });
+  assert.deepEqual(result.result.agentTags.tagged, [{ rowId: "city-lobby-b", site: "Cityscape", post: "Lobby", shift: "B", date: "2026-08-03", mode: "working" }]);
 });
 
 test("ambiguous targets and unknown officers are structured validation errors", () => {
@@ -61,7 +62,20 @@ test("ambiguous targets and unknown officers are structured validation errors", 
   );
 });
 
-test("a batch is atomic from the caller perspective and master targets use weekday keys", () => {
+test("agent mutations auto-tag changed entries and rows without changing manual state", () => {
+  const state = schedule();
+  const timeResult = executeSchedulerCommand(state, { kind: "set_time", target, end: "1500" });
+  assert.equal(timeResult.state.rows[0].assignments["2026-08-03"].tagged, true);
+  assert.equal(timeResult.result.agentTags.total, 1);
+  assert.equal(timeResult.result.agentTags.tagged[0].rowId, "city-lobby-a");
+
+  const rowResult = executeSchedulerCommand(timeResult.state, { kind: "set_row_post", target, post: "Lobby Desk" });
+  assert.equal(rowResult.state.rows[0].agentTagged, true);
+  assert.equal(rowResult.result.agentTags.tagged[0].scope, "row");
+  assert.equal(state.rows[0].agentTagged, undefined);
+});
+
+test("a batch is atomic, auto-tags entries, and can explicitly clean up tags", () => {
   const state = schedule();
   const result = executeSchedulerCommand(state, {
     kind: "batch",
@@ -73,4 +87,24 @@ test("a batch is atomic from the caller perspective and master targets use weekd
   assert.equal(result.state.rows[0].master.Mon.name, "Alex Morgan");
   assert.equal(result.state.rows[0].master.Mon.tagged, false);
   assert.equal(result.result.commands.length, 2);
+  assert.equal(result.result.agentTags.totalCleared, 1);
+  assert.equal(result.result.agentTags.cleared[0].day, "Mon");
+});
+
+test("destructive commands require one explicit confirmation while exact routine edits do not", () => {
+  assert.throws(
+    () => executeSchedulerCommand(schedule(), { kind: "clear", target }),
+    (error) => error instanceof SchedulerCommandError && error.code === "confirmation_required" && error.status === 409
+  );
+  const result = executeSchedulerCommand(schedule(), {
+    kind: "batch",
+    confirm: true,
+    commands: [
+      { kind: "clear", target },
+      { kind: "block", target: { ...target, shift: "B" } }
+    ]
+  });
+  assert.equal(result.state.rows[0].assignments["2026-08-03"].tagged, true);
+  assert.equal(result.state.rows[1].assignments["2026-08-03"].tagged, true);
+  assert.equal(result.result.agentTags.total, 2);
 });

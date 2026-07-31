@@ -91,8 +91,81 @@ const assignmentAt = (target, create = true) => {
   return collection[target.assignmentKey] || blank();
 };
 
-const requireConfirmation = (command, action) => {
-  if (command.confirm !== true) fail("confirmation_required", `${action} requires confirm: true`, { field: "confirm" }, 409);
+const requireConfirmation = (command, action, options = {}) => {
+  if (command.confirm !== true && options.confirmed !== true) {
+    fail("confirmation_required", `${action} requires confirm: true`, { field: "confirm" }, 409);
+  }
+};
+
+const assignmentCollections = [
+  { name: "assignments", mode: "working" },
+  { name: "master", mode: "master" }
+];
+const rowMetadata = (row = {}) => {
+  const { assignments, master, agentTagged, ...metadata } = row;
+  return metadata;
+};
+const tagReportTarget = (row, key, mode) => ({
+  rowId: row.id,
+  site: row.site || "",
+  post: row.post || "",
+  shift: row.shiftCode || row.shiftName || "",
+  ...(key ? (mode === "working" ? { date: key, mode } : { day: key, mode }) : { scope: "row" })
+});
+
+// Direct command requests are the agent execution boundary. Mark only the
+// state they changed here, after normal validation succeeds, so manual UI
+// edits keep their existing tagging behavior.
+const markAgentChanges = (before, after) => {
+  const tagged = [];
+  const cleared = [];
+  const seen = new Set();
+  const add = (collection, target) => {
+    const id = `${target.rowId || target.scope}:${target.mode || target.scope}:${target.date || target.day || ""}`;
+    if (!seen.has(id)) {
+      seen.add(id);
+      collection.push(target);
+    }
+  };
+  const beforeRows = new Map((before.rows || []).map((row) => [String(row.id), row]));
+  for (const row of after.rows || []) {
+    const previous = beforeRows.get(String(row.id));
+    if (!previous || JSON.stringify(rowMetadata(previous)) !== JSON.stringify(rowMetadata(row))) {
+      row.agentTagged = true;
+      add(tagged, tagReportTarget(row));
+    }
+    if (!previous) continue;
+    for (const { name, mode } of assignmentCollections) {
+      const priorAssignments = previous[name] || {};
+      const nextAssignments = row[name] || {};
+      for (const assignmentKey of new Set([...Object.keys(priorAssignments), ...Object.keys(nextAssignments)])) {
+        const prior = priorAssignments[assignmentKey] || blank();
+        const next = nextAssignments[assignmentKey];
+        if (!next || JSON.stringify(prior) === JSON.stringify(next)) continue;
+        const target = tagReportTarget(row, assignmentKey, mode);
+        const explicitCleanup = next._skipAgentTag === true;
+        delete next._skipAgentTag;
+        if (explicitCleanup) {
+          add(cleared, target);
+          continue;
+        }
+        next.tagged = true;
+        add(tagged, target);
+      }
+    }
+  }
+  if (JSON.stringify(before.staff || []) !== JSON.stringify(after.staff || [])) {
+    add(tagged, { scope: "roster" });
+  }
+  return {
+    automatic: true,
+    total: tagged.length,
+    tagged: tagged.slice(0, 100),
+    truncated: tagged.length > 100,
+    totalCleared: cleared.length,
+    cleared: cleared.slice(0, 100),
+    clearedTruncated: cleared.length > 100
+  };
 };
 
 const targetCandidates = (state, rawTarget) => {
@@ -172,7 +245,10 @@ const executeOne = (state, command, options = {}) => {
     if (!Array.isArray(command.commands) || !command.commands.length || command.commands.length > 50) {
       fail("invalid_field", "batch.commands must contain 1 to 50 commands", { field: "command.commands" });
     }
-    const results = command.commands.map((item) => executeOne(state, item, { inBatch: true }).result);
+    const results = command.commands.map((item) => executeOne(state, item, {
+      inBatch: true,
+      confirmed: command.confirm === true || options.confirmed === true
+    }).result);
     return { changed: true, result: { kind, commands: results } };
   }
 
@@ -181,6 +257,7 @@ const executeOne = (state, command, options = {}) => {
     return { changed: true, result: { kind, officer } };
   }
   if (kind === "remove_officer") {
+    requireConfirmation(command, "remove_officer", options);
     const officer = text(command.officer, "officer", { required: true, max: 200 });
     const found = state.staff?.find((name) => key(name) === key(officer));
     if (!found) fail("officer_not_found", "Officer is not in the roster", { officer }, 404);
@@ -190,7 +267,7 @@ const executeOne = (state, command, options = {}) => {
     return { changed: true, result: { kind, officer: found } };
   }
   if (kind === "rollover_master") {
-    requireConfirmation(command, "rollover_master");
+    requireConfirmation(command, "rollover_master", options);
     const date = isoDate(command.date, "date");
     const dates = weekDates(date);
     for (const row of state.rows) {
@@ -201,7 +278,7 @@ const executeOne = (state, command, options = {}) => {
     return { changed: true, result: { kind, weekStart: dates[0], rowsUpdated: state.rows.length } };
   }
   if (kind === "clear_week") {
-    requireConfirmation(command, "clear_week");
+    requireConfirmation(command, "clear_week", options);
     const date = isoDate(command.date, "date");
     const mode = command.mode == null ? "working" : text(command.mode, "mode", { required: true, max: 12 }).toLowerCase();
     if (mode !== "working" && mode !== "master") fail("invalid_field", "mode must be working or master", { field: "mode" });
@@ -295,6 +372,10 @@ const executeOne = (state, command, options = {}) => {
   if (kind === "tag" || kind === "untag") {
     requireEditable(assignment);
     assignment.tagged = kind === "tag";
+    // An explicit tag-cleanup request is the intentional exception to the
+    // automatic agent marker. It enables one batch to retain only the tags
+    // the caller selected, without UI-by-UI clicking.
+    if (kind === "untag") assignment._skipAgentTag = true;
     return { changed: true, result: { kind, ...assignmentResult(target, assignment) } };
   }
   if (kind === "update_assignment") {
@@ -321,11 +402,13 @@ const executeOne = (state, command, options = {}) => {
     return { changed: true, result: { kind, ...assignmentResult(target, assignment) } };
   }
   if (kind === "clear") {
+    requireConfirmation(command, "clear", options);
     Object.assign(assignment, blank());
     delete assignment.tagged;
     return { changed: true, result: { kind, ...assignmentResult(target, assignment) } };
   }
   if (kind === "block") {
+    requireConfirmation(command, "block", options);
     Object.assign(assignment, { status: "blocked", name: "", start: "", end: "", note: "" });
     delete assignment.tagged;
     return { changed: true, result: { kind, ...assignmentResult(target, assignment) } };
@@ -339,5 +422,10 @@ export const executeSchedulerCommand = (rawState, command) => {
   }
   const state = clone(rawState);
   const execution = executeOne(state, command);
-  return { state, changed: execution.changed, result: execution.result };
+  const agentTags = execution.changed ? markAgentChanges(rawState, state) : null;
+  return {
+    state,
+    changed: execution.changed,
+    result: execution.changed ? { ...execution.result, agentTags } : execution.result
+  };
 };
