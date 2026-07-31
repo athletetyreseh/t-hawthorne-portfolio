@@ -25,7 +25,7 @@ export async function onRequestPost(context) {
     catch { return json({ error: "Stored schedule data is invalid" }, 500); }
     const execution = executeSchedulerCommand(state, body.command);
 
-    // Save/sync commands are useful acknowledgement points for voice agents.
+    // Save/sync commands are useful acknowledgement points for automation agents.
     // Mutations must include the revision observed from GET api/state so a
     // stale agent never overwrites a more recent browser or agent update.
     if (!execution.changed) {
@@ -36,7 +36,7 @@ export async function onRequestPost(context) {
       return json({ error: "baseRevision is required for a mutating command", code: "required_revision", revision: current.revision }, 409);
     }
     // Direct mutations always add their own pre-change restore point. That
-    // gives a voice agent an exact, safe undo even when browser history's
+    // gives an automation agent an exact, safe undo even when browser history's
     // normal five-minute retention throttle is active.
     const saved = await saveSchedulerState(context.env.SCHEDULER_DB, ownerEmail, execution.state, { baseRevision, historyAlways: true });
     if (saved.conflict) {
