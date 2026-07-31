@@ -91,6 +91,83 @@ export const maybeCreateHistory = async (database, ownerEmail, currentRow, now) 
   await pruneHistory(database, ownerEmail);
 };
 
+export const createRestorePoint = async (database, ownerEmail, currentRow, now) => {
+  if (!currentRow) return;
+  await database.prepare(
+    "INSERT INTO scheduler_history (owner_email, revision, state_json, created_at) VALUES (?, ?, ?, ?)"
+  ).bind(ownerEmail, currentRow.revision, currentRow.state_json, now).run();
+  await pruneHistory(database, ownerEmail);
+};
+
+// Both the browser sync endpoint and the command endpoint use this one write
+// path. Keeping the compare-and-swap and restore-history behavior together is
+// important: a voice command must not be able to bypass normal cloud sync.
+export const saveSchedulerState = async (database, ownerEmail, state, { baseRevision = null, force = false, historyAlways = false } = {}) => {
+  const serialized = serializeValidatedState(state);
+  const now = new Date().toISOString();
+  const current = await database.prepare(
+    "SELECT state_json, revision, updated_at FROM scheduler_state WHERE owner_email = ?"
+  ).bind(ownerEmail).first();
+
+  if (!current) {
+    const result = await database.prepare(
+      "INSERT OR IGNORE INTO scheduler_state (owner_email, state_json, revision, updated_at) VALUES (?, ?, 1, ?)"
+    ).bind(ownerEmail, serialized, now).run();
+    if (!result.meta?.changes) {
+      const raced = await database.prepare(
+        "SELECT revision, updated_at FROM scheduler_state WHERE owner_email = ?"
+      ).bind(ownerEmail).first();
+      return { conflict: true, revision: raced?.revision, updatedAt: raced?.updated_at };
+    }
+    return { revision: 1, updatedAt: now };
+  }
+
+  if (!force && (!Number.isSafeInteger(baseRevision) || baseRevision !== current.revision)) {
+    return { conflict: true, revision: current.revision, updatedAt: current.updated_at };
+  }
+
+  const nextRevision = current.revision + 1;
+  const result = await database.prepare(
+    "UPDATE scheduler_state SET state_json = ?, revision = ?, updated_at = ? WHERE owner_email = ? AND revision = ?"
+  ).bind(serialized, nextRevision, now, ownerEmail, current.revision).run();
+  if (!result.meta?.changes) {
+    const raced = await database.prepare(
+      "SELECT revision, updated_at FROM scheduler_state WHERE owner_email = ?"
+    ).bind(ownerEmail).first();
+    return { conflict: true, revision: raced?.revision, updatedAt: raced?.updated_at };
+  }
+
+  if (historyAlways) await createRestorePoint(database, ownerEmail, current, now);
+  else await maybeCreateHistory(database, ownerEmail, current, now);
+  return { revision: nextRevision, updatedAt: now };
+};
+
+// Restore is shared by the normal UI and direct undo. It always snapshots the
+// current state first, so a restore/undo is itself recoverable through the
+// established history mechanism.
+export const restoreSchedulerState = async (database, ownerEmail, versionId, { baseRevision = null } = {}) => {
+  const version = await database.prepare(
+    "SELECT state_json, revision, created_at FROM scheduler_history WHERE owner_email = ? AND id = ?"
+  ).bind(ownerEmail, versionId).first();
+  if (!version) return { notFound: true };
+  const current = await database.prepare(
+    "SELECT state_json, revision, updated_at FROM scheduler_state WHERE owner_email = ?"
+  ).bind(ownerEmail).first();
+  if (!current) return { noCurrent: true };
+  if (baseRevision != null && (!Number.isSafeInteger(baseRevision) || baseRevision !== current.revision)) {
+    return { conflict: true, revision: current.revision, updatedAt: current.updated_at };
+  }
+
+  const now = new Date().toISOString();
+  await createRestorePoint(database, ownerEmail, current, now);
+  const nextRevision = current.revision + 1;
+  const result = await database.prepare(
+    "UPDATE scheduler_state SET state_json = ?, revision = ?, updated_at = ? WHERE owner_email = ? AND revision = ?"
+  ).bind(version.state_json, nextRevision, now, ownerEmail, current.revision).run();
+  if (!result.meta?.changes) return { conflict: true, revision: current.revision, updatedAt: current.updated_at };
+  return { state_json: version.state_json, revision: nextRevision, updated_at: now, restoredVersionId: versionId };
+};
+
 export const errorResponse = (error) => {
   if (error instanceof Response) return error;
   console.error("Scheduler API error", error);
