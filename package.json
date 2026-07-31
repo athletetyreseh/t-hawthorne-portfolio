@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test:scheduler-commands": "node --test tests/scheduler-commands.test.mjs tests/scheduler-history.test.mjs"
+    "test:scheduler-commands": "node --test tests/scheduler-commands.test.mjs tests/scheduler-history.test.mjs tests/scheduler-capabilities.test.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
