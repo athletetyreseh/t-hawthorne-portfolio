@@ -67,6 +67,21 @@
   border: 1px solid #bb9200;
 }
 
+.agent-row-marker {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 18;
+  min-width: 17px;
+  padding: 1px 3px;
+  color: #fff;
+  background: #075f70;
+  border: 1px solid #033e49;
+  border-radius: 2px;
+  font: 800 8px/1.1 Tahoma, Arial, sans-serif;
+  text-align: center;
+}
+
 #ctx #tagBoxAction {
   display: flex;
   align-items: center;
@@ -253,6 +268,70 @@
 }
 
 .cloud-card button.secondary { color: var(--th-blue); background: #fff; }
+
+.ai-control-button {
+  width: auto !important;
+  min-width: 64px;
+  padding: 1px 6px !important;
+  color: #fff !important;
+  background: linear-gradient(#356fae, #17457e) !important;
+  border-color: #113866 !important;
+  font-size: 9px !important;
+  font-weight: 800;
+  letter-spacing: .03em;
+}
+
+.ai-control-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2400;
+  width: min(510px, 100vw);
+  transform: translateX(105%);
+  transition: transform 160ms ease;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  color: var(--th-ink);
+  background: #f8fbff;
+  border-left: 1px solid #8aa2c6;
+  box-shadow: -16px 0 45px rgba(0, 0, 0, .24);
+  font: 12px/1.45 Arial, sans-serif;
+}
+
+.ai-control-panel.open { transform: translateX(0); }
+
+.ai-control-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 16px;
+  color: #fff;
+  background: #123f74;
+}
+
+.ai-control-head p { margin: 0 0 4px; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.ai-control-head h2 { margin: 0; font-size: 18px; }
+.ai-control-close { width: 30px; height: 30px; color: #fff !important; background: rgba(255,255,255,.14) !important; border: 1px solid rgba(255,255,255,.28) !important; font-size: 18px !important; }
+
+.ai-control-body { overflow: auto; padding: 14px 16px 22px; }
+.ai-control-body h3 { margin: 18px 0 6px; color: #173f73; font-size: 13px; }
+.ai-control-body h3:first-child { margin-top: 0; }
+.ai-control-body p { margin: 0 0 10px; color: #415a77; }
+.ai-control-body ul { margin: 0; padding-left: 19px; color: #1e3856; }
+.ai-control-body li + li { margin-top: 3px; }
+.ai-control-body code { padding: 1px 3px; background: #e7effa; color: #163d70; font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.ai-control-example { margin: 8px 0; padding: 9px; border: 1px solid #c8d7e9; background: #fff; color: #182a41; font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ai-control-manifest { width: 100%; min-height: 185px; resize: vertical; padding: 8px; border: 1px solid #9eb3d0; background: #fff; color: #15283f; font: 10px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.ai-control-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.ai-control-actions button, .ai-control-actions a { display: inline-flex; align-items: center; justify-content: center; min-height: 30px; padding: 5px 9px; color: #fff; background: #174b86; border: 1px solid #0a2b55; text-decoration: none; font-weight: 700; }
+.ai-control-actions a { color: #174b86; background: #fff; }
+.ai-control-notice { margin-top: 8px !important; color: #54708f !important; font-size: 11px; }
+
+@media (max-width: 640px) {
+  .ai-control-panel { width: 100vw; }
+  .ai-control-body { padding: 13px; }
+}
 
 .history-list {
   max-height: min(52vh, 430px);
