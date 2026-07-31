@@ -31,3 +31,14 @@ test("latest history event compares the restore point to current state", () => {
   assert.equal(events[0].singleRevision, true);
   assert.equal(events[0].changes[0].after.officer, "Alex Morgan");
 });
+
+test("history makes automatic agent tags auditable", () => {
+  const before = state();
+  const after = state();
+  after.rows[0].assignments["2026-08-03"].tagged = true;
+  after.rows[0].agentTagged = true;
+  const result = summarizeSchedulerChanges(before, after);
+  assert.equal(result.totalChanges, 2);
+  assert.equal(result.changes.find((change) => change.type === "assignment_updated").after.tagged, true);
+  assert.equal(result.changes.find((change) => change.type === "row_updated").after.agentTagged, true);
+});
