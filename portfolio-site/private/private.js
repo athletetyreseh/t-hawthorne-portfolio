@@ -9,6 +9,7 @@
   let session = null;
 
   const resourceIcons = Object.freeze({
+    life_manager: '<circle cx="12" cy="12" r="8" /><path d="M12 7v5l3 2M5 4l2 2m10-2-2 2" />',
     scheduler: '<path d="M4 5h16v15H4zM8 3v4m8-4v4M4 9h16M8 13h3m2 0h3m-8 4h3m2 0h3" />',
     fire_drill: '<path d="M13 3c1 4-2 5-2 8 0 2 1 3 3 3 2 0 3-2 3-4 2 2 3 4 3 6 0 3-3 5-8 5s-8-2-8-6c0-3 2-6 6-9 0 3 1 4 3 5" />',
     staff: '<circle cx="9" cy="8" r="3" /><circle cx="17" cy="10" r="2" /><path d="M3 20c.5-4 2.5-6 6-6s5.5 2 6 6m0-5c3 0 5 1.7 5 5" />'

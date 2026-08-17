@@ -22,6 +22,7 @@ export async function onRequest(context) {
   );
   const pathname = new URL(context.request.url).pathname;
   if ((pathname === "/private/admin" || pathname.startsWith("/private/admin/")) && !context.data.privateUser.isAdmin) return denyPage(context);
+  if ((pathname === "/private/life-manager" || pathname.startsWith("/private/life-manager/")) && !context.data.privateUser.isAdmin) return denyPage(context);
   if (pathname === "/private/staff" || pathname.startsWith("/private/staff/")) {
     const allowed = await hasResourceAccess(
       context.env.SCHEDULER_DB,

@@ -8,7 +8,8 @@ export async function onRequestGet(context) {
       "SELECT resource_key, requested_level, status, requested_at FROM access_requests WHERE user_email = ? AND status = 'pending'"
     ).bind(user.email).all();
     const pendingByResource = new Map((pending.results || []).map((row) => [row.resource_key, row]));
-    const resources = await Promise.all(Object.entries(RESOURCE_CATALOG).map(async ([key, resource]) => ({
+    const visibleResources = Object.entries(RESOURCE_CATALOG).filter(([, resource]) => !resource.ownerOnly || user.isAdmin);
+    const resources = await Promise.all(visibleResources.map(async ([key, resource]) => ({
       key,
       ...resource,
       accessLevel: await getAccessLevel(context.env.SCHEDULER_DB, user.email, key, ownerEmail),

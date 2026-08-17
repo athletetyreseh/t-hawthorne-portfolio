@@ -22,6 +22,8 @@ The Pages project requires:
 - `CF_ACCESS_TEAM_DOMAIN`: the Cloudflare Zero Trust team domain
 - `CF_ACCESS_AUD`: comma-separated application audience tags for all three Access applications
 - D1 binding `SCHEDULER_DB`: the existing scheduler database
+- R2 binding `LIFE_MANAGER_PHOTOS`: a private bucket for Life Manager event photos
+- `LIFE_MANAGER_TOKEN_PEPPER` (secret): a long random value used to hash revocable Android device tokens
 - `RESEND_API_KEY` (secret, optional): enables direct staff email delivery
 - `STAFF_EMAIL_FROM` (optional): verified sender such as `Tyrese Hawthorne <operations@t-hawthorne.com>`
 
@@ -34,6 +36,8 @@ The Pages project requires:
 3. Other users sign in at the same URL and request specific resources.
 4. Open `https://t-hawthorne.com/private/admin/` as the owner.
 5. Approve or deny requests, or directly set `No access`, `View`, or `Edit` for each user and resource.
+
+Life Manager is owner-only and does not appear in the grantable resource list for member accounts. Pair Android devices from `/private/life-manager/`; never place a Cloudflare service token in the APK.
 
 ## Resource Behavior
 

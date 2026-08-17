@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Life Manager | Private Workspace</title>
+  <link rel="stylesheet" href="life-manager.css?v=20260817-1" />
+</head>
+<body>
+  <header class="topbar">
+    <a href="../" class="brand"><span class="logo">TH</span><span><strong>Life Manager</strong><small>Private cloud workspace</small></span></a>
+    <nav><a href="../">Private home</a><a href="/cdn-cgi/access/logout">Sign out</a></nav>
+  </header>
+  <main>
+    <section class="hero">
+      <div><p class="eyebrow">Owner only</p><h1>Your life, available everywhere.</h1><p>The Android app remains offline-first. Connected changes appear here when either device gets online.</p></div>
+      <div class="sync-pill" id="syncStatus">Loading cloud state…</div>
+    </section>
+
+    <section class="metrics" aria-label="Cloud summary">
+      <article><strong id="planCount">—</strong><span>planned days</span></article>
+      <article><strong id="eventCount">—</strong><span>events</span></article>
+      <article><strong id="photoCount">—</strong><span>photos</span></article>
+      <article><strong id="deviceCount">—</strong><span>devices</span></article>
+    </section>
+
+    <section class="panel planner-panel">
+      <div class="panel-head"><div><p class="eyebrow">Plan editor</p><h2>Day and event details</h2></div><label>Date<input id="dayDate" type="date" /></label></div>
+      <div class="day-grid">
+        <label>Day starts<input id="dayStart" type="time" value="05:45" /></label>
+        <label>Day ends<input id="dayEnd" type="time" value="22:00" /></label>
+        <label>Wake-up time<input id="dayWake" type="time" value="05:45" /></label>
+      </div>
+      <label class="check standalone-check"><input id="dayWakeAlarm" type="checkbox" checked /> Create the wake-up alarm</label>
+      <label>Day tasks<textarea id="dayTasks" rows="3" placeholder="One task per line"></textarea></label>
+      <div class="section-head"><h3>Events</h3><button id="addEvent" type="button">Add event</button></div>
+      <div id="eventList" class="event-list"></div>
+      <details class="raw-editor">
+        <summary>View or edit every field for this day (JSON)</summary>
+        <p class="helper">This includes completed tasks, alarm voice and output, recurrence details, deferred items, photo references, and every event setting.</p>
+        <textarea id="dayJson" rows="18" spellcheck="false"></textarea>
+        <button id="saveDayJson" type="button">Save complete day JSON</button>
+      </details>
+      <div class="actions"><button id="saveDay" type="button">Save day</button><button id="deleteDay" type="button" class="danger">Delete day</button></div>
+    </section>
+
+    <section class="two-column">
+      <section class="panel">
+        <div class="panel-head"><div><p class="eyebrow">Phone connection</p><h2>Connected devices</h2></div></div>
+        <form id="pairForm" class="pair-form"><label>Pairing code<input name="userCode" maxlength="8" autocomplete="one-time-code" placeholder="AB12CD34" /></label><button>Approve phone</button></form>
+        <p class="helper">In the Android app, open Cloud Sync and tap Connect. Enter the displayed code here.</p>
+        <div id="deviceList" class="stack-list"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><div><p class="eyebrow">Private attachments</p><h2>Event photos</h2></div></div>
+        <div id="photoGrid" class="photo-grid"></div>
+      </section>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><div><p class="eyebrow">Advanced</p><h2>Templates, reusable events, and preferences</h2></div></div>
+      <p class="helper">These editors preserve every Life Manager field. Valid JSON is required.</p>
+      <div id="advancedRecords" class="advanced-grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><div><p class="eyebrow">Safety net</p><h2>Recent cloud history</h2></div></div>
+      <div id="historyList" class="stack-list"></div>
+    </section>
+    <p id="message" class="message" role="status"></p>
+  </main>
+  <template id="eventTemplate">
+    <article class="event-card">
+      <div class="event-card-head"><strong>Event</strong><button type="button" data-remove class="danger subtle">Remove</button></div>
+      <div class="event-fields">
+        <label class="wide">Name<input data-field="description" placeholder="Event name" /></label>
+        <label>Start<input data-field="start" type="time" /></label>
+        <label>End<input data-field="end" type="time" /></label>
+        <label>Color<input data-field="color" type="color" value="#6d36d8" /></label>
+        <label>Recurrence<select data-field="recurrenceRule"><option value="none">None</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></label>
+        <label class="check"><input data-field="eventAlarm" type="checkbox" /> Alarm</label>
+        <label class="check"><input data-field="speakDescription" type="checkbox" /> Speak description</label>
+        <label class="wide">Checklist<textarea data-field="checklist" rows="3" placeholder="One item per line"></textarea></label>
+        <label class="wide">Notes<textarea data-field="notes" rows="3"></textarea></label>
+      </div>
+    </article>
+  </template>
+  <script src="life-manager.js?v=20260817-1"></script>
+</body>
+</html>

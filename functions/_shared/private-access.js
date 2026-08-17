@@ -1,4 +1,11 @@
 export const RESOURCE_CATALOG = Object.freeze({
+  life_manager: {
+    name: "Life Manager",
+    description: "Personal plans, events, checklists, notes, templates, photos, and connected devices.",
+    url: "/private/life-manager/",
+    requestLevel: "edit",
+    ownerOnly: true
+  },
   scheduler: {
     name: "TH Operations Scheduler",
     description: "Shared schedule, coverage, staffing, and restore history.",
