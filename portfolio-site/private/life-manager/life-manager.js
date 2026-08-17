@@ -104,8 +104,8 @@
   };
   const loadAll = async () => {
     $("syncStatus").textContent = "Loading cloud state…"; $("syncStatus").className = "sync-pill";
-    const [cloud, devices] = await Promise.all([request("api/state"), request("api/devices")]); state.records.clear(); cloud.records.forEach((item) => state.records.set(keyFor(item.type, item.id), item)); state.photos = cloud.photos || []; state.history = cloud.history || []; state.devices = devices.devices || [];
-    renderMetrics(); renderDevices(); renderPhotos(); renderAdvanced(); renderHistory(); $("syncStatus").textContent = `Cloud synced · r${cloud.cursor}`; $("syncStatus").className = "sync-pill saved";
+    const [cloud, devices, health] = await Promise.all([request("api/state"), request("api/devices"), request("api/health")]); state.records.clear(); cloud.records.forEach((item) => state.records.set(keyFor(item.type, item.id), item)); state.photos = cloud.photos || []; state.history = cloud.history || []; state.devices = devices.devices || [];
+    renderMetrics(); renderDevices(); renderPhotos(); renderAdvanced(); renderHistory(); $("syncStatus").textContent = `Cloud synced · r${cloud.cursor} · ${health.photoStorage === "ready" ? "photo storage ready" : "photo storage unavailable"}`; $("syncStatus").className = "sync-pill saved";
   };
 
   $("addEvent").addEventListener("click", () => addEventCard()); $("saveDay").addEventListener("click", () => saveDay().catch((error) => message(error.message, true))); $("saveDayJson").addEventListener("click", () => saveDayJson().catch((error) => message(error.message, true))); $("deleteDay").addEventListener("click", () => deleteDay().catch((error) => message(error.message, true))); $("dayDate").addEventListener("change", (event) => openDay(event.target.value));
