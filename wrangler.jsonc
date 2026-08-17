@@ -1,0 +1,23 @@
+{
+  "name": "t-hawthorne-portfolio",
+  "pages_build_output_dir": "./portfolio-site",
+  "compatibility_date": "2026-06-01",
+  "vars": {
+    "OWNER_EMAIL": "athletetyreseh@gmail.com",
+    "CF_ACCESS_TEAM_DOMAIN": "curly-cell-b79d.cloudflareaccess.com",
+    "CF_ACCESS_AUD": "1f9796f47689debf6a880b70d807067624842dba53aa77d07826a955ae942589"
+  },
+  "d1_databases": [
+    {
+      "binding": "SCHEDULER_DB",
+      "database_name": "th-operations-scheduler",
+      "database_id": "a368d00e-d277-4e4c-aac3-abbedb3a999b"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "LIFE_MANAGER_PHOTOS",
+      "bucket_name": "life-manager-photos"
+    }
+  ]
+}
