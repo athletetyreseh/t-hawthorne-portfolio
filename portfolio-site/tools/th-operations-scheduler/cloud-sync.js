@@ -4,8 +4,10 @@
   // The inherited scheduler owns the interface on every screen size. This
   // layer adds authenticated cloud persistence without creating a second UI.
   const API_ROOT = new URL("api/", window.location.href);
-  const SAVE_DELAY = 1000;
+  const SAVE_DELAY = 250;
+  const RETRY_DELAY = 1500;
   const ACTIVE_TAB_KEY = "thOperationsSchedulerActiveTab";
+  const PENDING_SAVE_KEY = "thOperationsSchedulerPendingCloudSave";
   const ACTIVE_TAB_TTL = 15000;
   const tabId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const browserSave = save;
@@ -30,6 +32,25 @@
   const readActiveTab = () => {
     try { return JSON.parse(localStorage.getItem(ACTIVE_TAB_KEY) || "null"); }
     catch { return null; }
+  };
+
+  const readPendingSave = () => {
+    try { return JSON.parse(localStorage.getItem(PENDING_SAVE_KEY) || "null"); }
+    catch { return null; }
+  };
+
+  const markPendingSave = () => {
+    try {
+      localStorage.setItem(PENDING_SAVE_KEY, JSON.stringify({
+        baseRevision: revision,
+        updatedAt: Date.now(),
+        hash: cloudHash(state)
+      }));
+    } catch {}
+  };
+
+  const clearPendingSave = () => {
+    try { localStorage.removeItem(PENDING_SAVE_KEY); } catch {}
   };
 
   const claimActiveTab = () => {
@@ -141,6 +162,7 @@
     lastCloudHash = cloudHash(state);
     hydrating = false;
     dirty = false;
+    clearPendingSave();
     hideOverlay();
     setStatus(`Cloud saved · r${revision}`, "saved");
   };
@@ -166,6 +188,24 @@
       }
       const payload = await parseJsonResponse(response);
       if (!response.ok) throw new Error(payload.error || `Cloud load failed (${response.status})`);
+      const pending = readPendingSave();
+      const localHash = cloudHash(state);
+      const serverHash = cloudHash(payload.state);
+      if (pending && state.rows?.length && localHash !== serverHash) {
+        revision = Number(payload.revision || 0);
+        lastCloudHash = serverHash;
+        hydrating = false;
+        dirty = true;
+        if (pending.baseRevision == null || Number(pending.baseRevision) === revision) {
+          setStatus("Restoring local changes to cloud", "saving");
+          claimActiveTab();
+          await persistCloud(false);
+        } else {
+          showConflict(payload.revision, payload.updatedAt);
+          setStatus("Local changes need review", "error");
+        }
+        return;
+      }
       applyCloudState(payload);
     } catch (error) {
       hydrating = false;
@@ -182,23 +222,34 @@
     }
   };
 
-  const scheduleCloudSave = () => {
+  const scheduleCloudSave = (delay = SAVE_DELAY) => {
     const currentHash = cloudHash(state);
     if (currentHash === lastCloudHash) {
       dirty = false;
+      clearPendingSave();
       clearTimeout(saveTimer);
       setStatus(`Cloud saved · r${revision || 0}`, "saved");
       return;
     }
     dirty = true;
+    markPendingSave();
     clearTimeout(saveTimer);
-    setStatus("Saved locally", "saving");
+    if (!navigator.onLine) {
+      setStatus("Offline · saved locally", "offline");
+      return;
+    }
+    // Refresh ownership while this focused tab is saving. Previously the
+    // 15-second ownership lease could expire during normal editing, causing
+    // later saves to be skipped until another click or keypress happened.
+    claimActiveTab();
+    setStatus("Saving to cloud", "saving");
     if (!isActiveSchedulerTab()) return;
-    saveTimer = window.setTimeout(() => persistCloud(false), SAVE_DELAY);
+    saveTimer = window.setTimeout(() => persistCloud(false), delay);
   };
 
-  const persistCloud = async (force = false, retryCount = 0) => {
+  const persistCloud = async (force = false) => {
     if (hydrating || !state.rows?.length) return;
+    if (!force) claimActiveTab();
     if (!force && !isActiveSchedulerTab()) return;
     if (saving) {
       dirty = true;
@@ -215,8 +266,9 @@
       setStatus(`Cloud saved · r${revision || 0}`, "saved");
       return;
     }
-    const shouldForce = force || isActiveSchedulerTab();
+    const shouldForce = force;
 
+    let failed = false;
     try {
       const response = await fetch(new URL("state", API_ROOT), {
         method: "PUT",
@@ -227,10 +279,6 @@
       const payload = await parseJsonResponse(response);
       if (response.status === 409) {
         revision = Number(payload.revision || revision || 0);
-        if (isActiveSchedulerTab() && retryCount < 2) {
-          saving = false;
-          return persistCloud(true, retryCount + 1);
-        }
         showConflict(payload.revision, payload.updatedAt);
         setStatus("Save conflict", "error");
         return;
@@ -238,15 +286,17 @@
       if (!response.ok) throw new Error(payload.error || `Cloud save failed (${response.status})`);
       revision = Number(payload.revision || revision || 1);
       lastCloudHash = snapshotHash;
+      clearPendingSave();
       hideOverlay();
       setStatus(`Cloud saved · r${revision}`, "saved");
     } catch (error) {
+      failed = true;
       dirty = true;
-      setStatus(navigator.onLine ? "Cloud save failed" : "Offline · saved locally", "offline");
+      setStatus(navigator.onLine ? "Retrying cloud save" : "Offline · saved locally", "offline");
       console.error(error);
     } finally {
       saving = false;
-      if (dirty && navigator.onLine && cloudOverlay.hidden) scheduleCloudSave();
+      if (dirty && navigator.onLine && cloudOverlay.hidden) scheduleCloudSave(failed ? RETRY_DELAY : SAVE_DELAY);
     }
   };
 
@@ -319,6 +369,7 @@
 
   const saveButton = $id("saveBrowser");
   if (saveButton) saveButton.textContent = "Save Now";
+  $id("tbDownloadJson")?.addEventListener("click", () => $id("downloadJson")?.click());
   const historyButton = document.createElement("button");
   historyButton.id = "cloudHistory";
   historyButton.type = "button";

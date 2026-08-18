@@ -9,6 +9,31 @@
   --th-warning: #9a6400;
 }
 
+/* Scheduler grid refinements: match the approved teal date/post header and
+   improve time scanning without changing any schedule interaction. */
+.schedule th,
+.week-past .schedule th,
+.week-next .schedule th,
+.week-future .schedule th,
+.master .schedule th {
+  background: linear-gradient(to bottom, #09dad7, #0b9995) !important;
+  border-color: #0b9995 !important;
+  height: 34px;
+}
+
+.schedule thead tr,
+.week-past .schedule thead tr,
+.week-next .schedule thead tr,
+.week-future .schedule thead tr,
+.master .schedule thead tr {
+  background: #0b9995 !important;
+}
+
+.timepiece,
+.timecell {
+  color: #48a549 !important;
+}
+
 .shift-change-marker {
   position: absolute;
   z-index: 16;
