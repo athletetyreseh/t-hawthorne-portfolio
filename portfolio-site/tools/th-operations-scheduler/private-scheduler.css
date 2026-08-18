@@ -9,24 +9,23 @@
   --th-warning: #9a6400;
 }
 
-/* Scheduler grid refinements: match the approved teal date/post header and
-   improve time scanning without changing any schedule interaction. */
-.schedule th,
-.week-past .schedule th,
-.week-next .schedule th,
-.week-future .schedule th,
-.master .schedule th {
-  background: linear-gradient(to bottom, #09dad7, #0b9995) !important;
-  border-color: #0b9995 !important;
+/* Keep the scheduler's existing past/current/future/master week colors. Only
+   the next working week uses the approved turquoise date/post header. */
+.schedule th {
   height: 34px;
 }
 
-.schedule thead tr,
-.week-past .schedule thead tr,
-.week-next .schedule thead tr,
-.week-future .schedule thead tr,
-.master .schedule thead tr {
+.week-next .schedule th {
+  background: linear-gradient(to bottom, #09dad7, #0b9995) !important;
+  border-color: #0b9995 !important;
+}
+
+.week-next .schedule thead tr {
   background: #0b9995 !important;
+}
+
+.cell .name {
+  font-weight: 600;
 }
 
 .timepiece,
