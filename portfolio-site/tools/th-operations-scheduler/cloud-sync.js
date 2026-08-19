@@ -296,7 +296,14 @@
       console.error(error);
     } finally {
       saving = false;
-      if (dirty && navigator.onLine && cloudOverlay.hidden) scheduleCloudSave(failed ? RETRY_DELAY : SAVE_DELAY);
+      if (dirty && navigator.onLine && cloudOverlay.hidden) {
+        if (force) {
+          clearTimeout(saveTimer);
+          saveTimer = window.setTimeout(() => persistCloud(true), failed ? RETRY_DELAY : SAVE_DELAY);
+        } else {
+          scheduleCloudSave(failed ? RETRY_DELAY : SAVE_DELAY);
+        }
+      }
     }
   };
 
@@ -369,7 +376,40 @@
 
   const saveButton = $id("saveBrowser");
   if (saveButton) saveButton.textContent = "Save Now";
-  $id("tbDownloadJson")?.addEventListener("click", () => $id("downloadJson")?.click());
+  const forceCloudButton = document.createElement("button");
+  forceCloudButton.id = "tbForceCloudSave";
+  forceCloudButton.type = "button";
+  forceCloudButton.className = "toolbtn force-cloud-button";
+  forceCloudButton.textContent = "☁";
+  forceCloudButton.title = "Force upload current schedule to cloud";
+  forceCloudButton.setAttribute("aria-label", "Force upload current schedule to cloud");
+  $id("tbCalendar")?.insertAdjacentElement("afterend", forceCloudButton);
+  forceCloudButton.addEventListener("click", async () => {
+    if (forceCloudButton.disabled) return;
+    forceCloudButton.disabled = true;
+    forceCloudButton.setAttribute("aria-busy", "true");
+    browserSave(true);
+    dirty = true;
+    markPendingSave();
+    claimActiveTab();
+    setStatus("Forcing cloud save", "saving");
+    try {
+      for (let attempt = 0; saving && attempt < 100; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 100));
+      }
+      if (saving) throw new Error("The existing cloud save did not finish in time.");
+      await persistCloud(true);
+    } catch (error) {
+      dirty = true;
+      setStatus("Retrying forced cloud save", "offline");
+      clearTimeout(saveTimer);
+      saveTimer = window.setTimeout(() => persistCloud(true), RETRY_DELAY);
+      console.error(error);
+    } finally {
+      forceCloudButton.disabled = false;
+      forceCloudButton.removeAttribute("aria-busy");
+    }
+  });
   const historyButton = document.createElement("button");
   historyButton.id = "cloudHistory";
   historyButton.type = "button";
