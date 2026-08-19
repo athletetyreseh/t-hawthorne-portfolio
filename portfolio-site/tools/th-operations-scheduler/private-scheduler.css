@@ -25,12 +25,38 @@
 }
 
 .cell .name {
-  font-weight: 600;
+  font-weight: 500;
 }
 
-.timepiece,
 .timecell {
+  color: #111 !important;
+}
+
+.timepiece {
   color: #48a549 !important;
+  font-weight: 600 !important;
+}
+
+.cell.open .timepiece,
+.cell.sick .timepiece {
+  color: #111 !important;
+}
+
+.force-cloud-button {
+  color: #fff !important;
+  background: linear-gradient(#3f84c8, #18538f) !important;
+  border-color: #0c3d70 !important;
+  font-size: 15px !important;
+  font-weight: 700;
+}
+
+.force-cloud-button:hover {
+  background: linear-gradient(#55a0e6, #2467a7) !important;
+}
+
+.force-cloud-button[aria-busy="true"] {
+  opacity: .65;
+  cursor: wait;
 }
 
 .shift-change-marker {
