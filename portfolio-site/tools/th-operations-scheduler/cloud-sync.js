@@ -21,8 +21,25 @@
 
   const $id = (id) => document.getElementById(id);
   const cloneState = (value) => JSON.parse(JSON.stringify(value));
-  const cloudHash = (value) => {
+  const EMPTY_ASSIGNMENT_KEYS = new Set(["status", "name", "start", "end", "note"]);
+  const isDefaultBlankAssignment = (assignment) => {
+    if (!assignment || typeof assignment !== "object" || Array.isArray(assignment)) return false;
+    if ((assignment.status || "blank") !== "blank") return false;
+    if (assignment.name || assignment.start || assignment.end || assignment.note) return false;
+    return Object.keys(assignment).every((key) => EMPTY_ASSIGNMENT_KEYS.has(key));
+  };
+  const compactState = (value) => {
     const copy = cloneState(value || {});
+    for (const row of copy.rows || []) {
+      if (!row.assignments || typeof row.assignments !== "object") continue;
+      for (const [date, assignment] of Object.entries(row.assignments)) {
+        if (isDefaultBlankAssignment(assignment)) delete row.assignments[date];
+      }
+    }
+    return copy;
+  };
+  const cloudHash = (value) => {
+    const copy = compactState(value);
     delete copy.view;
     delete copy.lastSaved;
     return JSON.stringify(copy);
@@ -259,7 +276,7 @@
     saving = true;
     dirty = false;
     setStatus("Saving to cloud", "saving");
-    const snapshot = cloneState(state);
+    const snapshot = compactState(state);
     const snapshotHash = cloudHash(snapshot);
     if (!force && snapshotHash === lastCloudHash) {
       saving = false;
