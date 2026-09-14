@@ -6,12 +6,13 @@
   const API_ROOT = new URL("api/", window.location.href);
   const SAVE_DELAY = 250;
   const RETRY_DELAY = 1500;
-  const ACTIVE_TAB_KEY = "thOperationsSchedulerActiveTab";
   const PENDING_SAVE_KEY = "thOperationsSchedulerPendingCloudSave";
-  const ACTIVE_TAB_TTL = 15000;
   const tabId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const browserSave = save;
   let revision = null;
+  let baseState = null;
+  let loading = false;
+  let recovering = true;
   let saveTimer = 0;
   let saving = false;
   let dirty = false;
@@ -46,41 +47,52 @@
   };
   const escapeText = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
 
-  const readActiveTab = () => {
-    try { return JSON.parse(localStorage.getItem(ACTIVE_TAB_KEY) || "null"); }
-    catch { return null; }
-  };
-
   const readPendingSave = () => {
-    try { return JSON.parse(localStorage.getItem(PENDING_SAVE_KEY) || "null"); }
+    try { return JSON.parse(sessionStorage.getItem(PENDING_SAVE_KEY) || localStorage.getItem(PENDING_SAVE_KEY) || "null"); }
     catch { return null; }
   };
 
   const markPendingSave = () => {
     try {
-      localStorage.setItem(PENDING_SAVE_KEY, JSON.stringify({
+      const pending = JSON.stringify({
         baseRevision: revision,
+        baseState,
+        state: compactState(state),
+        tabId,
         updatedAt: Date.now(),
         hash: cloudHash(state)
-      }));
+      });
+      sessionStorage.setItem(PENDING_SAVE_KEY, pending);
+      localStorage.setItem(PENDING_SAVE_KEY, pending);
     } catch {}
   };
 
-  const clearPendingSave = () => {
-    try { localStorage.removeItem(PENDING_SAVE_KEY); } catch {}
-  };
-
-  const claimActiveTab = () => {
-    if (document.visibilityState !== "visible") return;
+  const clearPendingSave = (hash = cloudHash(state)) => {
     try {
-      localStorage.setItem(ACTIVE_TAB_KEY, JSON.stringify({ id: tabId, updatedAt: Date.now() }));
+      for (const storage of [sessionStorage, localStorage]) {
+        const pending = JSON.parse(storage.getItem(PENDING_SAVE_KEY) || "null");
+        if (pending?.hash === hash) storage.removeItem(PENDING_SAVE_KEY);
+      }
     } catch {}
   };
 
-  const isActiveSchedulerTab = () => {
-    if (document.visibilityState !== "visible" || !document.hasFocus()) return false;
-    const active = readActiveTab();
-    return active?.id === tabId && Date.now() - Number(active.updatedAt || 0) < ACTIVE_TAB_TTL;
+  // A stalled connection must not hold the single-flight save lock forever.
+  const cloudFetch = (url, options = {}) => fetch(url, {
+    ...options, signal: AbortSignal.timeout(15000)
+  });
+
+  const reconcileCloud = (payload) => {
+    const remote = compactState(payload.state);
+    const view = state.view;
+    state = cloneState(window.SchedulerSync.merge(baseState ?? { rows: [], staff: [] }, compactState(state), remote));
+    state.view = view;
+    revision = Number(payload.revision || 0);
+    baseState = remote;
+    lastCloudHash = cloudHash(remote);
+    hydrating = true;
+    try { render(); browserSave(true); } finally { hydrating = false; }
+    dirty = cloudHash(state) !== lastCloudHash;
+    if (dirty) markPendingSave(); else clearPendingSave();
   };
 
   const showCurrentWeek = () => {
@@ -101,6 +113,10 @@
       status.classList.add("cloud-state");
       status.dataset.tone = tone;
       status.textContent = message;
+      status.setAttribute("role", "status");
+      status.setAttribute("aria-live", "polite");
+      status.title = tone === "saved" ? "All schedule changes are saved to your private cloud." :
+        tone === "offline" ? "Your changes are kept on this device. Cloud saving retries automatically." : message;
     }
   };
 
@@ -149,18 +165,6 @@
     }
   };
 
-  const showConflict = (serverRevision, updatedAt) => {
-    const when = updatedAt ? new Date(updatedAt).toLocaleString() : "recently";
-    showOverlay(`
-      <h2>A newer cloud schedule exists</h2>
-      <p>Another tab or device saved revision ${serverRevision} ${when}. Choose which copy should remain current.</p>
-      <div class="cloud-card-actions">
-        <button type="button" data-cloud-action="reload">Load cloud version</button>
-        <button class="secondary" type="button" data-cloud-action="overwrite">Overwrite with this device</button>
-      </div>
-    `);
-  };
-
   const parseJsonResponse = async (response) => {
     const text = await response.text();
     if (!text) return {};
@@ -171,6 +175,7 @@
     hydrating = true;
     state = cloneState(payload.state);
     revision = Number(payload.revision || 0);
+    baseState = compactState(payload.state);
     mode = state.view?.mode || "working";
     siteFilter = state.view?.siteFilter || "all";
     showCurrentWeek();
@@ -185,9 +190,11 @@
   };
 
   const loadCloudState = async () => {
+    if (loading || saving) return;
+    loading = true;
     setStatus("Loading cloud", "saving");
     try {
-      const response = await fetch(new URL("state", API_ROOT), {
+      const response = await cloudFetch(new URL("state", API_ROOT), {
         credentials: "same-origin",
         cache: "no-store",
         headers: { Accept: "application/json" }
@@ -196,6 +203,7 @@
         hydrating = false;
         if (state.rows?.length) {
           dirty = true;
+          loading = false;
           await persistCloud(true);
         } else {
           setStatus("Setup required", "offline");
@@ -205,22 +213,18 @@
       }
       const payload = await parseJsonResponse(response);
       if (!response.ok) throw new Error(payload.error || `Cloud load failed (${response.status})`);
-      const pending = readPendingSave();
-      const localHash = cloudHash(state);
-      const serverHash = cloudHash(payload.state);
-      if (pending && state.rows?.length && localHash !== serverHash) {
-        revision = Number(payload.revision || 0);
-        lastCloudHash = serverHash;
-        hydrating = false;
+      const pending = recovering ? readPendingSave() : null;
+      recovering = false;
+      if (!dirty && pending && (pending.state || pending.hash === cloudHash(state))) {
+        // Recovery uses the actual unsent snapshot, never another tab's browser cache.
+        if (pending.state) state = cloneState(pending.state);
+        baseState = pending.baseState || baseState;
         dirty = true;
-        if (pending.baseRevision == null || Number(pending.baseRevision) === revision) {
-          setStatus("Restoring local changes to cloud", "saving");
-          claimActiveTab();
-          await persistCloud(false);
-        } else {
-          showConflict(payload.revision, payload.updatedAt);
-          setStatus("Local changes need review", "error");
-        }
+      }
+      if (dirty) {
+        reconcileCloud(payload);
+        if (dirty) scheduleCloudSave();
+        else setStatus(`Cloud saved · r${revision}`, "saved");
         return;
       }
       applyCloudState(payload);
@@ -236,12 +240,15 @@
         showOverlay(`<h2>Cloud schedule unavailable</h2><p>${escapeText(error.message)} Try again when your connection is available.</p><div class="cloud-card-actions"><button data-cloud-action="reload">Try again</button></div>`);
         setStatus("Cloud unavailable", "error");
       }
+    } finally {
+      loading = false;
+      if (dirty && navigator.onLine) scheduleCloudSave(RETRY_DELAY);
     }
   };
 
   const scheduleCloudSave = (delay = SAVE_DELAY) => {
     const currentHash = cloudHash(state);
-    if (currentHash === lastCloudHash) {
+    if (currentHash === lastCloudHash && !saving) {
       dirty = false;
       clearPendingSave();
       clearTimeout(saveTimer);
@@ -255,20 +262,17 @@
       setStatus("Offline · saved locally", "offline");
       return;
     }
-    // Refresh ownership while this focused tab is saving. Previously the
-    // 15-second ownership lease could expire during normal editing, causing
-    // later saves to be skipped until another click or keypress happened.
-    claimActiveTab();
+    // Dirty tabs may save in the background: revision checks and reconciliation
+    // prevent a stale tab from overwriting unrelated cloud changes.
     setStatus("Saving to cloud", "saving");
-    if (!isActiveSchedulerTab()) return;
+
     saveTimer = window.setTimeout(() => persistCloud(false), delay);
   };
 
   const persistCloud = async (force = false) => {
-    if (hydrating || !state.rows?.length) return;
-    if (!force) claimActiveTab();
-    if (!force && !isActiveSchedulerTab()) return;
-    if (saving) {
+    if (hydrating || !Array.isArray(state.rows)) return;
+
+    if (saving || loading) {
       dirty = true;
       return;
     }
@@ -287,7 +291,7 @@
 
     let failed = false;
     try {
-      const response = await fetch(new URL("state", API_ROOT), {
+      const response = await cloudFetch(new URL("state", API_ROOT), {
         method: "PUT",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -295,16 +299,22 @@
       });
       const payload = await parseJsonResponse(response);
       if (response.status === 409) {
-        revision = Number(payload.revision || revision || 0);
-        showConflict(payload.revision, payload.updatedAt);
-        setStatus("Save conflict", "error");
+        const latestResponse = await cloudFetch(new URL("state", API_ROOT), {
+          credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" }
+        });
+        const latest = await parseJsonResponse(latestResponse);
+        if (!latestResponse.ok) throw new Error(latest.error || "Cloud refresh failed");
+        reconcileCloud(latest);
+        setStatus(dirty ? "Syncing latest changes" : `Cloud saved · r${revision}`, dirty ? "saving" : "saved");
         return;
       }
       if (!response.ok) throw new Error(payload.error || `Cloud save failed (${response.status})`);
       revision = Number(payload.revision || revision || 1);
       lastCloudHash = snapshotHash;
-      clearPendingSave();
-      hideOverlay();
+      baseState = snapshot;
+      dirty = cloudHash(state) !== snapshotHash;
+      if (dirty) markPendingSave(); else clearPendingSave(snapshotHash);
+      if (force) hideOverlay();
       setStatus(`Cloud saved · r${revision}`, "saved");
     } catch (error) {
       failed = true;
@@ -313,13 +323,8 @@
       console.error(error);
     } finally {
       saving = false;
-      if (dirty && navigator.onLine && cloudOverlay.hidden) {
-        if (force) {
-          clearTimeout(saveTimer);
-          saveTimer = window.setTimeout(() => persistCloud(true), failed ? RETRY_DELAY : SAVE_DELAY);
-        } else {
-          scheduleCloudSave(failed ? RETRY_DELAY : SAVE_DELAY);
-        }
+      if (dirty && navigator.onLine) {
+        scheduleCloudSave(failed ? RETRY_DELAY : SAVE_DELAY);
       }
     }
   };
@@ -353,7 +358,6 @@
   };
 
   const refreshCloudOnActivation = () => {
-    claimActiveTab();
     if (hydrating || saving || cloudOverlay.hidden === false) return;
     if (dirty) {
       persistCloud(false);
@@ -371,8 +375,7 @@
     if (action === "paste-import") await importPastedJson();
     if (action === "reload") await loadCloudState();
     if (action === "overwrite") {
-      claimActiveTab();
-      await persistCloud(true);
+        await persistCloud(true);
     }
     if (action === "close") hideOverlay();
     if (restoreId) {
@@ -408,7 +411,6 @@
     browserSave(true);
     dirty = true;
     markPendingSave();
-    claimActiveTab();
     setStatus("Forcing cloud save", "saving");
     try {
       for (let attempt = 0; saving && attempt < 100; attempt += 1) {
@@ -707,20 +709,19 @@
   window.addEventListener("online", () => { if (dirty) persistCloud(false); else loadCloudState(); });
   window.addEventListener("offline", () => setStatus("Offline · saved locally", "offline"));
   window.addEventListener("focus", refreshCloudOnActivation);
-  document.addEventListener("pointerdown", claimActiveTab, true);
-  document.addEventListener("keydown", claimActiveTab, true);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       clearTimeout(saveTimer);
       browserSave(true);
+      if (dirty) { markPendingSave(); persistCloud(false); }
       return;
     }
     refreshCloudOnActivation();
   });
 
   setStatus("Loading cloud", "saving");
-  claimActiveTab();
   showCurrentWeek();
   render();
+  hydrating = false;
   loadCloudState();
 })();
