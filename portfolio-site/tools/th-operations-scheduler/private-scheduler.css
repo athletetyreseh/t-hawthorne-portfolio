@@ -1238,61 +1238,70 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 /* Reference desktop assets and the connected Working/date-range frame. */
-.scheduler-icon { display: block; width: 22px; height: 22px; object-fit: contain; pointer-events: none; user-select: none; }
+.scheduler-icon { display: block; width: 19px; height: 19px; object-fit: contain; pointer-events: none; user-select: none; }
 .dropdown-icon { display: block; width: 9px; height: 6px; object-fit: fill; pointer-events: none; }
 .toolstrip { height: 29px; min-height: 29px; gap: 3px; padding: 2px 7px; background: linear-gradient(#eff3f8, #cad7e8); }
-.toolstrip .toolbtn:not(.ai-control-button):not(.force-cloud-button) {
-  width: 26px; min-width: 26px; height: 25px; padding: 1px;
+.toolstrip .toolbtn:not(#tbPrint):not(.ai-control-button):not(.force-cloud-button) {
+  width: 22px; min-width: 22px; height: 21px; padding: 1px;
   border: 1px solid transparent; border-radius: 2px; background: transparent;
 }
-.toolstrip .toolbtn:not(.ai-control-button):not(.force-cloud-button):hover {
+.toolstrip .toolbtn:not(#tbPrint):not(.ai-control-button):not(.force-cloud-button):hover {
   border-color: #8a9db8; background: linear-gradient(#fff, #d7e3f3);
+}
+.toolstrip #tbPrint { width: 26px; min-width: 26px; height: 25px; padding: 1px; }
+.toolstrip .force-cloud-button {
+  width: 20px !important; min-width: 20px !important; height: 21px !important;
+  font-size: 13px !important;
+}
+.toolstrip .ai-control-button {
+  width: 61px !important; min-width: 61px !important; height: 21px !important;
+  padding: 1px 4px !important; font-size: 9px !important;
 }
 .top {
   height: 110px; min-height: 110px;
-  grid-template-columns: minmax(260px, 1fr) 184px 350px 110px;
+  grid-template-columns: minmax(260px, 1fr) 184px 235px 73px;
   gap: 12px; padding: 7px 12px 6px 8px;
   background: linear-gradient(#f2f4f7, #e3e9f0);
 }
 .top .hours { font-weight: normal; color: #737983; font-size: 10px; }
 .top .hours b { width: 105px; }
 .wm {
-  min-width: 0; width: 350px; padding: 0; border: 0; background: transparent;
+  min-width: 0; width: 235px; padding: 0; border: 0; background: transparent;
   display: flex; justify-content: flex-start; align-self: start;
 }
-.wm-tabs { height: 30px; align-items: end; }
+.wm-tabs { height: 20px; align-items: end; }
 .wm-tab {
-  height: 28px; padding: 6px 11px; font-size: 12px; line-height: 16px;
+  height: 19px; padding: 3px 7px; font-size: 8px; line-height: 11px;
   border: 1px solid #8e98a5; border-radius: 3px 3px 0 0;
   background: linear-gradient(#fffff5, #ebe9df); color: #353a43;
   box-shadow: inset 0 1px 1px #fff;
 }
 .wm-tab.active {
-  height: 30px; border-color: #405674; border-bottom-color: #455e80;
+  height: 20px; border-color: #405674; border-bottom-color: #455e80;
   color: #fff; background: linear-gradient(#64758c, #455e80);
   box-shadow: inset 0 1px 1px #94a1b3; position: relative; z-index: 1;
 }
-.find-control { margin: 0 7px 6px auto; display: flex; gap: 5px; align-items: center; color: #222b38; font-size: 12px; }
-.find-control .scheduler-icon { width: 21px; height: 23px; }
+.find-control { margin: 0 5px 3px auto; display: flex; gap: 3px; align-items: center; color: #222b38; font-size: 8px; }
+.find-control .scheduler-icon { width: 14px; height: 15px; }
 .date-strip {
-  display: grid; grid-template-columns: 26px minmax(0,1fr) minmax(0,1fr) 26px;
-  gap: 0; padding: 7px; background: #455e80; border: 1px solid #354b68;
-  box-shadow: inset 1px 0 #8291a4, inset -1px -1px #2d425d; height: 45px;
+  display: grid; grid-template-columns: 17px minmax(0,1fr) minmax(0,1fr) 17px;
+  gap: 0; padding: 4px; background: #455e80; border: 1px solid #354b68;
+  box-shadow: inset 1px 0 #8291a4, inset -1px -1px #2d425d; height: 30px;
 }
 .date-strip button, .date-strip button:hover {
-  width: 26px; height: 29px; padding: 0; border: 0; border-radius: 0;
+  width: 17px; height: 20px; padding: 0; border: 0; border-radius: 0;
   background: transparent; box-shadow: none;
 }
-.date-strip button .scheduler-icon { width: 26px; height: 29px; object-fit: fill; }
+.date-strip button .scheduler-icon { width: 17px; height: 20px; object-fit: fill; }
 .date-strip button:hover .scheduler-icon { filter: brightness(1.12); }
 .date-strip input {
-  min-width: 0; width: 100%; height: 29px; padding: 2px 3px;
-  font-size: 13px; font-weight: bold; color: #202731; background: #fafafa;
+  min-width: 0; width: 100%; height: 20px; padding: 1px 2px;
+  font-size: 9px; font-weight: bold; color: #202731; background: #fafafa;
   border: 1px solid #939da8; box-shadow: inset 0 1px 2px #c1c7ce;
 }
-.date-strip #rangeStart { margin-right: 7px; width: calc(100% - 7px); }
+.date-strip #rangeStart { margin-right: 4px; width: calc(100% - 4px); }
 .date-strip input::-webkit-calendar-picker-indicator {
-  width: 21px; height: 23px; margin: 0; padding: 0; cursor: pointer;
+  width: 14px; height: 16px; margin: 0; padding: 0; cursor: pointer;
   background: url('assets/calendar.png') center / contain no-repeat; opacity: 1;
 }
 .date-strip #endDate::-webkit-calendar-picker-indicator { display: none; }
@@ -1300,18 +1309,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .wm-actions button { height: 22px; padding: 1px 5px; font-size: 10px; border-radius: 2px; }
 .wm-actions .paperbtn { width: 24px; padding: 0; font-size: 15px; }
 #saveStatus.cloud-state { padding: 2px 5px; font-size: 9px; }
-.icons { align-self: start; padding-top: 30px; gap: 0; justify-content: space-between; }
-.icons .icon { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; color: #252d38; min-width: 48px; }
-.icons .scheduler-icon { width: 29px; height: 26px; }
-.icons #menuButton { border-left: 1px solid #adb5c0; padding-left: 10px; }
+.icons { align-self: start; padding-top: 20px; gap: 0; justify-content: space-between; }
+.icons .icon { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 8px; color: #252d38; min-width: 32px; }
+.icons .scheduler-icon { width: 19px; height: 17px; }
+.icons #menuButton { border-left: 1px solid #adb5c0; padding-left: 7px; }
 @media (min-width: 761px) and (max-width: 1100px) {
-  .top { grid-template-columns: minmax(180px, 1fr) 145px 340px 102px; gap: 8px; }
-  .wm { width: 340px; }
+  .top { grid-template-columns: minmax(180px, 1fr) 145px 235px 73px; gap: 8px; }
+  .wm { width: 235px; }
   .top .hours b { width: 92px; }
 }
 @media (max-width: 760px) {
   .toolstrip { height: 38px; min-height: 38px; }
-  .toolstrip .toolbtn:not(.ai-control-button):not(.force-cloud-button) { width: 32px; min-width: 32px; height: 30px; }
+  .toolstrip .toolbtn:not(#tbPrint):not(.ai-control-button):not(.force-cloud-button) { width: 32px; min-width: 32px; height: 30px; }
   .top { height: 120px; min-height: 120px; display: flex; padding: 6px; gap: 12px; }
   .wm { width: 350px; min-width: 350px; height: 106px; order: -1; overflow: visible; }
   .wm-tabs { min-height: 30px; }
