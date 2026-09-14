@@ -1258,11 +1258,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   padding: 1px 4px !important; font-size: 9px !important;
 }
 .top {
-  height: 110px; min-height: 110px;
+  height: 90px; min-height: 90px;
   grid-template-columns: minmax(260px, 1fr) 184px 235px 73px;
   gap: 12px; padding: 7px 12px 6px 8px;
   background: linear-gradient(#f2f4f7, #e3e9f0);
 }
+.top > .group { margin-left: 30px; }
 .top .hours { font-weight: normal; color: #737983; font-size: 10px; }
 .top .hours b { width: 105px; }
 .wm {
@@ -1313,6 +1314,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .icons .icon { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 8px; color: #252d38; min-width: 32px; }
 .icons .scheduler-icon { width: 19px; height: 17px; }
 .icons #menuButton { border-left: 1px solid #adb5c0; padding-left: 7px; }
+.cell.pto { font-weight: normal; }
+.cell.pto .name { font-weight: bold; }
 @media (min-width: 761px) and (max-width: 1100px) {
   .top { grid-template-columns: minmax(180px, 1fr) 145px 235px 73px; gap: 8px; }
   .wm { width: 235px; }
@@ -1322,6 +1325,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .toolstrip { height: 38px; min-height: 38px; }
   .toolstrip .toolbtn:not(#tbPrint):not(.ai-control-button):not(.force-cloud-button) { width: 32px; min-width: 32px; height: 30px; }
   .top { height: 120px; min-height: 120px; display: flex; padding: 6px; gap: 12px; }
+  .top > .group { margin-left: 0; }
   .wm { width: 350px; min-width: 350px; height: 106px; order: -1; overflow: visible; }
   .wm-tabs { min-height: 30px; }
   .wm-tab { display: block; min-height: 28px; }
