@@ -35,7 +35,7 @@ const text = (value, field, { required = false, max = MAX_TEXT } = {}) => {
 };
 const isoDate = (value, field = "target.date") => {
   const date = text(value, field, { required: true, max: 10 });
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`))) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || (Number.isNaN(Date.parse(`${date}T00:00:00Z`)) || new Date(`${date}T00:00:00Z`).toISOString().slice(0,10) !== date)) {
     fail("invalid_date", `${field} must be an ISO date (YYYY-MM-DD)`, { field });
   }
   return date;
@@ -80,7 +80,10 @@ const assignmentResult = (target, assignment) => ({
     start: assignment.start || "",
     end: assignment.end || "",
     tagged: assignment.tagged === true,
-    note: assignment.note || ""
+    note: assignment.note || "",
+    billCategory: assignment.billCategory || "",
+    hoursDesc: assignment.hoursDesc || "",
+    invoice: assignment.invoice || ""
   }
 });
 
@@ -134,9 +137,8 @@ const markAgentChanges = (before, after) => {
       row.agentTagged = true;
       add(tagged, tagReportTarget(row));
     }
-    if (!previous) continue;
     for (const { name, mode } of assignmentCollections) {
-      const priorAssignments = previous[name] || {};
+      const priorAssignments = previous?.[name] || {};
       const nextAssignments = row[name] || {};
       for (const assignmentKey of new Set([...Object.keys(priorAssignments), ...Object.keys(nextAssignments)])) {
         const prior = priorAssignments[assignmentKey] || blank();
@@ -242,6 +244,7 @@ const executeOne = (state, command, options = {}) => {
   const kind = text(command.kind, "command.kind", { required: true, max: 64 }).toLowerCase();
   if (kind === "save" || kind === "sync") return { changed: false, result: { kind, synchronized: true } };
   if (kind === "batch") {
+    if(options.inBatch) fail("invalid_field", "Nested batches are not supported");
     if (!Array.isArray(command.commands) || !command.commands.length || command.commands.length > 50) {
       fail("invalid_field", "batch.commands must contain 1 to 50 commands", { field: "command.commands" });
     }
@@ -252,6 +255,41 @@ const executeOne = (state, command, options = {}) => {
     return { changed: true, result: { kind, commands: results } };
   }
 
+  if (kind === "replace_state") {
+    requireConfirmation(command, "replace_state", options);
+    validateImportedState(command.state);
+    for(const field of Object.keys(state)) delete state[field];
+    Object.assign(state, clone(command.state));
+    return {changed:true,result:{kind,rows:state.rows.length,officers:state.staff.length}};
+  }
+  if (kind === "update_settings") {
+    const patch=command.patch;
+    if(!isObject(patch) || !Object.keys(patch).length) fail("invalid_field","patch is required");
+    const allowed=["jobNumbers","view","dates","lastRolloverWeek"];
+    for(const field of Object.keys(patch)) {
+      if(!allowed.includes(field)) fail("invalid_field","Unsupported setting",{field,allowed});
+      if(field==='dates') {if(!Array.isArray(patch[field])) fail("invalid_field","dates must be an array");patch[field].forEach(d=>isoDate(d));}
+      else if(field==='lastRolloverWeek') {if(patch[field]) isoDate(patch[field]);}
+      else if(!isObject(patch[field])) fail("invalid_field",field+" must be an object");
+      state[field]=clone(patch[field]);
+    }
+    return {changed:true,result:{kind,fields:Object.keys(patch)}};
+  }
+  if (kind === "copy_week") {
+    requireConfirmation(command,"copy_week",options);
+    const sourceDates=weekDates(isoDate(command.sourceDate,"sourceDate"));
+    const destinationDates=weekDates(isoDate(command.destinationDate,"destinationDate"));
+    const sourceMode=command.sourceMode||'working', destinationMode=command.destinationMode||'working';
+    if(!['working','master'].includes(sourceMode)||!['working','master'].includes(destinationMode)) fail("invalid_field","Modes must be working or master");
+    const rows=state.rows.filter(r=>!command.site||key(r.site)===key(command.site));
+    if(!rows.length) fail("target_not_found","No rows match site");
+    for(const row of rows){
+      const values=sourceDates.map(date=>clone(assignmentAt({row,mode:sourceMode,assignmentKey:sourceMode==='master'?dayFor(date):date},false)));
+      const collection=destinationMode==='master'?(row.master||={}):(row.assignments||={});
+      destinationDates.forEach((date,i)=>{collection[destinationMode==='master'?dayFor(date):date]=values[i]});
+    }
+    return {changed:true,result:{kind,rowsUpdated:rows.length,sourceWeek:sourceDates[0],destinationWeek:destinationDates[0],sourceMode,destinationMode}};
+  }
   if (kind === "add_officer") {
     const officer = resolveOfficer(state, command.officer, true);
     return { changed: true, result: { kind, officer } };
@@ -295,6 +333,31 @@ const executeOne = (state, command, options = {}) => {
 
   const target = targetCandidates(state, command.target);
   const assignment = assignmentAt(target);
+  if(kind==='copy_cell') {
+    requireConfirmation(command,'copy_cell',options);
+    const source=targetCandidates(state,command.source);
+    const value=clone(assignmentAt(source,false));
+    const collection=target.mode==='master'?target.row.master:target.row.assignments;
+    collection[target.assignmentKey]=value;
+    return {changed:true,result:{kind,...assignmentResult(target,value)}};
+  }
+  if(kind==='remove_row') {
+    requireConfirmation(command,'remove_row',options);
+    state.rows=state.rows.filter(row=>row!==target.row);
+    return {changed:true,result:{kind,rowId:target.row.id}};
+  }
+  if(kind==='update_row') {
+    const patch=command.patch;
+    const allowed=['site','post','shiftCode','shiftName','time','typeNum','typeLabel','scope','weekStart'];
+    if(!isObject(patch)||!Object.keys(patch).length) fail('invalid_field','patch is required');
+    for(const field of Object.keys(patch)) {
+      if(!allowed.includes(field)) fail('invalid_field','Unsupported row field',{field,allowed});
+      if(field==='typeNum') {if(!Number.isSafeInteger(patch[field])||patch[field]<1) fail('invalid_field','typeNum must be a positive integer');target.row[field]=patch[field];}
+      else if(field==='weekStart') target.row[field]=mondayFor(isoDate(patch[field]));
+      else {if(field==='scope'&&!['working-week','master-only',''].includes(patch[field])) fail('invalid_field','Invalid row scope');target.row[field]=text(patch[field],field,{max:300});}
+    }
+    return {changed:true,result:{kind,row:rowMetadata(target.row)}};
+  }
   if (kind === "set_row_post") {
     const post = text(command.post, "post", { required: true, max: 300 });
     target.row.post = post;
@@ -310,12 +373,15 @@ const executeOne = (state, command, options = {}) => {
       else hiddenWeeks.delete(weekStart);
       target.row.hiddenWeeks = [...hiddenWeeks].sort();
     }
+    const scope=target.mode==='master'?'master':mondayFor(target.date);
+    const legacy=state.hiddenRowsByScope?.[scope];
+    if(legacy && kind==='show_row') {delete legacy[target.row.id];delete legacy[[target.row.site,target.row.shiftName,target.row.post,target.row.shiftCode,target.row.typeNum].join('|')];}
     return { changed: true, result: { kind, ...publicTarget(target), hidden: kind === "hide_row" } };
   }
   if (kind === "insert_row") {
     const source = clone(target.row);
     const requestedId = text(command.rowId, "rowId", { max: 200 });
-    const id = requestedId || `${String(source.site || "row").replace(/[^a-z0-9]+/gi, "-")}-${Date.now()}`;
+    const id = requestedId || `${String(source.site || "row").replace(/[^a-z0-9]+/gi, "-")}-${crypto.randomUUID()}`;
     if (state.rows.some((row) => String(row.id) === id)) fail("duplicate_row", "rowId already exists", { rowId: id }, 409);
     source.id = id;
     source.typeNum = Number.isSafeInteger(command.typeNum) && command.typeNum > 0 ? command.typeNum : Number(source.typeNum || 0) + 1;
@@ -359,6 +425,7 @@ const executeOne = (state, command, options = {}) => {
   }
   if (kind === "set_status") {
     const status = text(command.status, "status", { required: true, max: 32 }).toLowerCase();
+    if(["blank","blocked"].includes(status)) requireConfirmation(command,"set_status "+status,options);
     let officer;
     if (STAFF_STATUSES.has(status) && command.officer != null) officer = resolveOfficer(state, command.officer, command.allowNewOfficer === true);
     applyStatus(assignment, status, officer);
@@ -381,12 +448,13 @@ const executeOne = (state, command, options = {}) => {
   if (kind === "update_assignment") {
     if (!isObject(command.patch)) fail("required_field", "update_assignment requires patch", { field: "patch" });
     const patch = command.patch;
-    const fields = ["status", "officer", "start", "end", "position", "note", "tagged"];
+    const fields = ["status", "officer", "start", "end", "position", "note", "tagged", "billCategory", "hoursDesc", "invoice"];
     const allowedPatchFields = [...fields, "allowNewOfficer"];
     const unsupported = Object.keys(patch).filter((field) => !allowedPatchFields.includes(field));
     if (unsupported.length) fail("invalid_field", "patch contains unsupported fields", { unsupported, allowed: allowedPatchFields });
     if (!Object.keys(patch).some((field) => fields.includes(field))) fail("invalid_field", "patch contains no supported assignment fields", { allowed: fields });
     const nextStatus = patch.status == null ? assignment.status : text(patch.status, "patch.status", { required: true, max: 32 }).toLowerCase();
+    if(["blank","blocked"].includes(nextStatus)) requireConfirmation(command,"update_assignment "+nextStatus,options);
     let officer;
     if (patch.officer != null) officer = resolveOfficer(state, patch.officer, patch.allowNewOfficer === true);
     applyStatus(assignment, nextStatus, officer);
@@ -394,6 +462,7 @@ const executeOne = (state, command, options = {}) => {
     if (patch.end != null) assignment.end = time(patch.end, "patch.end");
     if (patch.position != null) assignment.position = text(patch.position, "patch.position", { required: true, max: 300 });
     if (patch.note != null) assignment.note = text(patch.note, "patch.note");
+    for(const field of ["billCategory","hoursDesc","invoice"]) if(patch[field]!=null) assignment[field]=text(patch[field],"patch."+field);
     if (patch.tagged != null) {
       if (typeof patch.tagged !== "boolean") fail("invalid_field", "patch.tagged must be boolean", { field: "patch.tagged" });
       requireEditable(assignment);
@@ -416,6 +485,29 @@ const executeOne = (state, command, options = {}) => {
   fail("unsupported_command", "Unsupported scheduler command", { kind });
 };
 
+export function validateImportedState(state) {
+  if(!isObject(state)||!Array.isArray(state.rows)||!Array.isArray(state.staff)) fail('invalid_state','state.rows and state.staff are required');
+  if(state.rows.length>500||state.staff.length>1000||JSON.stringify(state).length>1000000) fail('invalid_state','Schedule exceeds size limits');
+  const ids=new Set();
+  for(const officer of state.staff) text(officer,'staff',{required:true,max:200});
+  for(const row of state.rows) {
+    if(!isObject(row)) fail('invalid_state','Rows must be objects');
+    const id=text(row.id,'row.id',{required:true,max:200});if(ids.has(id)) fail('duplicate_row','Duplicate row ID',{rowId:id});ids.add(id);
+    text(row.site,'row.site',{required:true,max:200});text(row.post,'row.post',{required:true,max:300});
+    for(const collection of ['assignments','master']) {
+      if(row[collection]!=null&&!isObject(row[collection])) fail('invalid_state','Invalid assignment collection');
+      for(const [date,a] of Object.entries(row[collection]||{})) {
+        if(collection==='assignments') isoDate(date);else if(!DAYS.includes(date)) fail('invalid_date','Master keys must be Mon through Sun');
+        if(!isObject(a)||!STATUSES.has(a.status)) fail('invalid_status','Invalid imported assignment status');
+        for(const field of ['start','end']) if(a[field] && time(a[field],field)!==a[field]) fail('invalid_time','Imported times must use HHMM',{field});
+        for(const field of ['name','position','note','billCategory','hoursDesc','invoice']) if(a[field]!=null) text(a[field],field);
+        if(a.tagged!=null&&typeof a.tagged!=='boolean') fail('invalid_field','tagged must be boolean');
+        if(a._skipAgentTag) fail('invalid_field','Internal tag flags cannot be imported');
+      }
+    }
+  }
+}
+
 export const executeSchedulerCommand = (rawState, command) => {
   if (!isObject(rawState) || !Array.isArray(rawState.rows) || !Array.isArray(rawState.staff)) {
     fail("invalid_state", "Schedule state is invalid");
@@ -423,6 +515,18 @@ export const executeSchedulerCommand = (rawState, command) => {
   const state = clone(rawState);
   const execution = executeOne(state, command);
   const agentTags = execution.changed ? markAgentChanges(rawState, state) : null;
+  // Results describe the final saved state, including automatically applied tags.
+  const refreshResult = result => {
+    if(result.assignment && result.rowId) {
+      const row=state.rows.find(row=>row.id===result.rowId);
+      if(row) {
+        const target={row,date:result.date,mode:result.mode,assignmentKey:result.mode==='master'?dayFor(result.date):result.date};
+        result.assignment=assignmentResult(target,assignmentAt(target,false)).assignment;
+      }
+    }
+    if(Array.isArray(result.commands)) result.commands.forEach(refreshResult);
+  };
+  if(execution.changed) refreshResult(execution.result);
   return {
     state,
     changed: execution.changed,
