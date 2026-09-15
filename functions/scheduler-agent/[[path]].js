@@ -1,3 +1,6 @@
+import { agentConsole } from '../_shared/scheduler-agent-console.js';
+import { agentRead, agentExecute, agentManifest } from '../_shared/scheduler-agent-api.js';
+import { getSchedulerCapabilityManifest } from '../_shared/scheduler-capabilities.js';
 import { schema, config, authenticated, login, loginPage, PIN_ROOT, cookie } from '../_shared/scheduler-pin.js';
 import { json, errorResponse, requireSameOrigin } from '../_shared/scheduler.js';
 import { ownerEmailFor } from '../_shared/private-access.js';
@@ -31,6 +34,10 @@ export async function onRequest(context) {
     context.data.schedulerUser=ownerEmailFor(context);
     // PIN sessions are scheduler operators, not Cloudflare/private-access administrators.
     context.data.privateUser={email:'scheduler-pin-agent'};
+    if((!path||path==='index.html') && context.request.method==='GET') return agentConsole();
+    if(['api/context','api/query'].includes(path) && context.request.method==='GET') return await agentRead(context,path.slice(4));
+    if(path==='api/execute' && context.request.method==='POST') return await agentExecute(context);
+    if(path==='api/capabilities' && context.request.method==='GET') return json(agentManifest(getSchedulerCapabilityManifest()));
     if(path.startsWith('api/')) {
       const route=routes[path.slice(4)], method='onRequest'+context.request.method[0]+context.request.method.slice(1).toLowerCase();
       if(!route) return json({error:'Not found'},404);
