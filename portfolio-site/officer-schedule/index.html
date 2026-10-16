@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="officer-schedule.css?v=20260716-3" />
-  <link rel="stylesheet" href="preview-theme.css?v=20261016-1" />
+  <link rel="stylesheet" href="preview-theme.css?v=20261016-2" />
 </head>
 <body>
   <main class="officer-app">
@@ -18,13 +18,6 @@
       <div>
         <h1>Officer <em>schedule</em></h1>
         <p id="syncStatus" role="status">Loading schedule...</p>
-      </div>
-      <div class="header-signature">
-      <button class="secondary-button refresh-button" id="refreshButton" type="button" aria-label="Refresh schedule">
-        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" /></svg>
-        <span class="button-label">Refresh</span>
-      </button>
-      <img class="masthead-logo" src="../assets/th-logo-mark.png" alt="Tyrese Hawthorne" width="52" height="48" decoding="async" fetchpriority="high" />
       </div>
     </header>
 
@@ -38,6 +31,14 @@
       <button class="icon-button" id="nextWeek" type="button" aria-label="Next week"><svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m9 18 6-6-6-6" /></svg></button>
       <button class="secondary-button" id="currentWeek" type="button">Current week</button>
     </section>
+
+      <div class="header-signature">
+      <button class="secondary-button refresh-button" id="refreshButton" type="button" aria-label="Refresh schedule">
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" /></svg>
+        <span class="button-label">Refresh</span>
+      </button>
+      <img class="masthead-logo" src="../assets/th-logo-mark.png" alt="Tyrese Hawthorne" width="52" height="48" decoding="async" fetchpriority="high" />
+      </div>
 
     <section class="view-mode-panel" aria-label="Schedule view">
       <button class="mode-button active" id="perGuardMode" type="button" data-view-mode="guard"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 4a4 4 0 1 1 0 7M20 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>Per guard</button>
