@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <title>Officer Schedule | TH Operations</title>
   <link rel="stylesheet" href="officer-schedule.css?v=20260716-3" />
-  <link rel="stylesheet" href="preview-theme.css?v=20261015-2" />
+  <link rel="stylesheet" href="preview-theme.css?v=20261015-3" />
 </head>
 <body>
   <main class="officer-app">
@@ -123,23 +123,18 @@
         if (button && !button.disabled) { button.disabled = true; button.title = "Disabled on the visual improvements preview"; }
       });
       const addPhotoCredits = () => {
-        const city = document.querySelector("#site-cityscape .site-schedule-head");
-        if (city && !city.querySelector(".photo-credit")) {
-          const credit = document.createElement("small"); credit.className = "photo-credit";
-          const source = document.createElement("a"); source.href = "https://commons.wikimedia.org/wiki/File:CityScape_(6377886441).jpg"; source.target = "_blank"; source.rel = "noopener noreferrer"; source.textContent = "CityScape photo: Alan Stark / Wikimedia Commons";
-          const license = document.createElement("a"); license.href = "https://creativecommons.org/licenses/by-sa/2.0/"; license.target = "_blank"; license.rel = "noopener noreferrer"; license.textContent = "CC BY-SA 2.0 · cropped and darkened";
-          credit.append(source, document.createTextNode(" · "), license); city.append(credit);
-        }
-        const block = document.querySelector("#site-block-23 .site-schedule-head");
-        if (block && !block.querySelector(".photo-credit")) {
-          const credit = document.createElement("small"); credit.className = "photo-credit";
-          const source = document.createElement("a"); source.href = "https://www.omniplan.com/work/case-studies/block-23.html"; source.target = "_blank"; source.rel = "noopener noreferrer"; source.textContent = "Block 23 photo: Omniplan"; credit.append(source); block.append(credit);
-        }
+        const list = document.getElementById("scheduleList");
+        if (!list || document.querySelector(".photo-sources")) return;
+        const credits = document.createElement("p");
+        credits.className = "photo-sources";
+        credits.style.cssText = "margin:14px 4px;color:#9bb2c5;font-size:11px;line-height:1.5";
+        credits.innerHTML = 'Photo sources: <a href="https://commons.wikimedia.org/wiki/File:CityScape_(6377886441).jpg" target="_blank" rel="noopener noreferrer" style="color:inherit">CityScape — Alan Stark / Wikimedia Commons (CC BY-SA 2.0)</a>; <a href="https://www.omniplan.com/work/case-studies/block-23.html" target="_blank" rel="noopener noreferrer" style="color:inherit">Block 23 — Omniplan</a>';
+        list.after(credits);
       };
       lockActions(); addPhotoCredits();
       new MutationObserver(() => { lockActions(); addPhotoCredits(); }).observe(document.getElementById("scheduleList"), { childList: true, subtree: true, attributes: true, attributeFilter: ["disabled"] });
     })();
   </script>
-  <script src="officer-schedule.js?v=20260716-3"></script>
+  <script src="officer-schedule.js?v=20261015-4"></script>
 </body>
 </html>
