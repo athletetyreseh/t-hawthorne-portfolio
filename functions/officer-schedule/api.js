@@ -18,6 +18,10 @@ export async function onRequestPost(context) {
   try {
     if (!requireSameOrigin(context.request)) return json({ error: "Invalid request origin" }, 403);
     const url = new URL(context.request.url);
+    const branch = context.env?.CF_PAGES_BRANCH;
+    if (branch === "visual-improvements" || url.hostname.startsWith("visual-improvements.")) {
+      return json({ error: "Preview is read-only. Use the live schedule to submit requests or signatures." }, 403);
+    }
     const action = url.searchParams.get("action") || "request";
     const database = context.env.SCHEDULER_DB;
     const ownerEmail = ownerEmailFor(context);
