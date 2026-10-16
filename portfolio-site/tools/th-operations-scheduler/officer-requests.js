@@ -4,6 +4,7 @@
   const ADMIN_API = "api/officer-admin";
   const PUBLIC_LINK = `${location.origin}/officer-schedule/`;
   const requestLabels = {
+    overtime: "Overtime pickup",
     pto: "PTO",
     unpaid: "Unpaid Day Off",
     "late-in": "Late Arrival",
@@ -110,6 +111,7 @@
           <span>${escapeHtml(request.status)}</span>
         </div>
         <p>${escapeHtml(requestLabels[request.type])} | ${escapeHtml(range)}${request.requestedTime ? ` | ${escapeHtml(request.requestedTime)}` : ""}</p>
+        ${request.type === "overtime" ? `<p>${escapeHtml(request.site)} · ${escapeHtml(request.post)} · ${escapeHtml(request.shiftStart)}–${escapeHtml(request.shiftEnd)}</p>` : ""}
         ${request.message ? `<small>${escapeHtml(request.message)}</small>` : ""}
         ${request.denialMessage ? `<small class="denial-note">Denied reply: ${escapeHtml(request.denialMessage)}</small>` : ""}
         <div class="officer-request-actions">
@@ -176,6 +178,7 @@
       return;
     }
     await loadOfficerData();
+    if (payload.scheduleChanged) window.dispatchEvent(new Event("focus"));
   }
 
   async function deleteRequest(id) {
