@@ -110,7 +110,8 @@ export async function resolveOvertimeRequest(context, request, status, denialMes
   const shift = findOpenOvertimeShift(state, request.row_id, request.shift_date);
   if (shift.start !== request.start_time || shift.end !== request.end_time || shift.site !== request.site || shift.post !== request.post) fail("The shift details changed after this request. Review a new request for the updated shift.");
   if (hasAssignmentConflict(state, request, shift)) fail("This officer already has an overlapping assignment, including an overnight shift.");
-  const timeOff = await database.prepare("SELECT id FROM officer_schedule_requests WHERE owner_email = ? AND lower(officer_name) = lower(?) AND request_type IN ('pto', 'unpaid') AND status = 'approved' AND start_date <= ? AND end_date >= ? LIMIT 1").bind(owner, request.officer_name, request.shift_date, request.shift_date).first();
+  const lastShiftDate = new Date(shift.interval.end - 7 * 3600000 - 1).toISOString().slice(0, 10);
+  const timeOff = await database.prepare("SELECT id FROM officer_schedule_requests WHERE owner_email = ? AND lower(officer_name) = lower(?) AND request_type IN ('pto', 'unpaid') AND status = 'approved' AND start_date <= ? AND end_date >= ? LIMIT 1").bind(owner, request.officer_name, lastShiftDate, request.shift_date).first();
   if (timeOff) fail("This officer has approved time off on that date.");
   shift.row.assignments[request.shift_date] = { ...shift.cell, status: "assigned", name: request.officer_name, start: shift.start, end: shift.end, note: request.message || "Overtime pickup", overtimeRequestId: request.id };
   const serialized = serializeValidatedState(state), revision = Number(current.revision) + 1;
@@ -122,6 +123,6 @@ export async function resolveOvertimeRequest(context, request, status, denialMes
     database.prepare("UPDATE officer_schedule_overtime_requests SET status = 'denied', denial_message = 'The shift was assigned to another officer.', resolved_at = ?, resolved_by = ? WHERE owner_email = ? AND row_id = ? AND shift_date = ? AND id != ? AND status = 'pending' AND EXISTS (SELECT 1 FROM officer_schedule_overtime_requests WHERE id = ? AND owner_email = ? AND status = 'approved' AND resolved_at = ?)").bind(now, reviewer, owner, request.row_id, request.shift_date, request.id, request.id, owner, now)
   ]);
   if (!results[1].meta?.changes || !results[2].meta?.changes) return json({ error: "The schedule changed while approving. Refresh and review the shift again." }, 409);
-  await pruneHistory(database, owner);
+  try { await pruneHistory(database, owner); } catch (error) { console.error("Overtime history retention failed", error); }
   return json({ ok: true, scheduleChanged: true, revision, updatedAt: now });
 }
