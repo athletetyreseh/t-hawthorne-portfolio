@@ -205,6 +205,10 @@
     table.querySelectorAll(".cell[data-row][data-key]").forEach((cell) => {
       const row = (state.rows || []).find((item) => item.id === cell.dataset.row);
       const assignment = row?.assignments?.[cell.dataset.key];
+      const overtime = officerData.requests.filter((request) => request.type === "overtime" && request.status === "pending" && request.rowId === row?.id && request.startDate === cell.dataset.key);
+      if (assignment?.status === "open" && !assignment.name && overtime.length) {
+        cell.insertAdjacentHTML("afterbegin", `<span class="officer-request-flag" title="${escapeHtml("Overtime requests: " + overtime.map((request) => request.officerName).join(", "))}">${overtime.length}</span>`);
+      }
       if (!assignment?.name) return;
       const requests = requestsForCell(assignment.name, cell.dataset.key);
       const dayOff = requests.find((request) => ["pto", "unpaid"].includes(request.type) && ["pending", "approved"].includes(request.status));
