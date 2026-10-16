@@ -5,16 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <title>Officer Schedule | TH Operations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="officer-schedule.css?v=20260716-3" />
-  <link rel="stylesheet" href="preview-theme.css?v=20261015-7" />
+  <link rel="stylesheet" href="preview-theme.css?v=20261015-8" />
 </head>
 <body>
   <main class="officer-app">
+    <section class="schedule-masthead" aria-label="Schedule overview">
     <header class="hero">
       <div>
-        <p class="eyebrow">Live officer schedule</p>
-        <h1>Weekly assignments</h1>
-        <p id="syncStatus">Loading schedule...</p>
+        <h1>Officer <em>schedule</em></h1>
+        <p id="syncStatus" role="status">Loading schedule...</p>
       </div>
       <button class="secondary-button refresh-button" id="refreshButton" type="button" aria-label="Refresh schedule">
         <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6" /></svg>
@@ -34,11 +37,13 @@
     </section>
 
     <section class="view-mode-panel" aria-label="Schedule view">
-      <button class="mode-button active" id="perGuardMode" type="button" data-view-mode="guard">Per guard</button>
-      <button class="mode-button" id="wholeScheduleMode" type="button" data-view-mode="whole">Whole schedule</button>
+      <button class="mode-button active" id="perGuardMode" type="button" data-view-mode="guard"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 4a4 4 0 1 1 0 7M20 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>Per guard</button>
+      <button class="mode-button" id="wholeScheduleMode" type="button" data-view-mode="whole"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 9v12M15 9v12"/></svg>Whole schedule</button>
     </section>
 
     </div>
+
+    </section>
 
     <section class="officer-picker-panel">
       <label>
@@ -120,7 +125,7 @@
       banner.className = "preview-banner";
       banner.setAttribute("role", "status");
       banner.innerHTML = "<strong>Preview · read only</strong><span>Showing the current schedule. Requests and signatures are disabled here.</span>";
-      document.body.prepend(banner);
+      document.querySelector(".schedule-masthead").append(banner);
       const lockActions = () => ["requestButton", "signButton", "nameSignButton"].forEach((id) => {
         const button = document.getElementById(id);
         if (button && !button.disabled) { button.disabled = true; button.title = "Disabled on the visual improvements preview"; }
