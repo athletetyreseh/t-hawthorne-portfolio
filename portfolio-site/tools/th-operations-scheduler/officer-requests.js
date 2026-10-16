@@ -4,6 +4,7 @@
   const ADMIN_API = "api/officer-admin";
   const PUBLIC_LINK = `${location.origin}/officer-schedule/`;
   const requestLabels = {
+    overtime: "Overtime pickup",
     pto: "PTO",
     unpaid: "Unpaid Day Off",
     "late-in": "Late Arrival",
@@ -110,6 +111,7 @@
           <span>${escapeHtml(request.status)}</span>
         </div>
         <p>${escapeHtml(requestLabels[request.type])} | ${escapeHtml(range)}${request.requestedTime ? ` | ${escapeHtml(request.requestedTime)}` : ""}</p>
+        ${request.type === "overtime" ? `<p>${escapeHtml(request.site)} · ${escapeHtml(request.post)} · ${escapeHtml(request.shiftStart)}–${escapeHtml(request.shiftEnd)}</p>` : ""}
         ${request.message ? `<small>${escapeHtml(request.message)}</small>` : ""}
         ${request.denialMessage ? `<small class="denial-note">Denied reply: ${escapeHtml(request.denialMessage)}</small>` : ""}
         <div class="officer-request-actions">
@@ -176,6 +178,7 @@
       return;
     }
     await loadOfficerData();
+    if (payload.scheduleChanged) window.dispatchEvent(new Event("focus"));
   }
 
   async function deleteRequest(id) {
@@ -202,6 +205,10 @@
     table.querySelectorAll(".cell[data-row][data-key]").forEach((cell) => {
       const row = (state.rows || []).find((item) => item.id === cell.dataset.row);
       const assignment = row?.assignments?.[cell.dataset.key];
+      const overtime = officerData.requests.filter((request) => request.type === "overtime" && request.status === "pending" && request.rowId === row?.id && request.startDate === cell.dataset.key);
+      if (assignment?.status === "open" && !assignment.name && overtime.length) {
+        cell.insertAdjacentHTML("afterbegin", `<span class="officer-request-flag" title="${escapeHtml("Overtime requests: " + overtime.map((request) => request.officerName).join(", "))}">${overtime.length}</span>`);
+      }
       if (!assignment?.name) return;
       const requests = requestsForCell(assignment.name, cell.dataset.key);
       const dayOff = requests.find((request) => ["pto", "unpaid"].includes(request.type) && ["pending", "approved"].includes(request.status));

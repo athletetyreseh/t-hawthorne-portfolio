@@ -5,6 +5,7 @@
   const POLL_MS = 2000;
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const requestLabels = {
+    overtime: "Overtime pickup",
     pto: "PTO",
     unpaid: "Unpaid day off",
     "late-in": "Come in later",
@@ -29,6 +30,9 @@
   let viewMode = "whole";
   let signatureReady = false;
   let loading = false;
+  let overtimeSite = "all", selectedOvertimeKey = "", overtimeReviewing = false, overtimeSending = false, overtimeNotice = "";
+  let previewOvertimeRequests = [];
+  try { const saved = JSON.parse(sessionStorage.getItem("th-preview-overtime-requests") || "[]"); if (Array.isArray(saved)) previewOvertimeRequests = saved.filter((request) => request?.type === "overtime" && request.id && request.rowId && request.startDate).slice(0, 100); } catch {}
 
   const dom = {
     status: document.getElementById("syncStatus"),
@@ -60,7 +64,18 @@
     signatureForm: document.getElementById("signatureForm"),
     signaturePad: document.getElementById("signaturePad"),
     clearSignature: document.getElementById("clearSignature"),
-    saveSignature: document.getElementById("saveSignature")
+    saveSignature: document.getElementById("saveSignature"),
+    overtimeDialog: document.getElementById("overtimeDialog"),
+    overtimeForm: document.getElementById("overtimeForm"),
+    overtimeSummary: document.getElementById("overtimeShiftSummary"),
+    overtimeDetails: document.getElementById("overtimeDetails"),
+    overtimeOfficer: document.getElementById("overtimeOfficer"),
+    overtimeNotes: document.getElementById("overtimeNotes"),
+    overtimeReview: document.getElementById("overtimeReview"),
+    overtimeBack: document.getElementById("overtimeBack"),
+    overtimeSubmit: document.getElementById("overtimeSubmit"),
+    overtimeFeedback: document.getElementById("overtimeFeedback"),
+    overtimePreviewNote: document.getElementById("overtimePreviewNote")
   };
 
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
@@ -110,9 +125,14 @@
       let nextPayload = {};
       try { nextPayload = text ? JSON.parse(text) : {}; } catch { nextPayload = { error: text || "Schedule could not be loaded" }; }
       if (!response.ok) throw new Error(nextPayload.error || "Schedule could not be loaded");
+      const unchanged = payload && JSON.stringify(payload) === JSON.stringify(nextPayload);
+      const pageScroll = { left: window.scrollX, top: window.scrollY };
       payload = nextPayload;
       ensureSelectedOfficer();
-      render();
+      if (!unchanged) {
+        render();
+        requestAnimationFrame(() => window.scrollTo(pageScroll.left, pageScroll.top));
+      }
       const when = payload.updatedAt ? new Date(payload.updatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "just now";
       setStatus(`Live schedule loaded. Last scheduler save: ${when}`);
     } catch (error) {
@@ -143,27 +163,39 @@
   function renderWeek() {
     const dates = weekDates();
     dom.weekText.textContent = `${fmtDate(dates[0])} - ${fmtDate(dates[6])}`;
-    dom.scheduleHead.innerHTML = dates.map((date) => `<div class="day-head"><span>${dayNames[date.getDay()]}</span><strong>${fmtDate(date)}</strong></div>`).join("");
+    const today = iso(new Date());
+    dom.scheduleHead.innerHTML = dates.map((date) => {
+      const isToday = iso(date) === today;
+      return `<div class="day-head${isToday ? " is-today" : ""}"${isToday ? ' aria-current="date"' : ""}><span>${dayNames[date.getDay()]}</span><strong>${fmtDate(date)}</strong></div>`;
+    }).join("");
     dom.weekBar.dataset.weekTone = weekTone();
   }
 
   function renderModeControls() {
     dom.modeButtons.forEach((button) => {
       button.classList.toggle("active", button.dataset.viewMode === viewMode);
+      button.setAttribute("aria-pressed", String(button.dataset.viewMode === viewMode));
     });
     dom.pickerPanel.classList.toggle("whole-mode", viewMode === "whole");
-    dom.pickerPanel.hidden = viewMode === "whole";
-    dom.hoursSummary.hidden = viewMode === "whole";
-    dom.historyPanel.hidden = viewMode === "whole";
+    dom.pickerPanel.hidden = viewMode !== "guard";
+    dom.hoursSummary.hidden = viewMode !== "guard";
+    dom.historyPanel.hidden = viewMode !== "guard";
   }
 
   function renderSchedule() {
+    dom.scheduleCard.classList.toggle("overtime-schedule-card", viewMode === "overtime");
     if (!payload?.schedule) {
-      dom.scheduleList.innerHTML = '<div class="empty-state">No published cloud schedule is available yet.</div>';
+      dom.scheduleList.innerHTML = '<div class="empty-state" role="status">' + (loading ? 'Loading schedule…' : 'No published cloud schedule is available yet.') + '</div>';
       return;
     }
 
     const dates = weekDates();
+    if (viewMode === "overtime") {
+      dom.scheduleCard.classList.add("whole-schedule-card");
+      dom.scheduleHead.innerHTML = "";
+      dom.scheduleList.innerHTML = renderOvertimeSchedule();
+      return;
+    }
     if (viewMode === "whole") {
       const scrollPositions = wholeScheduleScrollPositions();
       dom.scheduleCard.classList.add("whole-schedule-card");
@@ -197,7 +229,142 @@
       cards = dayOffRequests.map((request) => renderDayOffOnly(request)).join("");
     }
 
-    return `<div class="day-column" data-title="${dayNames[date.getDay()]} ${fmtDate(date)}">${cards || '<div class="off-empty">No assignment</div>'}</div>`;
+    return `<div class="day-column${dateKey === iso(new Date()) ? " is-today" : ""}" data-title="${dayNames[date.getDay()]} ${fmtDate(date)}">${cards || '<div class="off-empty">No assignment</div>'}</div>`;
+  }
+
+
+  function overtimeMinutes(value) {
+    const digits = String(value || "").replace(":", "");
+    if (!/^\d{3,4}$/.test(digits)) return null;
+    const text = digits.padStart(4, "0"), hours = Number(text.slice(0, 2)), minutes = Number(text.slice(2));
+    return hours < 24 && minutes < 60 ? hours * 60 + minutes : null;
+  }
+
+  function availableOvertimeShifts() {
+    const shifts = [];
+    for (const row of activeRows()) {
+      for (const date of weekDates().map(iso)) {
+        const cell = row.assignments?.[date];
+        if (cell?.status !== "open" || normalizeName(cell.name)) continue;
+        const fallback = String(row.time || "").split(/[-–]/);
+        const start = cell.start || fallback[0] || "", end = cell.end || fallback[1] || "";
+        const first = overtimeMinutes(start), last = overtimeMinutes(end);
+        if (first == null || last == null || first === last) continue;
+        const midnight = Date.parse(date + "T00:00:00-07:00");
+        const endsAt = midnight + (last <= first ? last + 1440 : last) * 60000;
+        shifts.push({ key: JSON.stringify([row.id, date]), rowId: row.id, date, site: row.site || "", post: cell.position || row.post || "", shiftName: row.shiftName || "", start, end, overnight: last <= first, ended: endsAt <= Date.now() });
+      }
+    }
+    return shifts.sort((a, b) => Number(a.ended) - Number(b.ended) || a.date.localeCompare(b.date) || a.site.localeCompare(b.site) || a.start.localeCompare(b.start) || a.post.localeCompare(b.post));
+  }
+
+  function allOvertimeRequests() {
+    const requests = [...(payload?.requests || []).filter((request) => request.type === "overtime"), ...previewOvertimeRequests];
+    return [...new Map(requests.map((request) => [request.id, request])).values()];
+  }
+
+  function overtimeRequestsForShift(shift) {
+    return allOvertimeRequests().filter((request) => request.rowId === shift.rowId && request.startDate === shift.date && request.status === "pending");
+  }
+
+  function overtimeSiteLabel(site) { return site === "Cityscape" ? "CityScape" : site; }
+
+  function renderOvertimeSchedule() {
+    const all = availableOvertimeShifts();
+    const shifts = all.filter((shift) => overtimeSite === "all" || shift.site === overtimeSite);
+    const upcoming = shifts.filter((shift) => !shift.ended).length;
+    const filters = ["all", "Cityscape", "Block 23"].map((site) => '<button type="button" class="overtime-filter' + (overtimeSite === site ? ' active' : '') + '" data-overtime-site="' + escapeHtml(site) + '" aria-pressed="' + (overtimeSite === site) + '">' + escapeHtml(site === "all" ? "All sites" : overtimeSiteLabel(site)) + '</button>').join("");
+    const dates = [...new Set(shifts.map((shift) => shift.date))];
+    const groups = dates.map((date) => '<section class="overtime-day"><h3><time datetime="' + date + '">' + escapeHtml(new Intl.DateTimeFormat("en", { weekday: "long", month: "short", day: "numeric" }).format(parseDate(date))) + '</time></h3><div class="overtime-grid">' + shifts.filter((shift) => shift.date === date).map(renderOvertimeShift).join("") + '</div></section>').join("");
+    const rememberedName = localStorage.getItem("th-overtime-officer") || "";
+    const mine = rememberedName ? allOvertimeRequests().filter((request) => normalizeName(request.officerName) === normalizeName(rememberedName) && request.startDate >= iso(weekStart) && request.startDate <= iso(addDays(weekStart, 6))).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 8) : [];
+    const history = mine.length ? '<section class="overtime-history"><h3>Your requests</h3>' + mine.map((request) => '<article><div><strong>' + escapeHtml(request.officerName) + '</strong><span>' + escapeHtml(overtimeSiteLabel(request.site)) + ' · ' + escapeHtml(fmtFullDate(request.startDate)) + ' · ' + escapeHtml(formatScheduleTime(request.shiftStart, request.shiftEnd)) + '</span></div><span class="status-pill ' + escapeHtml(request.status) + '">' + escapeHtml(request.status) + '</span></article>').join("") + '</section>' : "";
+    return '<div class="overtime-board"><div class="overtime-head"><div><h2>Pick up overtime</h2><p>Request an unassigned shift. It stays open until the scheduler approves an officer.</p></div><span class="overtime-count">' + upcoming + ' available</span></div>' + (overtimeNotice ? '<div class="overtime-result" role="status">' + escapeHtml(overtimeNotice) + '</div>' : '') + '<nav class="overtime-filters" aria-label="Filter open shifts by site">' + filters + '</nav>' + (groups || '<div class="empty-state">No unassigned shifts for this week' + (overtimeSite === "all" ? '.' : ' at ' + escapeHtml(overtimeSiteLabel(overtimeSite)) + '.') + '</div>') + history + '</div>';
+  }
+
+  function renderOvertimeShift(shift) {
+    const requests = overtimeRequestsForShift(shift);
+    const mine = requests.some((request) => normalizeName(request.officerName) === normalizeName(localStorage.getItem("th-overtime-officer") || ""));
+    const pending = mine ? "Your request is pending" : requests.length ? requests.length + (requests.length === 1 ? " pending request" : " pending requests") : "Request this shift";
+    const label = 'Request ' + overtimeSiteLabel(shift.site) + ' ' + shift.post + ' on ' + fmtFullDate(shift.date) + ', ' + formatScheduleTime(shift.start, shift.end);
+    return '<button type="button" class="overtime-shift' + (shift.ended ? ' is-ended' : '') + '" data-overtime-shift="' + escapeHtml(shift.key) + '" aria-label="' + escapeHtml(label) + '"' + (shift.ended ? ' disabled' : '') + '><span class="overtime-card-top"><span>' + escapeHtml(overtimeSiteLabel(shift.site)) + '</span><span class="overtime-open">' + (shift.ended ? 'Ended' : 'Open') + '</span></span><strong class="overtime-time">' + escapeHtml(formatScheduleTime(shift.start, shift.end)) + '</strong><span class="overtime-post">' + escapeHtml(shift.post) + '</span><span class="overtime-shift-name">' + escapeHtml(shift.shiftName) + (shift.overnight ? ' · Ends next day' : '') + '</span><span class="overtime-card-bottom">' + escapeHtml(shift.ended ? "This shift has ended" : pending) + '<span aria-hidden="true">' + (shift.ended ? '' : '↗') + '</span></span></button>';
+  }
+
+  function overtimeError(message) {
+    dom.overtimeFeedback.textContent = message;
+    dom.overtimeFeedback.hidden = !message;
+  }
+
+  function overtimeStep(review) {
+    overtimeReviewing = review;
+    dom.overtimeDetails.hidden = review;
+    dom.overtimeReview.hidden = !review;
+    dom.overtimeBack.hidden = !review;
+    dom.overtimeSubmit.textContent = review ? "Confirm request" : "Review request";
+    overtimeError("");
+  }
+
+  function openOvertimeDialog(key) {
+    const shift = availableOvertimeShifts().find((item) => item.key === key);
+    if (!shift || shift.ended) {
+      overtimeNotice = "That shift is no longer available. Choose another open shift.";
+      render();
+      return;
+    }
+    selectedOvertimeKey = key;
+    dom.overtimeSummary.innerHTML = '<span>' + escapeHtml(overtimeSiteLabel(shift.site)) + '</span><h3>' + escapeHtml(shift.post) + '</h3><p>' + escapeHtml(fmtFullDate(shift.date)) + ' · <strong>' + escapeHtml(formatScheduleTime(shift.start, shift.end)) + '</strong>' + (shift.overnight ? ' · Ends next day' : '') + '</p>';
+    dom.overtimeOfficer.innerHTML = '<option value="">Select your name</option>' + (payload.officers || []).map((officer) => '<option value="' + escapeHtml(officer.name) + '">' + escapeHtml(officer.name) + '</option>').join("");
+    dom.overtimeOfficer.value = localStorage.getItem("th-overtime-officer") || "";
+    dom.overtimeNotes.value = "";
+    dom.overtimePreviewNote.hidden = !document.documentElement.classList.contains("schedule-preview");
+    overtimeStep(false);
+    dom.overtimeDialog.showModal();
+    dom.overtimeOfficer.focus();
+  }
+
+  async function submitOvertime(event) {
+    event.preventDefault();
+    if (overtimeSending || !dom.overtimeForm.reportValidity()) return;
+    const shift = availableOvertimeShifts().find((item) => item.key === selectedOvertimeKey);
+    const name = dom.overtimeOfficer.value;
+    if (!shift || shift.ended) { overtimeError("This shift has changed or ended. Close this window and refresh the open shifts."); return; }
+    if (overtimeRequestsForShift(shift).some((request) => normalizeName(request.officerName) === normalizeName(name))) {
+      overtimeError("Your request for this shift is already pending. The scheduler will review it.");
+      return;
+    }
+    if (!overtimeReviewing) {
+      dom.overtimeReview.innerHTML = '<dl><div><dt>Officer</dt><dd>' + escapeHtml(name) + '</dd></div><div><dt>Notes</dt><dd class="overtime-review-notes">' + escapeHtml(dom.overtimeNotes.value.trim() || "No notes added.") + '</dd></div></dl><p class="overtime-pending-note">Your request will be pending approval. Other officers can still request this shift.</p>';
+      overtimeStep(true);
+      dom.overtimeSubmit.focus();
+      return;
+    }
+    overtimeSending = true;
+    dom.overtimeSubmit.disabled = true;
+    dom.overtimeSubmit.textContent = "Submitting…";
+    overtimeError("");
+    try {
+      const response = await fetch(API + "?action=overtime", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ rowId: shift.rowId, date: shift.date, officerName: name, notes: dom.overtimeNotes.value.trim() }) });
+      const result = await response.json();
+      if (!response.ok || !result.request) throw new Error(result.error || "Your request could not be submitted. Please retry.");
+      localStorage.setItem("th-overtime-officer", result.request.officerName);
+      if (result.preview) {
+        previewOvertimeRequests = [result.request, ...previewOvertimeRequests].slice(0, 100);
+        try { sessionStorage.setItem("th-preview-overtime-requests", JSON.stringify(previewOvertimeRequests)); } catch {}
+        overtimeNotice = "Preview: your request is pending in this tab. No live request was sent. The shift stays open for other officers.";
+      } else {
+        payload.requests = [result.request, ...(payload.requests || []).filter((request) => request.id !== result.request.id)];
+        overtimeNotice = "Your request is pending approval. This shift remains open for other officers to request.";
+      }
+      dom.overtimeDialog.close();
+      render();
+      if (!result.preview) await loadSchedule(false);
+    } catch (error) {
+      overtimeError(error.message || "Unable to submit this request.");
+    } finally {
+      overtimeSending = false;
+      dom.overtimeSubmit.disabled = false;
+      dom.overtimeSubmit.textContent = overtimeReviewing ? "Confirm request" : "Review request";
+    }
   }
 
   function renderWholeSchedule() {
@@ -207,14 +374,18 @@
   function wholeScheduleScrollPositions() {
     return new Map([...dom.scheduleList.querySelectorAll(".site-schedule-section")].map((section) => [
       section.dataset.site,
-      section.querySelector(".site-table-scroll")?.scrollLeft || 0
+      { left: section.querySelector(".site-table-scroll")?.scrollLeft || 0, top: section.querySelector(".site-table-scroll")?.scrollTop || 0 }
     ]));
   }
 
   function restoreWholeScheduleScrollPositions(positions) {
     for (const section of dom.scheduleList.querySelectorAll(".site-schedule-section")) {
-      const scrollLeft = positions.get(section.dataset.site);
-      if (scrollLeft) section.querySelector(".site-table-scroll").scrollLeft = scrollLeft;
+      const position = positions.get(section.dataset.site);
+      const scroller = section.querySelector(".site-table-scroll");
+      if (position && scroller) {
+        scroller.scrollLeft = position.left;
+        scroller.scrollTop = position.top;
+      }
     }
   }
 
@@ -229,16 +400,19 @@
         <div class="site-schedule-head">
           <div>
             <p class="eyebrow">${escapeHtml(site)}</p>
-            <h2>Per Guard Schedule</h2>
+            <h2>${escapeHtml(site === "Cityscape" ? "CityScape" : site)}</h2>
           </div>
-          <button class="secondary-button" type="button" data-download-site="${escapeHtml(site)}">Download ${escapeHtml(site)} PNG</button>
+          <button class="secondary-button" type="button" data-download-site="${escapeHtml(site)}" aria-label="Download ${escapeHtml(site)} schedule as PNG"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" /></svg>Export schedule</button>
         </div>
         <div class="site-table-scroll">
-          <table class="whole-schedule-table">
+          <table class="whole-schedule-table" aria-label="${escapeHtml(site)} weekly assignments">
             <thead>
               <tr>
                 <th class="guard-column">Guard</th>
-                ${weekDates().map((date) => `<th>${dayNames[date.getDay()]}<small>${fmtDate(date)}</small></th>`).join("")}
+                ${weekDates().map((date) => {
+                  const isToday = iso(date) === iso(new Date());
+                  return `<th${isToday ? ' class="is-today" aria-current="date"' : ""}>${dayNames[date.getDay()]}<small>${fmtDate(date)}</small></th>`;
+                }).join("")}
               </tr>
             </thead>
             <tbody>${body}</tbody>
@@ -466,7 +640,7 @@
   }
 
   function renderHoursSummary() {
-    if (viewMode === "whole") {
+    if (viewMode !== "guard") {
       dom.hoursSummary.innerHTML = "";
       return;
     }
@@ -479,7 +653,7 @@
   function renderHourTile(item) {
     const total = roundHours(item.total);
     const ot = roundHours(Math.max(0, item.total - 40));
-    return `<article class="hour-tile"><span>${escapeHtml(item.name || "Scheduled hours")}</span><strong>${total} hrs</strong><small>OT: <b class="ot-hours">${ot} hrs</b></small></article>`;
+    return `<article class="hour-tile"><span>Scheduled hours</span><strong>${total} hrs</strong><small>OT: <b class="ot-hours">${ot} hrs</b></small></article>`;
   }
 
   function roundHours(value) {
@@ -534,7 +708,7 @@
   }
 
   function renderHistory() {
-    if (viewMode === "whole") {
+    if (viewMode !== "guard") {
       dom.requestHistory.innerHTML = '<div class="empty-state">Switch to per guard to view one officer request history.</div>';
       return;
     }
@@ -917,6 +1091,10 @@
   });
   dom.requestButton.addEventListener("click", openRequestDialog);
   dom.scheduleList.addEventListener("click", (event) => {
+    const overtimeShift = event.target.closest("[data-overtime-shift]");
+    if (overtimeShift) { openOvertimeDialog(overtimeShift.dataset.overtimeShift); return; }
+    const overtimeFilter = event.target.closest("[data-overtime-site]");
+    if (overtimeFilter) { overtimeSite = overtimeFilter.dataset.overtimeSite; render(); return; }
     const site = event.target.closest("[data-download-site]")?.dataset.downloadSite;
     const guard = event.target.closest("[data-download-guard]")?.dataset.downloadGuard;
     const guardSite = event.target.closest("[data-download-guard-site]")?.dataset.downloadGuardSite;
@@ -939,6 +1117,9 @@
   document.querySelectorAll("[data-close-dialog]").forEach((button) => {
     button.addEventListener("click", () => button.closest("dialog").close());
   });
+
+  dom.overtimeForm?.addEventListener("submit", submitOvertime);
+  dom.overtimeBack?.addEventListener("click", () => overtimeStep(false));
 
   loadSchedule(true);
   window.addEventListener("focus", () => loadSchedule(false));

@@ -26,6 +26,18 @@ export const ensureOfficerScheduleSchema = async (database) => {
       )`),
       database.prepare("CREATE INDEX IF NOT EXISTS officer_schedule_requests_owner_status ON officer_schedule_requests (owner_email, status, start_date)"),
       database.prepare("CREATE INDEX IF NOT EXISTS officer_schedule_requests_owner_dates ON officer_schedule_requests (owner_email, start_date, end_date)"),
+      database.prepare(`CREATE TABLE IF NOT EXISTS officer_schedule_overtime_requests (
+        id TEXT PRIMARY KEY, owner_email TEXT NOT NULL, row_id TEXT NOT NULL,
+        shift_date TEXT NOT NULL, site TEXT NOT NULL, post TEXT NOT NULL,
+        shift_name TEXT NOT NULL DEFAULT '', start_time TEXT NOT NULL, end_time TEXT NOT NULL,
+        officer_name TEXT NOT NULL, officer_email TEXT NOT NULL DEFAULT '',
+        message TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'pending'
+          CHECK (status IN ('pending', 'approved', 'denied')),
+        denial_message TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL,
+        resolved_at TEXT, resolved_by TEXT NOT NULL DEFAULT ''
+      )`),
+      database.prepare("CREATE UNIQUE INDEX IF NOT EXISTS overtime_pending_officer ON officer_schedule_overtime_requests (owner_email, row_id, shift_date, officer_name) WHERE status = 'pending'"),
+      database.prepare("CREATE INDEX IF NOT EXISTS overtime_owner_status_date ON officer_schedule_overtime_requests (owner_email, status, shift_date)"),
       database.prepare(`CREATE TABLE IF NOT EXISTS officer_schedule_acknowledgements (
         id TEXT PRIMARY KEY,
         owner_email TEXT NOT NULL,
@@ -72,6 +84,16 @@ export const publicRequestFromRow = (row) => {
   request.resolvedBy = "";
   return request;
 };
+
+export const overtimeRequestFromRow = (row, includeDetails = false) => ({
+  id: row.id, type: "overtime", rowId: row.row_id, startDate: row.shift_date,
+  endDate: row.shift_date, requestedTime: "", site: row.site, post: row.post,
+  shiftName: row.shift_name, shiftStart: row.start_time, shiftEnd: row.end_time,
+  officerName: row.officer_name, officerEmail: row.officer_email,
+  message: includeDetails ? row.message : "", status: row.status,
+  denialMessage: includeDetails ? row.denial_message : "", createdAt: row.created_at,
+  resolvedAt: row.resolved_at, resolvedBy: includeDetails ? row.resolved_by : ""
+});
 
 export const acknowledgementFromRow = (row, includeSignature = false) => ({
   id: row.id,
@@ -191,6 +213,13 @@ export const publicSchedulePayload = async (context, includeSignature = false, i
      ORDER BY CASE status WHEN 'pending' THEN 0 ELSE 1 END, created_at DESC
      LIMIT 500`
   ).bind(ownerEmail).all();
+  const overtimeResult = await database.prepare(
+    "SELECT * FROM officer_schedule_overtime_requests WHERE owner_email = ? ORDER BY created_at DESC LIMIT 500"
+  ).bind(ownerEmail).all();
+  const allRequests = [
+    ...(requestsResult.results || []).map(includeRequestDetails ? requestFromRow : publicRequestFromRow),
+    ...(overtimeResult.results || []).map((row) => overtimeRequestFromRow(row, includeRequestDetails))
+  ].sort((a, b) => Number(b.status === "pending") - Number(a.status === "pending") || b.createdAt.localeCompare(a.createdAt)).slice(0, 500);
   const acknowledgementsResult = await database.prepare(
     `SELECT * FROM officer_schedule_acknowledgements
      WHERE owner_email = ?
@@ -208,7 +237,7 @@ export const publicSchedulePayload = async (context, includeSignature = false, i
       hiddenRowsByScope: state.hiddenRowsByScope || {}
     } : publicState(state),
     officers,
-    requests: (requestsResult.results || []).map(includeRequestDetails ? requestFromRow : publicRequestFromRow),
+    requests: allRequests,
     acknowledgements: (acknowledgementsResult.results || []).map((row) => acknowledgementFromRow(row, includeSignature))
   };
 };

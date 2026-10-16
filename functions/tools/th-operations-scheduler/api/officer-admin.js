@@ -6,6 +6,8 @@ import {
   publicSchedulePayload
 } from "../../../_shared/officer-schedule.js";
 
+import { resolveOvertimeRequest, isOvertimePreview } from "../../../_shared/overtime.js";
+
 export async function onRequestGet(context) {
   try {
     return json(await publicSchedulePayload(context, true, true));
@@ -25,6 +27,9 @@ export async function onRequestPatch(context) {
     if (!id) return json({ error: "Request id is required" }, 400);
     if (!REQUEST_STATUSES.has(status) || status === "pending") return json({ error: "Status must be approved or denied" }, 400);
     if (status === "denied" && !denialMessage) return json({ error: "Denial message is required" }, 400);
+
+    const overtime = await context.env.SCHEDULER_DB.prepare("SELECT * FROM officer_schedule_overtime_requests WHERE id = ? AND owner_email = ?").bind(id, context.data.schedulerUser).first();
+    if (overtime) return await resolveOvertimeRequest(context, overtime, status, denialMessage);
 
     const result = await context.env.SCHEDULER_DB.prepare(
       `UPDATE officer_schedule_requests
@@ -53,6 +58,12 @@ export async function onRequestDelete(context) {
     const id = cleanText(body.id, 80);
     if (!id) return json({ error: "Request id is required" }, 400);
 
+    const overtime = await context.env.SCHEDULER_DB.prepare("SELECT id FROM officer_schedule_overtime_requests WHERE id = ? AND owner_email = ?").bind(id, context.data.schedulerUser).first();
+    if (overtime) {
+      if (isOvertimePreview(context)) return json({ error: "The preview cannot delete live overtime requests." }, 403);
+      await context.env.SCHEDULER_DB.prepare("DELETE FROM officer_schedule_overtime_requests WHERE id = ? AND owner_email = ?").bind(id, context.data.schedulerUser).run();
+      return json({ ok: true });
+    }
     const result = await context.env.SCHEDULER_DB.prepare(
       "DELETE FROM officer_schedule_requests WHERE id = ? AND owner_email = ?"
     ).bind(id, context.data.schedulerUser).run();
