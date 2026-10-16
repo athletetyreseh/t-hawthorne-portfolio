@@ -110,9 +110,14 @@
       let nextPayload = {};
       try { nextPayload = text ? JSON.parse(text) : {}; } catch { nextPayload = { error: text || "Schedule could not be loaded" }; }
       if (!response.ok) throw new Error(nextPayload.error || "Schedule could not be loaded");
+      const unchanged = payload && JSON.stringify(payload) === JSON.stringify(nextPayload);
+      const pageScroll = { left: window.scrollX, top: window.scrollY };
       payload = nextPayload;
       ensureSelectedOfficer();
-      render();
+      if (!unchanged) {
+        render();
+        requestAnimationFrame(() => window.scrollTo(pageScroll.left, pageScroll.top));
+      }
       const when = payload.updatedAt ? new Date(payload.updatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "just now";
       setStatus(`Live schedule loaded. Last scheduler save: ${when}`);
     } catch (error) {
@@ -205,16 +210,20 @@
   }
 
   function wholeScheduleScrollPositions() {
-    return new Map([...dom.scheduleList.querySelectorAll(".site-schedule-section")].map((section) => [
-      section.dataset.site,
-      section.querySelector(".site-table-scroll")?.scrollLeft || 0
-    ]));
+    return new Map([...dom.scheduleList.querySelectorAll(".site-schedule-section")].map((section) => {
+      const scroller = section.querySelector(".site-table-scroll");
+      return [section.dataset.site, { left: scroller?.scrollLeft || 0, top: scroller?.scrollTop || 0 }];
+    }));
   }
 
   function restoreWholeScheduleScrollPositions(positions) {
     for (const section of dom.scheduleList.querySelectorAll(".site-schedule-section")) {
-      const scrollLeft = positions.get(section.dataset.site);
-      if (scrollLeft) section.querySelector(".site-table-scroll").scrollLeft = scrollLeft;
+      const position = positions.get(section.dataset.site);
+      const scroller = section.querySelector(".site-table-scroll");
+      if (position && scroller) {
+        scroller.scrollLeft = position.left;
+        scroller.scrollTop = position.top;
+      }
     }
   }
 
