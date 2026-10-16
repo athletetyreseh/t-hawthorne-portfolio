@@ -6,6 +6,8 @@ import {
   publicSchedulePayload
 } from "../_shared/officer-schedule.js";
 
+import { submitOvertimeRequest } from "../_shared/overtime.js";
+
 export async function onRequestGet(context) {
   try {
     return json(await publicSchedulePayload(context, false));
@@ -18,11 +20,12 @@ export async function onRequestPost(context) {
   try {
     if (!requireSameOrigin(context.request)) return json({ error: "Invalid request origin" }, 403);
     const url = new URL(context.request.url);
+    const action = url.searchParams.get("action") || "request";
+    if (action === "overtime") return await submitOvertimeRequest(context);
     const branch = context.env?.CF_PAGES_BRANCH;
     if (branch === "visual-improvements" || url.hostname.startsWith("visual-improvements.")) {
       return json({ error: "Preview is read-only. Use the live schedule to submit requests or signatures." }, 403);
     }
-    const action = url.searchParams.get("action") || "request";
     const database = context.env.SCHEDULER_DB;
     const ownerEmail = ownerEmailFor(context);
     await ensureOfficerScheduleSchema(database);
