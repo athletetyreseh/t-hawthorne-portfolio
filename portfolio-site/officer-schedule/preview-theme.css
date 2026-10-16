@@ -30,3 +30,7 @@ dialog{color:#e3edf6;background:#142232;border:1px solid #41566b;border-radius:1
 .control-bar[data-week-tone="next"]{--week-fill:linear-gradient(125deg,#14a6c7,#087c9b);--week-border:#5fd0df}
 .control-bar[data-week-tone="future"]{--week-fill:linear-gradient(125deg,#1e9a58,#146838);--week-border:#5cc58a}
 .control-bar[data-week-tone] .week-label strong{color:#fff}.control-bar[data-week-tone] .icon-button{color:#fff;background:#081d3038;border-color:#ffffff38}.control-bar[data-week-tone] .icon-button:hover{background:#071b304d;border-color:#ffffff70}.control-bar[data-week-tone] #currentWeek{color:#fff;background:#091c3026;border:1px solid #ffffff28}.control-bar[data-week-tone] #currentWeek:hover{background:#071b304d}
+
+/* Compact officer metrics and a visible today marker in the stacked mobile view. */
+.hours-summary{display:block}.hour-tile{display:flex;align-items:center;gap:16px;min-height:66px;padding:15px 20px;border:0}.hour-tile strong,.hour-tile small{margin-top:0}.hour-tile small{margin-left:auto}.hour-tile strong{font-size:25px}.hour-tile span{font-size:12px}
+@media(max-width:840px){.hour-tile{gap:12px;padding:14px 16px}.hour-tile strong{font-size:23px}.day-column.is-today:before{display:table;padding:6px 10px;margin-left:-2px;color:#c9f2f3;background:#1d3d4c;border-radius:5px;box-shadow:inset 2px 0 #77cbd0;content:attr(data-title) " · Today"}}
