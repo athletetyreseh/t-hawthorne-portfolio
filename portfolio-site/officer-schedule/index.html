@@ -6,6 +6,7 @@
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <title>Officer Schedule | TH Operations</title>
   <link rel="stylesheet" href="officer-schedule.css?v=20260716-3" />
+  <link rel="stylesheet" href="preview-theme.css?v=20261015-1" />
 </head>
 <body>
   <main class="officer-app">
@@ -104,6 +105,41 @@
     </form>
   </dialog>
 
+  <script>
+    (() => {
+      const host = location.hostname;
+      const isPreview = host.startsWith("visual-improvements.") || (host.endsWith(".pages.dev") && host.includes("visual-improvements"));
+      if (!isPreview) return;
+      document.documentElement.classList.add("schedule-preview");
+      const label = document.querySelector(".hero .eyebrow");
+      if (label) label.textContent = "Visual improvements preview";
+      const banner = document.createElement("div");
+      banner.className = "preview-banner";
+      banner.setAttribute("role", "status");
+      banner.innerHTML = "<strong>Preview · read only</strong><span>Showing the current schedule. Requests and signatures are disabled here.</span>";
+      document.body.prepend(banner);
+      const lockActions = () => ["requestButton", "signButton", "nameSignButton"].forEach((id) => {
+        const button = document.getElementById(id);
+        if (button && !button.disabled) { button.disabled = true; button.title = "Disabled on the visual improvements preview"; }
+      });
+      const addPhotoCredits = () => {
+        const city = document.querySelector("#site-cityscape .site-schedule-head");
+        if (city && !city.querySelector(".photo-credit")) {
+          const credit = document.createElement("small"); credit.className = "photo-credit";
+          const source = document.createElement("a"); source.href = "https://commons.wikimedia.org/wiki/File:CityScape_(6377886441).jpg"; source.target = "_blank"; source.rel = "noopener noreferrer"; source.textContent = "CityScape photo: Alan Stark / Wikimedia Commons";
+          const license = document.createElement("a"); license.href = "https://creativecommons.org/licenses/by-sa/2.0/"; license.target = "_blank"; license.rel = "noopener noreferrer"; license.textContent = "CC BY-SA 2.0 · cropped and darkened";
+          credit.append(source, document.createTextNode(" · "), license); city.append(credit);
+        }
+        const block = document.querySelector("#site-block-23 .site-schedule-head");
+        if (block && !block.querySelector(".photo-credit")) {
+          const credit = document.createElement("small"); credit.className = "photo-credit";
+          const source = document.createElement("a"); source.href = "https://www.omniplan.com/work/case-studies/block-23.html"; source.target = "_blank"; source.rel = "noopener noreferrer"; source.textContent = "Block 23 photo: Omniplan"; credit.append(source); block.append(credit);
+        }
+      };
+      lockActions(); addPhotoCredits();
+      new MutationObserver(() => { lockActions(); addPhotoCredits(); }).observe(document.getElementById("scheduleList"), { childList: true, subtree: true, attributes: true, attributeFilter: ["disabled"] });
+    })();
+  </script>
   <script src="officer-schedule.js?v=20260716-3"></script>
 </body>
 </html>
