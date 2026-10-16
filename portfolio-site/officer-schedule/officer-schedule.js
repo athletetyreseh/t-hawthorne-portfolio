@@ -148,7 +148,11 @@
   function renderWeek() {
     const dates = weekDates();
     dom.weekText.textContent = `${fmtDate(dates[0])} - ${fmtDate(dates[6])}`;
-    dom.scheduleHead.innerHTML = dates.map((date) => `<div class="day-head"><span>${dayNames[date.getDay()]}</span><strong>${fmtDate(date)}</strong></div>`).join("");
+    const today = iso(new Date());
+    dom.scheduleHead.innerHTML = dates.map((date) => {
+      const isToday = iso(date) === today;
+      return `<div class="day-head${isToday ? " is-today" : ""}"${isToday ? ' aria-current="date"' : ""}><span>${dayNames[date.getDay()]}</span><strong>${fmtDate(date)}</strong></div>`;
+    }).join("");
     dom.weekBar.dataset.weekTone = weekTone();
   }
 
@@ -210,10 +214,10 @@
   }
 
   function wholeScheduleScrollPositions() {
-    return new Map([...dom.scheduleList.querySelectorAll(".site-schedule-section")].map((section) => {
-      const scroller = section.querySelector(".site-table-scroll");
-      return [section.dataset.site, { left: scroller?.scrollLeft || 0, top: scroller?.scrollTop || 0 }];
-    }));
+    return new Map([...dom.scheduleList.querySelectorAll(".site-schedule-section")].map((section) => [
+      section.dataset.site,
+      { left: section.querySelector(".site-table-scroll")?.scrollLeft || 0, top: section.querySelector(".site-table-scroll")?.scrollTop || 0 }
+    ]));
   }
 
   function restoreWholeScheduleScrollPositions(positions) {
@@ -247,7 +251,10 @@
             <thead>
               <tr>
                 <th class="guard-column">Guard</th>
-                ${weekDates().map((date) => `<th>${dayNames[date.getDay()]}<small>${fmtDate(date)}</small></th>`).join("")}
+                ${weekDates().map((date) => {
+                  const isToday = iso(date) === iso(new Date());
+                  return `<th${isToday ? ' class="is-today" aria-current="date"' : ""}>${dayNames[date.getDay()]}<small>${fmtDate(date)}</small></th>`;
+                }).join("")}
               </tr>
             </thead>
             <tbody>${body}</tbody>
