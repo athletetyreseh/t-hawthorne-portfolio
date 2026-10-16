@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <title>Officer Schedule | TH Operations</title>
   <link rel="stylesheet" href="officer-schedule.css?v=20260716-3" />
-  <link rel="stylesheet" href="preview-theme.css?v=20261015-3" />
+  <link rel="stylesheet" href="preview-theme.css?v=20261015-5" />
 </head>
 <body>
   <main class="officer-app">
@@ -22,6 +22,7 @@
       </button>
     </header>
 
+    <div class="schedule-toolbar">
     <section class="control-bar" id="weekBar" aria-label="Schedule controls">
       <button class="icon-button" id="previousWeek" type="button" aria-label="Previous week"><svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m15 18-6-6 6-6" /></svg></button>
       <div class="week-label">
@@ -36,6 +37,8 @@
       <button class="mode-button active" id="perGuardMode" type="button" data-view-mode="guard">Per guard</button>
       <button class="mode-button" id="wholeScheduleMode" type="button" data-view-mode="whole">Whole schedule</button>
     </section>
+
+    </div>
 
     <section class="officer-picker-panel">
       <label>
@@ -108,7 +111,7 @@
   <script>
     (() => {
       const host = location.hostname;
-      const isPreview = host.startsWith("visual-improvements.") || (host.endsWith(".pages.dev") && host.includes("visual-improvements"));
+      const isPreview = host.endsWith(".t-hawthorne-portfolio.pages.dev");
       if (!isPreview) return;
       document.documentElement.classList.add("schedule-preview");
       const label = document.querySelector(".hero .eyebrow");
@@ -135,6 +138,6 @@
       new MutationObserver(() => { lockActions(); addPhotoCredits(); }).observe(document.getElementById("scheduleList"), { childList: true, subtree: true, attributes: true, attributeFilter: ["disabled"] });
     })();
   </script>
-  <script src="officer-schedule.js?v=20261015-4"></script>
+  <script src="officer-schedule.js?v=20261015-5"></script>
 </body>
 </html>
