@@ -206,7 +206,7 @@
       cards = dayOffRequests.map((request) => renderDayOffOnly(request)).join("");
     }
 
-    return `<div class="day-column" data-title="${dayNames[date.getDay()]} ${fmtDate(date)}">${cards || '<div class="off-empty">No assignment</div>'}</div>`;
+    return `<div class="day-column${dateKey === iso(new Date()) ? " is-today" : ""}" data-title="${dayNames[date.getDay()]} ${fmtDate(date)}">${cards || '<div class="off-empty">No assignment</div>'}</div>`;
   }
 
   function renderWholeSchedule() {
@@ -495,7 +495,7 @@
   function renderHourTile(item) {
     const total = roundHours(item.total);
     const ot = roundHours(Math.max(0, item.total - 40));
-    return `<article class="hour-tile"><span>${escapeHtml(item.name || "Scheduled hours")}</span><strong>${total} hrs</strong><small>OT: <b class="ot-hours">${ot} hrs</b></small></article>`;
+    return `<article class="hour-tile"><span>Scheduled hours</span><strong>${total} hrs</strong><small>OT: <b class="ot-hours">${ot} hrs</b></small></article>`;
   }
 
   function roundHours(value) {
