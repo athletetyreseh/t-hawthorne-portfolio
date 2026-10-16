@@ -242,12 +242,12 @@
         <div class="site-schedule-head">
           <div>
             <p class="eyebrow">${escapeHtml(site)}</p>
-            <h2>Per Guard Schedule</h2>
+            <h2>${escapeHtml(site === "Cityscape" ? "CityScape" : site)}</h2>
           </div>
-          <button class="secondary-button" type="button" data-download-site="${escapeHtml(site)}">Download ${escapeHtml(site)} PNG</button>
+          <button class="secondary-button" type="button" data-download-site="${escapeHtml(site)}" aria-label="Download ${escapeHtml(site)} schedule as PNG"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3" /></svg>Export schedule</button>
         </div>
         <div class="site-table-scroll">
-          <table class="whole-schedule-table">
+          <table class="whole-schedule-table" aria-label="${escapeHtml(site)} weekly assignments">
             <thead>
               <tr>
                 <th class="guard-column">Guard</th>
