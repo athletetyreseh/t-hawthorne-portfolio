@@ -185,7 +185,7 @@
   function renderSchedule() {
     dom.scheduleCard.classList.toggle("overtime-schedule-card", viewMode === "overtime");
     if (!payload?.schedule) {
-      dom.scheduleList.innerHTML = '<div class="empty-state">No published cloud schedule is available yet.</div>';
+      dom.scheduleList.innerHTML = '<div class="empty-state" role="status">' + (loading ? 'Loading schedule…' : 'No published cloud schedule is available yet.') + '</div>';
       return;
     }
 
@@ -255,7 +255,7 @@
         shifts.push({ key: JSON.stringify([row.id, date]), rowId: row.id, date, site: row.site || "", post: cell.position || row.post || "", shiftName: row.shiftName || "", start, end, overnight: last <= first, ended: endsAt <= Date.now() });
       }
     }
-    return shifts.sort((a, b) => a.date.localeCompare(b.date) || a.site.localeCompare(b.site) || a.start.localeCompare(b.start) || a.post.localeCompare(b.post));
+    return shifts.sort((a, b) => Number(a.ended) - Number(b.ended) || a.date.localeCompare(b.date) || a.site.localeCompare(b.site) || a.start.localeCompare(b.start) || a.post.localeCompare(b.post));
   }
 
   function allOvertimeRequests() {
