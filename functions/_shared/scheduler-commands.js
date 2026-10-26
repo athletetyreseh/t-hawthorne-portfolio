@@ -1,3 +1,5 @@
+import { rolloverMasterState } from "../../portfolio-site/tools/th-operations-scheduler/rollover.js";
+
 // Pure command execution for the TH Operations Scheduler.  This module has no
 // request or database dependency so its validation and target resolution can be
 // exercised locally before a command is allowed to touch a private schedule.
@@ -308,12 +310,8 @@ const executeOne = (state, command, options = {}) => {
     requireConfirmation(command, "rollover_master", options);
     const date = isoDate(command.date, "date");
     const dates = weekDates(date);
-    for (const row of state.rows) {
-      row.assignments = row.assignments || {};
-      row.master = row.master || {};
-      for (const workingDate of dates) row.assignments[workingDate] = clone(row.master[dayFor(workingDate)] || blank());
-    }
-    return { changed: true, result: { kind, weekStart: dates[0], rowsUpdated: state.rows.length } };
+    const rollover = rolloverMasterState(state, dates);
+    return { changed: true, result: { kind, ...rollover } };
   }
   if (kind === "clear_week") {
     requireConfirmation(command, "clear_week", options);
