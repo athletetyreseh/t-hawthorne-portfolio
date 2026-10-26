@@ -5,7 +5,6 @@ import {
   ensureOfficerScheduleSchema,
   acknowledgementFromRow,
   isIsoDate,
-  loadStaffDirectory,
   overtimeRequestFromRow,
   requestFromRow
 } from "../../../_shared/officer-schedule.js";
@@ -61,31 +60,54 @@ const officerRequestDetails = async (database, ownerEmail, weekStart) => {
         ORDER BY signed_at DESC
         LIMIT 500`).bind(ownerEmail, ownerEmail);
 
-  const [requestsResult, overtimeResult, acknowledgementsResult, directory] = await Promise.all([
-    database.prepare(`SELECT id, officer_name, officer_email, request_type, start_date, end_date,
-        requested_time, message, status, denial_message, created_at, resolved_at, resolved_by
-      FROM officer_schedule_requests
-      WHERE owner_email = ?
-      ORDER BY CASE status WHEN 'pending' THEN 0 ELSE 1 END, created_at DESC
+  const [requestsResult, overtimeResult, acknowledgementsResult] = await Promise.all([
+    database.prepare(`SELECT request.id, request.officer_name,
+        COALESCE(NULLIF(request.officer_email, ''), (
+          SELECT staff.email FROM staff_records AS staff
+          WHERE staff.status != 'inactive'
+            AND lower(trim(staff.full_name)) = lower(trim(request.officer_name))
+          ORDER BY staff.full_name COLLATE NOCASE
+          LIMIT 1
+        ), '') AS officer_email,
+        request.request_type, request.start_date, request.end_date, request.requested_time,
+        request.message, request.status, request.denial_message, request.created_at,
+        request.resolved_at, request.resolved_by
+      FROM officer_schedule_requests AS request
+      WHERE request.owner_email = ?
+      ORDER BY CASE request.status WHEN 'pending' THEN 0 ELSE 1 END, request.created_at DESC
       LIMIT 500`).bind(ownerEmail).all(),
-    database.prepare(`SELECT id, row_id, shift_date, site, post, shift_name, start_time, end_time,
-        officer_name, officer_email, message, status, denial_message, created_at, resolved_at, resolved_by
-      FROM officer_schedule_overtime_requests
-      WHERE owner_email = ?
-      ORDER BY created_at DESC
+    database.prepare(`SELECT overtime.id, overtime.row_id, overtime.shift_date, overtime.site, overtime.post,
+        overtime.shift_name, overtime.start_time, overtime.end_time, overtime.officer_name,
+        COALESCE(NULLIF(overtime.officer_email, ''), (
+          SELECT staff.email FROM staff_records AS staff
+          WHERE staff.status != 'inactive'
+            AND lower(trim(staff.full_name)) = lower(trim(overtime.officer_name))
+          ORDER BY staff.full_name COLLATE NOCASE
+          LIMIT 1
+        ), '') AS officer_email,
+        overtime.message, overtime.status, overtime.denial_message, overtime.created_at,
+        overtime.resolved_at, overtime.resolved_by
+      FROM officer_schedule_overtime_requests AS overtime
+      WHERE overtime.owner_email = ?
+      ORDER BY overtime.created_at DESC
       LIMIT 500`).bind(ownerEmail).all(),
-    acknowledgementsQuery.all(),
-    loadStaffDirectory(database)
+    acknowledgementsQuery.all()
   ]);
 
   const requests = [
     ...(requestsResult.results || []).map(requestFromRow),
     ...(overtimeResult.results || []).map((row) => overtimeRequestFromRow(row, true))
   ].sort((a, b) => Number(b.status === "pending") - Number(a.status === "pending") || b.createdAt.localeCompare(a.createdAt)).slice(0, 500);
-  const officers = directory.staff.map((person) => ({
-    name: cleanText(person.full_name, 120),
-    email: String(person.email || "").trim().toLowerCase()
-  })).filter((officer) => officer.name);
+  const officersByName = new Map();
+  for (const request of requests) {
+    const name = cleanText(request.officerName, 120);
+    if (!name) continue;
+    const key = name.toLowerCase();
+    const email = String(request.officerEmail || "").trim().toLowerCase();
+    const existing = officersByName.get(key);
+    if (!existing || (!existing.email && email)) officersByName.set(key, { name, email });
+  }
+  const officers = [...officersByName.values()].sort((a, b) => a.name.localeCompare(b.name));
 
   return {
     revision: null,
