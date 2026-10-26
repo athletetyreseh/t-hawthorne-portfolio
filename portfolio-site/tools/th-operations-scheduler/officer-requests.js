@@ -2,6 +2,7 @@
   "use strict";
 
   const ADMIN_API = "api/officer-admin";
+    const ADMIN_SUMMARY_API = "api/officer-admin?summary=1";
   const PUBLIC_LINK = `${location.origin}/officer-schedule/`;
   const requestLabels = {
     overtime: "Overtime pickup",
@@ -11,6 +12,7 @@
     "late-out": "Early Leave"
   };
 
+  let markerRequests = [];
   let officerData = { requests: [], acknowledgements: [], officers: [] };
   let panelOpen = false;
 
@@ -52,8 +54,12 @@
     document.getElementById("officerAdminBody").addEventListener("click", handlePanelClick);
 
     wrapRender();
-    loadOfficerData();
-    window.setInterval(loadOfficerData, 10000);
+    refreshOfficerData();
+    window.setInterval(refreshOfficerData, 10000);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState !== "hidden") refreshOfficerData();
+    });
+    window.addEventListener("online", refreshOfficerData);
   }
 
   function wrapRender() {
@@ -66,12 +72,34 @@
     applyScheduleMarkers();
   }
 
+  function refreshOfficerData() {
+    if (document.visibilityState === "hidden") return;
+    if (panelOpen) loadOfficerData();
+    else loadOfficerSummary();
+  }
+
+  async function loadOfficerSummary() {
+    try {
+      const response = await fetch(ADMIN_SUMMARY_API, { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Officer requests could not be loaded");
+      markerRequests = Array.isArray(payload.requests) ? payload.requests : [];
+      const pendingCount = Number(payload.pendingCount);
+      const fallbackCount = markerRequests.filter((request) => request.status === "pending").length;
+      document.getElementById("officerAdminCount").textContent = String(Number.isFinite(pendingCount) ? pendingCount : fallbackCount);
+      applyScheduleMarkers();
+    } catch (error) {
+      console.error("Officer request summary failed", error);
+    }
+  }
+
   async function loadOfficerData() {
     try {
       const response = await fetch(ADMIN_API, { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Officer requests could not be loaded");
       officerData = payload;
+      markerRequests = Array.isArray(payload.requests) ? payload.requests : [];
       renderPanel();
       applyScheduleMarkers();
     } catch (error) {
@@ -199,13 +227,14 @@
 
   function applyScheduleMarkers() {
     const table = document.getElementById("scheduleTable");
-    if (!table || !officerData.requests.length || typeof state === "undefined") return;
+    if (!table || typeof state === "undefined") return;
     table.querySelectorAll(".officer-request-flag, .officer-dayoff-overlay").forEach((item) => item.remove());
+    if (!markerRequests.length) return;
 
     table.querySelectorAll(".cell[data-row][data-key]").forEach((cell) => {
       const row = (state.rows || []).find((item) => item.id === cell.dataset.row);
       const assignment = row?.assignments?.[cell.dataset.key];
-      const overtime = officerData.requests.filter((request) => request.type === "overtime" && request.status === "pending" && request.rowId === row?.id && request.startDate === cell.dataset.key);
+      const overtime = markerRequests.filter((request) => request.type === "overtime" && request.status === "pending" && request.rowId === row?.id && request.startDate === cell.dataset.key);
       if (assignment?.status === "open" && !assignment.name && overtime.length) {
         cell.insertAdjacentHTML("afterbegin", `<span class="officer-request-flag" title="${escapeHtml("Overtime requests: " + overtime.map((request) => request.officerName).join(", "))}">${overtime.length}</span>`);
       }
@@ -223,7 +252,7 @@
 
   function requestsForCell(name, date) {
     const target = normalizeName(name);
-    return officerData.requests.filter((request) => normalizeName(request.officerName) === target && date >= request.startDate && date <= request.endDate);
+    return markerRequests.filter((request) => normalizeName(request.officerName) === target && date >= request.startDate && date <= request.endDate);
   }
 
   function currentWeekStart() {
@@ -239,6 +268,7 @@
   function togglePanel(open) {
     panelOpen = open;
     document.getElementById("officerAdminPanel").classList.toggle("open", panelOpen);
+    if (panelOpen) loadOfficerData();
   }
 
   async function copyOfficerLink() {
