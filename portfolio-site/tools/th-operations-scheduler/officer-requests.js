@@ -15,6 +15,11 @@
   let markerRequests = [];
   let officerData = { requests: [], acknowledgements: [], officers: [] };
   let panelOpen = false;
+  let panelDataToken = "";
+  let latestPanelToken = "";
+  let panelDataWeek = "";
+  let detailsRequestInFlight = false;
+  let detailsRefreshQueued = false;
 
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
   const normalizeName = (value) => String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
@@ -68,45 +73,70 @@
     render = function renderWithOfficerRequests() {
       schedulerRender();
       applyScheduleMarkers();
+      if (panelOpen && currentWeekStart() !== panelDataWeek) loadOfficerData();
     };
     applyScheduleMarkers();
   }
 
   function refreshOfficerData() {
     if (document.visibilityState === "hidden") return;
-    if (panelOpen) loadOfficerData();
-    else loadOfficerSummary();
+    loadOfficerSummary();
   }
 
   async function loadOfficerSummary() {
     try {
-      const response = await fetch(ADMIN_SUMMARY_API, { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
+      const summaryUrl = new URL(ADMIN_SUMMARY_API, location.href);
+      summaryUrl.searchParams.set("weekStart", currentWeekStart());
+      const response = await fetch(summaryUrl, { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Officer requests could not be loaded");
+      latestPanelToken = String(payload.panelToken || "");
       markerRequests = Array.isArray(payload.requests) ? payload.requests : [];
       const pendingCount = Number(payload.pendingCount);
       const fallbackCount = markerRequests.filter((request) => request.status === "pending").length;
       document.getElementById("officerAdminCount").textContent = String(Number.isFinite(pendingCount) ? pendingCount : fallbackCount);
       applyScheduleMarkers();
+      if (panelOpen && latestPanelToken && latestPanelToken !== panelDataToken) loadOfficerData();
     } catch (error) {
       console.error("Officer request summary failed", error);
     }
   }
 
   async function loadOfficerData() {
+    if (detailsRequestInFlight) {
+      detailsRefreshQueued = true;
+      return;
+    }
+    detailsRequestInFlight = true;
+    const requestedWeek = currentWeekStart();
+    let loaded = false;
     try {
       const adminUrl = new URL(ADMIN_API, location.href);
-      adminUrl.searchParams.set("weekStart", currentWeekStart());
+      adminUrl.searchParams.set("weekStart", requestedWeek);
       const response = await fetch(adminUrl, { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Officer requests could not be loaded");
       officerData = payload;
       markerRequests = Array.isArray(payload.requests) ? payload.requests : [];
+      panelDataToken = String(payload.panelToken || latestPanelToken || "");
+      if (panelDataToken) latestPanelToken = panelDataToken;
+      panelDataWeek = requestedWeek;
       renderPanel();
       applyScheduleMarkers();
+      loaded = true;
     } catch (error) {
       const body = document.getElementById("officerAdminBody");
       if (body) body.innerHTML = `<div class="officer-admin-empty">${escapeHtml(error.message)}</div>`;
+    } finally {
+      detailsRequestInFlight = false;
+      const weekChanged = currentWeekStart() !== panelDataWeek;
+      const tokenChanged = latestPanelToken && panelDataToken !== latestPanelToken;
+      if (loaded && panelOpen && (detailsRefreshQueued || weekChanged || tokenChanged)) {
+        detailsRefreshQueued = false;
+        loadOfficerData();
+      } else if (loaded) {
+        detailsRefreshQueued = false;
+      }
     }
   }
 
