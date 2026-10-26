@@ -518,7 +518,7 @@
       const hiddenRows = payload?.schedule?.hiddenRowsByScope?.[start] || {};
       if (hiddenRows[row.id] || hiddenRows[baseRowKey(row)]) return false;
       if (!row.scope) return true;
-      if (row.scope === "master-only") return false;
+      if (row.scope === "master-only") return Array.isArray(row.rolloverWeeks) && row.rolloverWeeks.includes(start);
       if (row.scope === "working-week") return row.weekStart === start;
       return true;
     }).filter((row) => !(Array.isArray(row.hiddenWeeks) && row.hiddenWeeks.includes(start)));
