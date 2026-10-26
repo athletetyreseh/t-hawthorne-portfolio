@@ -3,7 +3,11 @@ import {
   REQUEST_STATUSES,
   cleanText,
   ensureOfficerScheduleSchema,
-  publicSchedulePayload
+  acknowledgementFromRow,
+  isIsoDate,
+  loadStaffDirectory,
+  overtimeRequestFromRow,
+  requestFromRow
 } from "../../../_shared/officer-schedule.js";
 
 import { resolveOvertimeRequest, isOvertimePreview } from "../../../_shared/overtime.js";
@@ -40,13 +44,72 @@ const officerRequestSummary = async (database, ownerEmail) => {
   return { requests, pendingCount: allRequests.filter((request) => request.status === "pending").length };
 };
 
+const officerRequestDetails = async (database, ownerEmail, weekStart) => {
+  await ensureOfficerScheduleSchema(database);
+  const selectedWeek = isIsoDate(weekStart) ? weekStart : "";
+  const acknowledgementsQuery = selectedWeek
+    ? database.prepare(`SELECT id, officer_name, officer_email, week_start, signature_data, signed_at
+        FROM officer_schedule_acknowledgements
+        WHERE owner_email = ? AND week_start = ?
+        ORDER BY signed_at DESC
+        LIMIT 500`).bind(ownerEmail, selectedWeek)
+    : database.prepare(`SELECT id, officer_name, officer_email, week_start, signature_data, signed_at
+        FROM officer_schedule_acknowledgements
+        WHERE owner_email = ? AND week_start = (
+          SELECT MAX(week_start) FROM officer_schedule_acknowledgements WHERE owner_email = ?
+        )
+        ORDER BY signed_at DESC
+        LIMIT 500`).bind(ownerEmail, ownerEmail);
+
+  const [requestsResult, overtimeResult, acknowledgementsResult, directory] = await Promise.all([
+    database.prepare(`SELECT id, officer_name, officer_email, request_type, start_date, end_date,
+        requested_time, message, status, denial_message, created_at, resolved_at, resolved_by
+      FROM officer_schedule_requests
+      WHERE owner_email = ?
+      ORDER BY CASE status WHEN 'pending' THEN 0 ELSE 1 END, created_at DESC
+      LIMIT 500`).bind(ownerEmail).all(),
+    database.prepare(`SELECT id, row_id, shift_date, site, post, shift_name, start_time, end_time,
+        officer_name, officer_email, message, status, denial_message, created_at, resolved_at, resolved_by
+      FROM officer_schedule_overtime_requests
+      WHERE owner_email = ?
+      ORDER BY created_at DESC
+      LIMIT 500`).bind(ownerEmail).all(),
+    acknowledgementsQuery.all(),
+    loadStaffDirectory(database)
+  ]);
+
+  const requests = [
+    ...(requestsResult.results || []).map(requestFromRow),
+    ...(overtimeResult.results || []).map((row) => overtimeRequestFromRow(row, true))
+  ].sort((a, b) => Number(b.status === "pending") - Number(a.status === "pending") || b.createdAt.localeCompare(a.createdAt)).slice(0, 500);
+  const officers = directory.staff.map((person) => ({
+    name: cleanText(person.full_name, 120),
+    email: String(person.email || "").trim().toLowerCase()
+  })).filter((officer) => officer.name);
+
+  return {
+    revision: null,
+    updatedAt: "",
+    schedule: null,
+    officers,
+    requests,
+    acknowledgements: (acknowledgementsResult.results || []).map((row) => acknowledgementFromRow(row, true))
+  };
+};
+
+
+
 export async function onRequestGet(context) {
   try {
     const url = new URL(context.request.url);
     if (url.searchParams.get("summary") === "1") {
       return json(await officerRequestSummary(context.env.SCHEDULER_DB, context.data.schedulerUser));
     }
-    return json(await publicSchedulePayload(context, true, true));
+    return json(await officerRequestDetails(
+      context.env.SCHEDULER_DB,
+      context.data.schedulerUser,
+      url.searchParams.get("weekStart") || ""
+    ));
   } catch (error) {
     return privateErrorResponse(error);
   }
