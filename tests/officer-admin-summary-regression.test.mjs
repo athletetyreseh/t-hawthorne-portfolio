@@ -97,7 +97,10 @@ test("officer admin details load only the selected week's signatures and avoid p
   assert.equal(response.status, 200);
   const payload = await response.json();
   assert.equal(payload.schedule, null);
-  assert.deepEqual(payload.officers, [{ name: "A. Officer", email: "a@example.com" }]);
+  assert.deepEqual(payload.officers, [
+    { name: "A. Officer", email: "a@example.com" },
+    { name: "B. Officer", email: "b@example.com" }
+  ]);
   assert.equal(payload.requests.length, 2);
   assert.equal(payload.requests.find((request) => request.id === "pto-pending").message, "Family appointment");
   assert.equal(payload.requests.find((request) => request.id === "overtime-approved").site, "North");
@@ -105,8 +108,14 @@ test("officer admin details load only the selected week's signatures and avoid p
     id: "ack-this-week", officerName: "A. Officer", officerEmail: "a@example.com", weekStart: "2026-10-26",
     signedAt: "2026-10-26T09:00:00.000Z", signatureData: "data:image/png;base64,signature"
   }]);
-  assert.equal(readQueries.length, 4);
+  assert.equal(readQueries.length, 3);
   assert.ok(readQueries.every(({ sql }) => !/scheduler_state/.test(sql)));
+  const regularRequestsQuery = readQueries.find(({ sql }) => sql.includes("FROM officer_schedule_requests AS request"));
+  const overtimeRequestsQuery = readQueries.find(({ sql }) => sql.includes("FROM officer_schedule_overtime_requests AS overtime"));
+  assert.match(regularRequestsQuery.sql, /SELECT staff.email FROM staff_records AS staff/);
+  assert.match(overtimeRequestsQuery.sql, /SELECT staff.email FROM staff_records AS staff/);
+  assert.deepEqual(new Set(payload.officers.map((officer) => officer.name)), new Set(["A. Officer", "B. Officer"]));
+  assert.ok(payload.officers.every((officer) => officer.email));
   const acknowledgementsQuery = readQueries.find(({ sql }) => sql.includes("FROM officer_schedule_acknowledgements"));
   assert.match(acknowledgementsQuery.sql, /week_start = \?/);
   assert.deepEqual(acknowledgementsQuery.boundValues, [owner, "2026-10-26"]);
