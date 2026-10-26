@@ -11,19 +11,44 @@ import {
 
 import { resolveOvertimeRequest, isOvertimePreview } from "../../../_shared/overtime.js";
 
-const officerRequestSummary = async (database, ownerEmail) => {
+const officerPanelToken = (requestsResult, overtimeResult, acknowledgementCount, latestSignedAt) => {
+  let hash = 2166136261;
+  const add = (value) => {
+    const text = String(value ?? "") + "\u001f";
+    for (let index = 0; index < text.length; index++) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+  };
+  for (const row of requestsResult.results || []) {
+    add("request");
+    add(row.id);
+    add(row.status);
+    add(row.created_at);
+    add(row.resolved_at);
+  }
+  for (const row of overtimeResult.results || []) {
+    add("overtime");
+    add(row.id);
+    add(row.status);
+    add(row.created_at);
+    add(row.resolved_at);
+  }
+  add(acknowledgementCount);
+  add(latestSignedAt);
+  return (hash >>> 0).toString(36);
+};
+
+const officerRequestSummary = async (database, ownerEmail, weekStart) => {
   await ensureOfficerScheduleSchema(database);
-  const [requestsResult, overtimeResult] = await Promise.all([
-    database.prepare(`SELECT id, officer_name, request_type, start_date, end_date, status, created_at
-      FROM officer_schedule_requests
-      WHERE owner_email = ?
-      ORDER BY CASE status WHEN 'pending' THEN 0 ELSE 1 END, created_at DESC
-      LIMIT 500`).bind(ownerEmail).all(),
-    database.prepare(`SELECT id, officer_name, shift_date, row_id, status, created_at
-      FROM officer_schedule_overtime_requests
-      WHERE owner_email = ?
-      ORDER BY created_at DESC
-      LIMIT 500`).bind(ownerEmail).all()
+  const selectedWeek = isIsoDate(weekStart) ? weekStart : "";
+  const acknowledgementsQuery = selectedWeek
+    ? database.prepare("SELECT COUNT(*) AS acknowledgement_count, MAX(signed_at) AS latest_signed_at FROM (SELECT signed_at FROM officer_schedule_acknowledgements WHERE owner_email = ? AND week_start = ? ORDER BY signed_at DESC LIMIT 500)").bind(ownerEmail, selectedWeek)
+    : database.prepare("SELECT COUNT(*) AS acknowledgement_count, MAX(signed_at) AS latest_signed_at FROM (SELECT signed_at FROM officer_schedule_acknowledgements WHERE owner_email = ? AND week_start = (SELECT MAX(week_start) FROM officer_schedule_acknowledgements WHERE owner_email = ?) ORDER BY signed_at DESC LIMIT 500)").bind(ownerEmail, ownerEmail);
+  const [requestsResult, overtimeResult, acknowledgementsResult] = await Promise.all([
+    database.prepare("SELECT id, officer_name, request_type, start_date, end_date, status, created_at, resolved_at FROM officer_schedule_requests WHERE owner_email = ? ORDER BY CASE status WHEN 'pending' THEN 0 ELSE 1 END, created_at DESC LIMIT 500").bind(ownerEmail).all(),
+    database.prepare("SELECT id, officer_name, shift_date, row_id, status, created_at, resolved_at FROM officer_schedule_overtime_requests WHERE owner_email = ? ORDER BY created_at DESC LIMIT 500").bind(ownerEmail).all(),
+    acknowledgementsQuery.all()
   ]);
   const allRequests = [
     ...(requestsResult.results || []).map((row) => ({
@@ -40,9 +65,18 @@ const officerRequestSummary = async (database, ownerEmail) => {
   const requests = allRequests
     .filter((request) => request.status === "pending" || (request.status === "approved" && ["pto", "unpaid"].includes(request.type)))
     .map(({ createdAt, ...request }) => request);
-  return { requests, pendingCount: allRequests.filter((request) => request.status === "pending").length };
+  const acknowledgement = (acknowledgementsResult.results || [])[0] || {};
+  return {
+    requests,
+    pendingCount: allRequests.filter((request) => request.status === "pending").length,
+    panelToken: officerPanelToken(
+      requestsResult,
+      overtimeResult,
+      acknowledgement.acknowledgement_count || 0,
+      acknowledgement.latest_signed_at || ""
+    )
+  };
 };
-
 const officerRequestDetails = async (database, ownerEmail, weekStart) => {
   await ensureOfficerScheduleSchema(database);
   const selectedWeek = isIsoDate(weekStart) ? weekStart : "";
@@ -115,7 +149,13 @@ const officerRequestDetails = async (database, ownerEmail, weekStart) => {
     schedule: null,
     officers,
     requests,
-    acknowledgements: (acknowledgementsResult.results || []).map((row) => acknowledgementFromRow(row, true))
+    acknowledgements: (acknowledgementsResult.results || []).map((row) => acknowledgementFromRow(row, true)),
+    panelToken: officerPanelToken(
+      requestsResult,
+      overtimeResult,
+      (acknowledgementsResult.results || []).length,
+      (acknowledgementsResult.results || []).reduce((latest, row) => row.signed_at > latest ? row.signed_at : latest, "")
+    )
   };
 };
 
@@ -125,7 +165,7 @@ export async function onRequestGet(context) {
   try {
     const url = new URL(context.request.url);
     if (url.searchParams.get("summary") === "1") {
-      return json(await officerRequestSummary(context.env.SCHEDULER_DB, context.data.schedulerUser));
+      return json(await officerRequestSummary(context.env.SCHEDULER_DB, context.data.schedulerUser, url.searchParams.get("weekStart") || ""));
     }
     return json(await officerRequestDetails(
       context.env.SCHEDULER_DB,
