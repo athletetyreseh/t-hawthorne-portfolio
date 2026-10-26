@@ -95,7 +95,9 @@
 
   async function loadOfficerData() {
     try {
-      const response = await fetch(ADMIN_API, { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
+      const adminUrl = new URL(ADMIN_API, location.href);
+      adminUrl.searchParams.set("weekStart", currentWeekStart());
+      const response = await fetch(adminUrl, { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Officer requests could not be loaded");
       officerData = payload;
