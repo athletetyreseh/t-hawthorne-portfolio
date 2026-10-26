@@ -8,8 +8,44 @@ import {
 
 import { resolveOvertimeRequest, isOvertimePreview } from "../../../_shared/overtime.js";
 
+const officerRequestSummary = async (database, ownerEmail) => {
+  await ensureOfficerScheduleSchema(database);
+  const [requestsResult, overtimeResult] = await Promise.all([
+    database.prepare(`SELECT id, officer_name, request_type, start_date, end_date, status, created_at
+      FROM officer_schedule_requests
+      WHERE owner_email = ?
+      ORDER BY CASE status WHEN 'pending' THEN 0 ELSE 1 END, created_at DESC
+      LIMIT 500`).bind(ownerEmail).all(),
+    database.prepare(`SELECT id, officer_name, shift_date, row_id, status, created_at
+      FROM officer_schedule_overtime_requests
+      WHERE owner_email = ?
+      ORDER BY created_at DESC
+      LIMIT 500`).bind(ownerEmail).all()
+  ]);
+  const allRequests = [
+    ...(requestsResult.results || []).map((row) => ({
+      id: row.id, officerName: row.officer_name, type: row.request_type,
+      startDate: row.start_date, endDate: row.end_date, rowId: "",
+      status: row.status, createdAt: row.created_at
+    })),
+    ...(overtimeResult.results || []).map((row) => ({
+      id: row.id, officerName: row.officer_name, type: "overtime",
+      startDate: row.shift_date, endDate: row.shift_date, rowId: row.row_id,
+      status: row.status, createdAt: row.created_at
+    }))
+  ].sort((a, b) => Number(b.status === "pending") - Number(a.status === "pending") || b.createdAt.localeCompare(a.createdAt)).slice(0, 500);
+  const requests = allRequests
+    .filter((request) => request.status === "pending" || (request.status === "approved" && ["pto", "unpaid"].includes(request.type)))
+    .map(({ createdAt, ...request }) => request);
+  return { requests, pendingCount: allRequests.filter((request) => request.status === "pending").length };
+};
+
 export async function onRequestGet(context) {
   try {
+    const url = new URL(context.request.url);
+    if (url.searchParams.get("summary") === "1") {
+      return json(await officerRequestSummary(context.env.SCHEDULER_DB, context.data.schedulerUser));
+    }
     return json(await publicSchedulePayload(context, true, true));
   } catch (error) {
     return privateErrorResponse(error);
