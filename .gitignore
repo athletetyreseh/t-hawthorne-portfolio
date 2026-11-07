@@ -9,3 +9,5 @@ coverage/
 !.env.example
 .codex_vendor/
 *.zip
+badge-desk/retention.wrangler.jsonc
+.wrangler/

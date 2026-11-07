@@ -1,0 +1,10 @@
+{
+  "origin": "https://t-hawthorne.com/badges",
+  "groups": [
+    {"name":"Western Alliance Bank","prefix":"WAB","theme":"bank","logos":["wab"],"count":2},
+    {"name":"Amazon","prefix":"AMZ","theme":"amazon","logos":["amazon"],"count":2},
+    {"name":"Secure Shred","prefix":"SHRED","theme":"shred","logos":["shred"],"count":2},
+    {"name":"UPS / FedEx","prefix":"SHIP","theme":"carrier","logos":["ups","fedex"],"count":3},
+    {"name":"Miscellaneous Vendor","prefix":"MISC","theme":"misc","logos":[],"count":4}
+  ]
+}

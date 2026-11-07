@@ -43,3 +43,5 @@ Private workspace and Cloudflare Access configuration are documented in:
 ```txt
 PRIVATE_ACCESS_SETUP.md
 ```
+
+The visitor badge desk, its private storage, and its migration checklist are documented in `badge-desk/README.md`.

@@ -4,11 +4,12 @@ The site uses Cloudflare Access for verified identity and Pages Functions with D
 
 ## Protected Applications
 
-Create or maintain three Cloudflare Access self-hosted applications:
+Create or maintain Cloudflare Access self-hosted applications for:
 
 1. `t-hawthorne.com/private/*`
 2. `t-hawthorne.com/tools/fire-drill-training/*`
 3. `t-hawthorne.com/tools/th-operations-scheduler/*`
+4. The badge desk's private paths: `t-hawthorne.com/badges/history`, `t-hawthorne.com/badges/api/history`, `t-hawthorne.com/badges/api/history.xlsx`, and `t-hawthorne.com/badges/api/record/*`. The badge roster, QR pages, checkout, and badge-specific return must stay public. See `badge-desk/README.md` before enabling this application.
 
 Each application should use an **Allow** policy with the configured login method. To let a new verified user create a private-workspace profile and request access, include the One-time PIN login method. Do not use a Bypass policy.
 
@@ -20,7 +21,7 @@ The Pages project requires:
 
 - `OWNER_EMAIL`: `athletetyreseh@gmail.com`
 - `CF_ACCESS_TEAM_DOMAIN`: the Cloudflare Zero Trust team domain
-- `CF_ACCESS_AUD`: comma-separated application audience tags for all three Access applications
+- `CF_ACCESS_AUD`: comma-separated audience tags for all configured Access applications
 - D1 binding `SCHEDULER_DB`: the existing scheduler database
 - R2 binding `LIFE_MANAGER_PHOTOS`: a private bucket for Life Manager event photos
 - `LIFE_MANAGER_TOKEN_PEPPER` (secret): a long random value used to hash revocable Android device tokens
@@ -47,4 +48,5 @@ Life Manager is owner-only and does not appear in the grantable resource list fo
 - **Staff Messaging:** with Resend configured, edit users can send one BCC message to up to 50 selected staff or separate messages to up to 100 selected staff. Without it, the interface opens BCC or individual drafts in the device mail client.
 - **Occurrences:** call off = 2 points, no call/no show = 4, late = 1, left early = 1, and documentation-only entries = 0. Points are assigned by the server rather than the browser.
 - **Exports:** roster and occurrence views generate local `.xlsx` files without transmitting export data to another service.
+- **Visitor Badge Desk:** view permission allows private history and ID photos; edit also permits owner and record changes. Photos expire after 72 hours and are deleted by the separately deployed retention Worker and bucket lifecycle rule.
 - **Admin:** owner-only and cannot be delegated from the interface.
