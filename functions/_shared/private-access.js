@@ -23,6 +23,12 @@ export const RESOURCE_CATALOG = Object.freeze({
     description: "Private roster, contacts, credential dates, staff messaging, occurrence tracking, and XLSX exports.",
     url: "/private/staff/",
     requestLevel: "view"
+  },
+  badge_desk: {
+    name: "Visitor Badge Desk",
+    description: "Private visitor checkout history, owner assignments, and ID photos.",
+    url: "/badges/history",
+    requestLevel: "view"
   }
 });
 

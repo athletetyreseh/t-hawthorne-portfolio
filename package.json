@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "build:badge-desk": "python3 badge-desk/scripts/build.py",
+    "test:badge-desk": "node --test tests/badge-desk.test.mjs",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
