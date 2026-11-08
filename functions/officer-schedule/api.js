@@ -3,6 +3,7 @@ import {
   ensureOfficerScheduleSchema,
   parseAcknowledgement,
   parseOfficerRequest,
+  publicScheduleChangeSummary,
   publicSchedulePayload
 } from "../_shared/officer-schedule.js";
 
@@ -10,6 +11,9 @@ import { submitOvertimeRequest } from "../_shared/overtime.js";
 
 export async function onRequestGet(context) {
   try {
+    if (new URL(context.request.url).searchParams.get("summary") === "1") {
+      return json(await publicScheduleChangeSummary(context));
+    }
     return json(await publicSchedulePayload(context, false));
   } catch (error) {
     return privateErrorResponse(error);

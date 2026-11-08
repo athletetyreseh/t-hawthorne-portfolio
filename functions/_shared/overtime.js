@@ -1,6 +1,7 @@
 import { json, ownerEmailFor, parseJson } from "./private-access.js";
 import { cleanText, ensureOfficerScheduleSchema, loadSchedulerState, loadStaffDirectory, namesFromSchedule, overtimeRequestFromRow } from "./officer-schedule.js";
 import { serializeValidatedState, pruneHistory } from "./scheduler.js";
+import { isWorkingRowVisible } from "../../portfolio-site/tools/th-operations-scheduler/rollover.js";
 
 const normalizedName = (value) => cleanText(value, 120).toLowerCase();
 const fail = (message, status = 409) => { throw json({ error: message }, status); };
@@ -31,12 +32,7 @@ const intervalFor = (date, start, end) => {
 };
 const visibleRow = (state, row, date) => {
   const week = mondayFor(date);
-  if (!week || row.scope === "master-only") return false;
-  if (row.scope === "working-week" && row.weekStart !== week) return false;
-  if ((row.hiddenWeeks || []).includes(week)) return false;
-  const hidden = state.hiddenRowsByScope?.[week] || {};
-  const baseKey = [row.site, row.shiftName, row.post, row.shiftCode, row.typeNum].join("|");
-  return !hidden[row.id] && !hidden[baseKey];
+  return Boolean(week && isWorkingRowVisible(state, row, week));
 };
 
 // Only an explicit red/open, unnamed, published cell can be requested.

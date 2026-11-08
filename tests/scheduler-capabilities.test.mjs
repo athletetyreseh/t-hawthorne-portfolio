@@ -10,6 +10,10 @@ test("capability manifest advertises the private command surface without schedul
   assert.equal(manifest.endpoints.manifest.path, "/tools/th-operations-scheduler/api/capabilities");
   assert.ok(manifest.operations.assignments.includes("assign"));
   assert.ok(manifest.operations.rows.includes("insert_row"));
+  assert.ok(manifest.operations.rows.includes("remove_row"));
+  assert.equal(manifest.operations.rows.includes("hide_row"), false);
+  assert.equal(manifest.operations.rows.includes("show_row"), false);
+  assert.ok(manifest.safety.destructiveOperations.includes("remove_row"));
   assert.ok(manifest.operations.statuses.allowed.includes("pto"));
   assert.ok(manifest.safety.confirmations.some((item) => item.includes("undo")));
   assert.match(manifest.agentExecutionRules.codeFirst, /batch command/);
