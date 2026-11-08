@@ -80,7 +80,7 @@ test("full public schedule and lightweight summary use the same change token", a
 });
 
 test("public officer page polls a lightweight token every ten seconds", async () => {
-  const source = await readFile(new URL("../portfolio-site/tools/th-operations-scheduler/officers/officer-schedule.js", import.meta.url), "utf8");
+  const source = await readFile(new URL("../portfolio-site/officer-schedule/officer-schedule.js", import.meta.url), "utf8");
   assert.match(source, /const POLL_MS = 10_000/);
   assert.match(source, /const SUMMARY_API = `\$\{API\}\?summary=1`/);
   assert.match(source, /summary\.changeToken !== changeToken/);
