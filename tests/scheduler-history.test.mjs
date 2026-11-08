@@ -42,3 +42,23 @@ test("history makes automatic agent tags auditable", () => {
   assert.equal(result.changes.find((change) => change.type === "assignment_updated").after.tagged, true);
   assert.equal(result.changes.find((change) => change.type === "row_updated").after.agentTagged, true);
 });
+
+test("history reports a row removed from one working week while retaining its assignments", () => {
+  const before = state("Alex Morgan");
+  const after = state();
+  after.rows[0].assignments = {};
+  after.rows[0].deletedWeeks = ["2026-08-03"];
+  after.historyRows = [{
+    id: "working:city-lobby-a:2026-08-03",
+    archiveId: "working:city-lobby-a:2026-08-03",
+    archivedRowId: "city-lobby-a",
+    archivedWeekStart: "2026-08-03",
+    scope: "history-only",
+    assignments: { "2026-08-03": { status: "assigned", name: "Alex Morgan", start: "0600", end: "1400" } }
+  }];
+  const result = summarizeSchedulerChanges(before, after);
+  const deletion = result.changes.find((change) => change.type === "row_removed_from_week");
+  assert.equal(deletion.target.rowId, "city-lobby-a");
+  assert.equal(deletion.target.mode, "working");
+  assert.deepEqual(deletion.preservedAssignments, ["2026-08-03"]);
+});

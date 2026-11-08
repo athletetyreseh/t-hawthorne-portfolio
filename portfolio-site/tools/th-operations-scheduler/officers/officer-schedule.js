@@ -1,8 +1,11 @@
+import { isWorkingRowVisible } from "../rollover.js";
+
 (() => {
   "use strict";
 
   const API = "/officer-schedule/api";
-  const POLL_MS = 2000;
+  const SUMMARY_API = `${API}?summary=1`;
+  const POLL_MS = 10_000;
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const requestLabels = {
     pto: "PTO",
@@ -29,6 +32,8 @@
   let viewMode = "whole";
   let signatureReady = false;
   let loading = false;
+  let summaryLoading = false;
+  let changeToken = "";
 
   const dom = {
     status: document.getElementById("syncStatus"),
@@ -111,6 +116,7 @@
       try { nextPayload = text ? JSON.parse(text) : {}; } catch { nextPayload = { error: text || "Schedule could not be loaded" }; }
       if (!response.ok) throw new Error(nextPayload.error || "Schedule could not be loaded");
       payload = nextPayload;
+      changeToken = nextPayload.changeToken || changeToken;
       ensureSelectedOfficer();
       render();
       const when = payload.updatedAt ? new Date(payload.updatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "just now";
@@ -119,6 +125,21 @@
       setStatus(payload ? `Live update delayed. Retrying...` : error.message);
     } finally {
       loading = false;
+    }
+  }
+
+  async function checkForUpdates(showLoading = false) {
+    if (summaryLoading || loading) return;
+    summaryLoading = true;
+    try {
+      const response = await fetch(SUMMARY_API, { cache: "no-store", headers: { Accept: "application/json" } });
+      const summary = await response.json();
+      if (!response.ok) throw new Error(summary.error || "Schedule updates could not be checked");
+      if (!payload || summary.changeToken !== changeToken) await loadSchedule(showLoading);
+    } catch (error) {
+      setStatus(payload ? "Live update delayed. Retrying..." : error.message);
+    } finally {
+      summaryLoading = false;
     }
   }
 
@@ -514,18 +535,7 @@
 
   function activeRows() {
     const start = iso(weekStart);
-    return (payload?.schedule?.rows || []).filter((row) => {
-      const hiddenRows = payload?.schedule?.hiddenRowsByScope?.[start] || {};
-      if (hiddenRows[row.id] || hiddenRows[baseRowKey(row)]) return false;
-      if (!row.scope) return true;
-      if (row.scope === "master-only") return Array.isArray(row.rolloverWeeks) && row.rolloverWeeks.includes(start);
-      if (row.scope === "working-week") return row.weekStart === start;
-      return true;
-    }).filter((row) => !(Array.isArray(row.hiddenWeeks) && row.hiddenWeeks.includes(start)));
-  }
-
-  function baseRowKey(row) {
-    return [row.site, row.shiftName, row.post, row.shiftCode, row.typeNum].join("|");
+    return (payload?.schedule?.rows || []).filter((row) => isWorkingRowVisible(payload.schedule, row, start));
   }
 
   function requestsForOfficer(officerName) {
@@ -941,9 +951,9 @@
   });
 
   loadSchedule(true);
-  window.addEventListener("focus", () => loadSchedule(false));
+  window.addEventListener("focus", () => checkForUpdates(false));
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") loadSchedule(false);
+    if (document.visibilityState === "visible") checkForUpdates(false);
   });
-  window.setInterval(() => loadSchedule(false), POLL_MS);
+  window.setInterval(() => checkForUpdates(false), POLL_MS);
 })();

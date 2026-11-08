@@ -91,6 +91,26 @@ test("a batch is atomic, auto-tags entries, and can explicitly clean up tags", (
   assert.equal(result.result.agentTags.cleared[0].day, "Mon");
 });
 
+test("history-only rows are excluded from target, clear-week, and copy-week operations", () => {
+  const state = schedule();
+  const archived = structuredClone(state.rows[0]);
+  archived.id = "archived-lobby-a";
+  archived.scope = "history-only";
+  state.rows.push(archived);
+
+  const cleared = executeSchedulerCommand(state, { kind: "clear_week", date: "2026-08-03", confirm: true });
+  assert.equal(cleared.state.rows[2].assignments["2026-08-03"].status, "open");
+
+  const copied = executeSchedulerCommand(state, {
+    kind: "copy_week", sourceDate: "2026-08-03", destinationDate: "2026-08-10", confirm: true
+  });
+  assert.equal(copied.state.rows[2].assignments["2026-08-10"], undefined);
+  assert.throws(
+    () => executeSchedulerCommand(state, { kind: "set_note", target: { rowId: "archived-lobby-a", date: "2026-08-03" }, note: "x" }),
+    (error) => error instanceof SchedulerCommandError && error.code === "target_not_found"
+  );
+});
+
 test("destructive commands require one explicit confirmation while exact routine edits do not", () => {
   assert.throws(
     () => executeSchedulerCommand(schedule(), { kind: "clear", target }),

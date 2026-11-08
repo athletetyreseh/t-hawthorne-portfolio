@@ -53,8 +53,8 @@ export const summarizeSchedulerChanges = (before, after, maxChanges = 100) => {
       add({ type: left ? "row_removed" : "row_added", target: targetFor(row, "", "row") });
       continue;
     }
-    const beforeRow = { site: left.site || "", post: left.post || "", shift: left.shiftCode || left.shiftName || "", hiddenWeeks: left.hiddenWeeks || [], masterHidden: left.masterHidden === true, agentTagged: left.agentTagged === true };
-    const afterRow = { site: right.site || "", post: right.post || "", shift: right.shiftCode || right.shiftName || "", hiddenWeeks: right.hiddenWeeks || [], masterHidden: right.masterHidden === true, agentTagged: right.agentTagged === true };
+    const beforeRow = { site: left.site || "", post: left.post || "", shift: left.shiftCode || left.shiftName || "", scope: left.scope || "", weekStart: left.weekStart || "", deletedWeeks: left.deletedWeeks || [], hiddenWeeks: left.hiddenWeeks || [], masterHidden: left.masterHidden === true, agentTagged: left.agentTagged === true };
+    const afterRow = { site: right.site || "", post: right.post || "", shift: right.shiftCode || right.shiftName || "", scope: right.scope || "", weekStart: right.weekStart || "", deletedWeeks: right.deletedWeeks || [], hiddenWeeks: right.hiddenWeeks || [], masterHidden: right.masterHidden === true, agentTagged: right.agentTagged === true };
     if (!same(beforeRow, afterRow)) add({ type: "row_updated", target: targetFor(right, "", "row"), before: beforeRow, after: afterRow });
     for (const mode of ["working", "master"]) {
       const leftAssignments = mode === "working" ? left.assignments || {} : left.master || {};
@@ -73,6 +73,16 @@ export const summarizeSchedulerChanges = (before, after, maxChanges = 100) => {
         }
       }
     }
+  }
+  const beforeArchives = new Set((before?.historyRows || []).map((row) => row.archiveId).filter(Boolean));
+  for (const archive of after?.historyRows || []) {
+    if (!archive.archiveId || beforeArchives.has(archive.archiveId) || !archive.archivedWeekStart) continue;
+    const row = { ...archive, id: archive.archivedRowId || archive.id };
+    add({
+      type: "row_removed_from_week",
+      target: targetFor(row, archive.archivedWeekStart, "working"),
+      preservedAssignments: Object.keys(archive.assignments || {}).sort()
+    });
   }
   const beforeStaff = [...new Set((before?.staff || []).map(String))].sort();
   const afterStaff = [...new Set((after?.staff || []).map(String))].sort();
