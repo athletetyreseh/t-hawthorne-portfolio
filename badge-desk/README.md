@@ -1,6 +1,6 @@
 # Visitor Badge Desk
 
-This is the source for the desk at `https://t-hawthorne.com/badges`. The roster, individual badge pages, checkout and badge-specific return are public. History, spreadsheets, visitor details, owner assignments and ID photos require Cloudflare Access **and** an owner or a `badge_desk` permission in the portfolio's private workspace. The Pages Function checks the signed Access JWT; a browser header or an authenticated account without a grant is not enough. A person who has a badge URL can check out or return that badge.
+This is the source for the desk at `https://t-hawthorne.com/badges`. The roster, individual badge pages, checkout and badge-specific return are public. History, spreadsheets, visitor details, owner assignments and ID photos require the owner's Cloudflare Access sign-in. The Pages Function verifies the signed Access JWT and matches its email to `OWNER_EMAIL`. A person who has a badge URL can check out or return that badge.
 
 The 13 printable QR codes use the production domain. Existing printed labels still contain their old URLs; print and replace those labels after the new desk has been verified.
 
@@ -50,7 +50,7 @@ These steps require access to the existing Cloudflare account. **Do not merge or
 
    Confirm the `*/5 * * * *` Cron Trigger appears in Cloudflare and check Worker logs after a scheduled run. Test with an expired test photo: the object should be deleted and its row's `photo_key` cleared, while an unexpired test photo remains. The generated local retention configuration is ignored by Git.
 5. In Cloudflare Zero Trust, create a self-hosted Access application covering the exact paths `/badges/history`, `/badges/api/history`, `/badges/api/history.xlsx`, and `/badges/api/record/*` (including the history path's descendant wildcard if the dashboard requires it). Use an Allow policy, not Bypass. Append its audience tag to the existing comma-separated `CF_ACCESS_AUD`, preserving all existing tags. Keep `CF_ACCESS_TEAM_DOMAIN` and `OWNER_EMAIL` configured, and never enable `SCHEDULER_DEV_BYPASS` in production. The public `/badges`, `/badges/b/*`, `/badges/api/status`, and `/badges/api/badge/*` routes must remain outside the Access application.
-6. In `/private/admin/`, grant `Visitor Badge Desk` view or edit permission to the relevant staff. View permits history and photo access; edit also permits private owner/record changes. The owner has access automatically. Confirm an authenticated account without this grant gets 403.
+6. Restrict the Access application's Allow policy to the owner email configured in `OWNER_EMAIL`. Confirm the Pages Function returns 403 for a signed-in non-owner, even if an old workspace permission exists.
 7. Migrate and verify existing records using the procedure below. Then deploy through the portfolio's normal GitHub/Pages workflow. Before allowing live visitor data, check anonymous 401/403 on history, Excel, ID-photo and record endpoints; verify the Activity Log opens the Access sign-in flow; test all public checkouts and returns; check the retention Worker and R2 rule; and verify unrelated portfolio routes.
 8. Print with US Letter, actual size/100%, and background colors enabled. Confirm the ruler is one inch, each cutout is 2.65 × 1.80 inches, and scan all 13 physical codes. Check both WAB phone numbers and that **CALL** and badge numbers are red.
 
@@ -75,4 +75,4 @@ The helper validates IDs, badge names, timestamps, duplicate active badges and p
 npx wrangler d1 execute visitor-badge-desk --remote --file /private/path/import.sql
 ```
 
-Check total and active counts, compare IDs and owners, verify every unexpired photo is accessible only to authorized staff, and verify expired photos are unavailable. Recheck the old desk for any changes before switching. Securely remove temporary exports when no longer needed. The workbook export alone is not a complete migration source: it deliberately excludes record IDs and image files, and editing it does not update the website.
+Check total and active counts, compare IDs and owners, verify every unexpired photo is accessible only to the owner, and verify expired photos are unavailable. Recheck the old desk for any changes before switching. Securely remove temporary exports when no longer needed. The workbook export alone is not a complete migration source: it deliberately excludes record IDs and image files, and editing it does not update the website.

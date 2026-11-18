@@ -48,5 +48,5 @@ Life Manager is owner-only and does not appear in the grantable resource list fo
 - **Staff Messaging:** with Resend configured, edit users can send one BCC message to up to 50 selected staff or separate messages to up to 100 selected staff. Without it, the interface opens BCC or individual drafts in the device mail client.
 - **Occurrences:** call off = 2 points, no call/no show = 4, late = 1, left early = 1, and documentation-only entries = 0. Points are assigned by the server rather than the browser.
 - **Exports:** roster and occurrence views generate local `.xlsx` files without transmitting export data to another service.
-- **Visitor Badge Desk:** view permission allows private history and ID photos; edit also permits owner and record changes. Photos expire after 72 hours and are deleted by the separately deployed retention Worker and bucket lifecycle rule.
+- **Visitor Badge Desk** requires an owner sign-in for history, ID photos, owner assignments, and record changes. Photos expire after 72 hours and are deleted by the separately deployed retention Worker and bucket lifecycle rule.
 - **Admin:** owner-only and cannot be delegated from the interface.

@@ -157,8 +157,8 @@ async function signer() {
   return {jwk,token};
 }
 
-test('Pages verifies Access signatures and requires owner or explicitly granted staff', async () => {
-  const {env, scheduler} = fixture();
+test('Pages verifies Access signatures and reserves history and photos for the owner', async () => {
+  const {db, env, scheduler} = fixture();
   const {jwk, token} = await signer();
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async url => {
@@ -181,12 +181,14 @@ test('Pages verifies Access signatures and requires owner or explicitly granted 
     const parts = validOwner.split('.');
     parts[2] = (parts[2][0] === 'A' ? 'B' : 'A') + parts[2].slice(1);
     assert.equal((await viaPages('/badges/api/history', parts.join('.'))).status, 403);
-    assert.equal((await viaPages('/badges/api/history', validOwner)).status, 200);
-    scheduler.prepare('INSERT INTO private_permissions VALUES (?,?,?)').run('staff@example.com','badge_desk','view');
+    assert.equal((await call('/badges/api/badge/ship-01', env, {method:'POST', body:checkoutForm({photo:true})})).status, 201);
+    const {id} = db.prepare('SELECT id FROM checkouts').get();
+    scheduler.prepare('INSERT INTO private_permissions VALUES (?,?,?)').run('staff@example.com','badge_desk','edit');
     const staff = await token({email:'staff@example.com'});
-    assert.equal((await viaPages('/badges/api/history',staff)).status, 200);
-    assert.equal((await viaPages('/badges/api/record/00000000-0000-0000-0000-000000000000/return',staff,'POST')).status, 403);
-    scheduler.prepare('UPDATE private_permissions SET access_level=?').run('edit');
-    assert.equal((await viaPages('/badges/api/record/00000000-0000-0000-0000-000000000000/return',staff,'POST')).status, 409);
+    for (const path of ['/badges/history','/badges/api/history','/badges/api/history.xlsx',`/badges/api/record/${id}/photo`]) {
+      assert.equal((await viaPages(path, validOwner)).status, 200, path);
+      assert.equal((await viaPages(path, staff)).status, 403, path);
+    }
+    assert.equal((await viaPages(`/badges/api/record/${id}/return`, staff, 'POST')).status, 403);
   } finally { globalThis.fetch = originalFetch; }
 });

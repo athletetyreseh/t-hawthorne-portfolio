@@ -186,7 +186,7 @@ async function api(request, env, path, authorized) {
     return error("This request must come from the badge desk.", 403);
   }
   if (!authorized && (path === "/api/history" || path === "/api/history.xlsx" || path.startsWith("/api/record/"))) {
-    return error("Staff authorization is required.", 401);
+    return error("Owner authorization is required.", 401);
   }
   if (request.method === "GET" && path === "/api/status") {
     const {results} = await env.DB.prepare("SELECT badge FROM checkouts WHERE returned_at IS NULL").all();
@@ -258,7 +258,7 @@ export default {
       const path = url.pathname.slice("/badges".length).replace(/\/$/, "") || "/";
       if (path.startsWith("/api/")) return await api(request, env, path, authorized);
       if (request.method !== "GET") return error("Method not allowed.", 405);
-      if (path === "/history" && !authorized) return error("Staff authorization is required.", 401);
+      if (path === "/history" && !authorized) return error("Owner authorization is required.", 401);
       if (path === "/catalog.json") return json({badges, origin: config.origin});
       const page = ["/", "/sheets", "/history"].includes(path) || path.startsWith("/b/");
       if (path === "/activity-log.xlsx") return error("That page could not be found.", 404);

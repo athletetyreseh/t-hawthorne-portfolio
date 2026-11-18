@@ -1,5 +1,5 @@
 import { authenticateAccessRequest } from "../_shared/auth.js";
-import { getAccessLevel, json, ownerEmailFor } from "../_shared/private-access.js";
+import { json } from "../_shared/private-access.js";
 import desk from "../_shared/badge-desk.generated.js";
 
 export async function onRequest(context) {
@@ -12,16 +12,6 @@ export async function onRequest(context) {
   const authContext = {...context, env: {...context.env, SCHEDULER_DEV_BYPASS: "false"}};
   const authentication = await authenticateAccessRequest(authContext);
   if (authentication.response) return authentication.response;
-  if (!authentication.isOwner) {
-    try {
-      const level = await getAccessLevel(context.env.SCHEDULER_DB, authentication.email, "badge_desk", ownerEmailFor(context));
-      const needsEdit = context.request.method !== "GET" && context.request.method !== "HEAD";
-      if (level !== "edit" && (needsEdit || level !== "view")) {
-        return json({error: "Badge desk access has not been granted"}, 403);
-      }
-    } catch {
-      return json({error: "Private access is not available"}, 503);
-    }
-  }
+  if (!authentication.isOwner) return json({error: "Badge desk owner access is required"}, 403);
   return desk.fetch(context.request, context.env, true);
 }
