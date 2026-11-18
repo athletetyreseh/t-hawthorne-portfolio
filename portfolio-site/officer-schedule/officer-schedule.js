@@ -2,7 +2,8 @@
   "use strict";
 
   const API = "/officer-schedule/api";
-  const POLL_MS = 2000;
+  const SUMMARY_API = `${API}?summary=1`;
+  const POLL_MS = 10_000;
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const requestLabels = {
     overtime: "Overtime pickup",
@@ -30,6 +31,8 @@
   let viewMode = "whole";
   let signatureReady = false;
   let loading = false;
+  let summaryLoading = false;
+  let changeToken = "";
   let overtimeSite = "all", selectedOvertimeKey = "", overtimeReviewing = false, overtimeSending = false, overtimeNotice = "";
   let previewOvertimeRequests = [];
   try { const saved = JSON.parse(sessionStorage.getItem("th-preview-overtime-requests") || "[]"); if (Array.isArray(saved)) previewOvertimeRequests = saved.filter((request) => request?.type === "overtime" && request.id && request.rowId && request.startDate).slice(0, 100); } catch {}
@@ -128,6 +131,7 @@
       const unchanged = payload && JSON.stringify(payload) === JSON.stringify(nextPayload);
       const pageScroll = { left: window.scrollX, top: window.scrollY };
       payload = nextPayload;
+      changeToken = nextPayload.changeToken || changeToken;
       ensureSelectedOfficer();
       if (!unchanged) {
         render();
@@ -139,6 +143,21 @@
       setStatus(payload ? `Live update delayed. Retrying...` : error.message);
     } finally {
       loading = false;
+    }
+  }
+
+  async function checkForUpdates(showLoading = false) {
+    if (summaryLoading || loading) return;
+    summaryLoading = true;
+    try {
+      const response = await fetch(SUMMARY_API, { cache: "no-store", headers: { Accept: "application/json" } });
+      const summary = await response.json();
+      if (!response.ok) throw new Error(summary.error || "Schedule updates could not be checked");
+      if (!payload || summary.changeToken !== changeToken) await loadSchedule(showLoading);
+    } catch (error) {
+      setStatus(payload ? "Live update delayed. Retrying..." : error.message);
+    } finally {
+      summaryLoading = false;
     }
   }
 
@@ -689,6 +708,8 @@
   function activeRows() {
     const start = iso(weekStart);
     return (payload?.schedule?.rows || []).filter((row) => {
+      if (row.scope === "history-only") return false;
+      if (Array.isArray(row.deletedWeeks) && row.deletedWeeks.includes(start)) return false;
       const hiddenRows = payload?.schedule?.hiddenRowsByScope?.[start] || {};
       if (hiddenRows[row.id] || hiddenRows[baseRowKey(row)]) return false;
       if (!row.scope) return true;
@@ -1122,9 +1143,9 @@
   dom.overtimeBack?.addEventListener("click", () => overtimeStep(false));
 
   loadSchedule(true);
-  window.addEventListener("focus", () => loadSchedule(false));
+  window.addEventListener("focus", () => checkForUpdates(false));
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") loadSchedule(false);
+    if (document.visibilityState === "visible") checkForUpdates(false);
   });
-  window.setInterval(() => loadSchedule(false), POLL_MS);
+  window.setInterval(() => checkForUpdates(false), POLL_MS);
 })();

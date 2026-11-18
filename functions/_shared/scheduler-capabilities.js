@@ -1,6 +1,6 @@
 // Public contract metadata for the authenticated scheduler command surface.
 // It intentionally contains no tenant, roster, row, or schedule information.
-export const SCHEDULER_CAPABILITIES_VERSION = "2026-07-30";
+export const SCHEDULER_CAPABILITIES_VERSION = "2026-11-08";
 
 export const getSchedulerCapabilityManifest = () => ({
   schemaVersion: SCHEDULER_CAPABILITIES_VERSION,
@@ -13,7 +13,7 @@ export const getSchedulerCapabilityManifest = () => ({
   agentExecutionRules: {
     codeFirst: "For precise routine work, call the direct command API. Use one batch command for multi-cell or multi-day work. Use the visual scheduler only when the command API is genuinely unavailable.",
     automaticTags: "Every successful mutating command automatically adds or retains a visible agent-change tag on each affected assignment or row. Results report agentTags, and history records the tagged field change. Do not add a separate tag command for routine agent work. An explicit untag inside a batch is supported for deliberate tag cleanup and is reported in agentTags.cleared.",
-    confirmation: "Precise non-destructive edits (time, assignment, status, note, and normal tagging) need no confirmation. Ambiguous targets are rejected for clarification. Clearing, blocking, removing a roster entry, clearing a week, and rolling over require one explicit confirm: true; a batch-level confirm applies to its destructive items.",
+    confirmation: "Precise non-destructive edits (time, assignment, status, note, and normal tagging) need no confirmation. Ambiguous targets are rejected for clarification. Clearing, blocking, removing a row or roster entry, clearing a week, and rolling over require one explicit confirm: true; a batch-level confirm applies to its destructive items.",
     auditability: "Every direct mutation creates a pre-change restore point and is reversible through the normal history and confirmed undo path."
   },
   endpoints: {
@@ -41,7 +41,7 @@ export const getSchedulerCapabilityManifest = () => ({
     statuses: { commands: ["set_status", "clear", "block"], allowed: ["assigned", "escort", "open", "blank", "blocked", "sick", "pto", "training"] },
     tagsAndNotes: ["tag", "untag", "set_note"],
     roster: ["add_officer", "remove_officer"],
-    rows: ["set_row_post", "insert_row", "hide_row", "show_row"],
+    rows: ["set_row_post", "insert_row", "remove_row"],
     batch: { kind: "batch", maximumCommands: 50, behavior: "Validated, auto-tagged, and saved as one auditable revision. Prefer this for multi-cell or multi-day work." },
     tagCleanup: { use: "batch", behavior: "To keep only selected existing tags, include one untag command for each tag to clear. Explicit untag is the deliberate exception to auto-tagging and is reported in agentTags.cleared." },
     history: "Use the history endpoint to look up bounded field-level changes.",
@@ -50,8 +50,8 @@ export const getSchedulerCapabilityManifest = () => ({
   safety: {
     deterministicResolution: "Targets normalize whitespace and case, then resolve exactly. Multiple matches return ambiguous_target with safe row identifiers; zero matches return target_not_found. Do not guess.",
     concurrency: "Every mutating command requires the current state revision as baseRevision. A stale revision returns revision_conflict (409); reload state and resolve again.",
-    confirmations: ["clear, block, remove_officer, clear_week, and rollover_master require command.confirm: true", "A batch command may carry one confirm: true for all destructive items inside it", "undo requires confirm: true and the current baseRevision"],
-    destructiveOperations: ["clear", "block", "remove_officer", "clear_week", "rollover_master", "command-undo"],
+    confirmations: ["clear, block, remove_row, remove_officer, clear_week, and rollover_master require command.confirm: true", "A batch command may carry one confirm: true for all destructive items inside it", "undo requires confirm: true and the current baseRevision"],
+    destructiveOperations: ["clear", "block", "remove_row", "remove_officer", "clear_week", "rollover_master", "command-undo"],
     routineEdits: "assign, unassign, set_time, set_status, set_note, update_assignment, tag, and untag do not require confirmation when their target is exact.",
     recoverability: "Direct mutations create a pre-change restore point. Undo and restore operations create another recoverable revision, and agentTags identify the affected entries or rows.",
     rosterGuard: "Unknown officers are rejected unless allowNewOfficer: true is explicitly supplied."
@@ -65,7 +65,7 @@ export const getSchedulerCapabilityManifest = () => ({
         type: "object",
         required: ["kind"],
         properties: {
-          kind: { type: "string", enum: ["assign", "unassign", "set_time", "set_status", "set_note", "tag", "untag", "update_assignment", "clear", "block", "add_officer", "remove_officer", "set_row_post", "insert_row", "hide_row", "show_row", "rollover_master", "clear_week", "batch", "save", "sync"] },
+          kind: { type: "string", enum: ["assign", "unassign", "set_time", "set_status", "set_note", "tag", "untag", "update_assignment", "clear", "block", "add_officer", "remove_officer", "set_row_post", "insert_row", "remove_row", "rollover_master", "clear_week", "batch", "save", "sync"] },
           target: { type: "object", description: "Required for cell and row operations; see target contract." },
           confirm: { type: "boolean", description: "Required once for destructive operations; batch-level confirmation applies to destructive child commands." }
         }

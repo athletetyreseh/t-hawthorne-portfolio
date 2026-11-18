@@ -136,6 +136,7 @@ export const loadStaffDirectory = async (database) => {
 export const namesFromSchedule = (state) => {
   const names = new Set();
   for (const row of state?.rows || []) {
+    if (row.scope === "history-only") continue;
     for (const source of [row.assignments || {}, row.master || {}]) {
       for (const assignment of Object.values(source)) {
         const name = cleanText(assignment?.name, 120);
@@ -173,16 +174,59 @@ const publicRow = (row = {}) => ({
   time: row.time || "",
   scope: row.scope || "",
   weekStart: row.weekStart || "",
+  deletedWeeks: Array.isArray(row.deletedWeeks) ? row.deletedWeeks : [],
   hiddenWeeks: Array.isArray(row.hiddenWeeks) ? row.hiddenWeeks : [],
   assignments: publicAssignments(row.assignments)
 });
 
 const publicState = (state) => state ? ({
   dates: state.dates || [],
-  rows: (state.rows || []).map(publicRow),
+  rows: (state.rows || []).filter((row) => row.scope !== "history-only").map(publicRow),
   view: state.view || {},
   hiddenRowsByScope: state.hiddenRowsByScope || {}
 }) : null;
+
+const publicChangeMetadata = async (database, ownerEmail, revision, updatedAt) => {
+  const [requests, overtime, acknowledgements] = await Promise.all([
+    database.prepare(`SELECT COUNT(*) AS count, MAX(COALESCE(resolved_at, created_at)) AS updated_at
+      FROM officer_schedule_requests WHERE owner_email = ?`).bind(ownerEmail).first(),
+    database.prepare(`SELECT COUNT(*) AS count, MAX(COALESCE(resolved_at, created_at)) AS updated_at
+      FROM officer_schedule_overtime_requests WHERE owner_email = ?`).bind(ownerEmail).first(),
+    database.prepare(`SELECT COUNT(*) AS count, MAX(signed_at) AS updated_at
+      FROM officer_schedule_acknowledgements WHERE owner_email = ?`).bind(ownerEmail).first()
+  ]);
+  const requestCount = Number(requests?.count || 0);
+  const overtimeCount = Number(overtime?.count || 0);
+  const acknowledgementCount = Number(acknowledgements?.count || 0);
+  const tokenParts = [
+    Number(revision || 0), updatedAt || "",
+    requestCount, requests?.updated_at || "",
+    overtimeCount, overtime?.updated_at || "",
+    acknowledgementCount, acknowledgements?.updated_at || ""
+  ];
+  return {
+    revision: Number(revision || 0),
+    updatedAt: updatedAt || "",
+    requestCount,
+    requestsUpdatedAt: requests?.updated_at || "",
+    overtimeCount,
+    overtimeUpdatedAt: overtime?.updated_at || "",
+    acknowledgementCount,
+    acknowledgementsUpdatedAt: acknowledgements?.updated_at || "",
+    changeToken: tokenParts.join("|")
+  };
+};
+
+export const publicScheduleChangeSummary = async (context) => {
+  const database = context.env.SCHEDULER_DB;
+  const ownerEmail = context.data.schedulerUser || ownerEmailFor(context);
+  await ensurePrivateSchema(database);
+  await ensureOfficerScheduleSchema(database);
+  const row = await database.prepare(
+    "SELECT revision, updated_at FROM scheduler_state WHERE owner_email = ?"
+  ).bind(ownerEmail).first();
+  return publicChangeMetadata(database, ownerEmail, row?.revision, row?.updated_at);
+};
 
 export const publicSchedulePayload = async (context, includeSignature = false, includeRequestDetails = false) => {
   const database = context.env.SCHEDULER_DB;
@@ -193,6 +237,7 @@ export const publicSchedulePayload = async (context, includeSignature = false, i
     loadSchedulerState(database, configuredOwnerEmail),
     loadStaffDirectory(database)
   ]);
+  const changeSummary = await publicChangeMetadata(database, ownerEmail, revision, updatedAt);
 
   const officers = namesFromSchedule(state).map((name) => ({
     name,
@@ -226,10 +271,10 @@ export const publicSchedulePayload = async (context, includeSignature = false, i
      ORDER BY signed_at DESC
      LIMIT 500`
   ).bind(ownerEmail).all();
-
   return {
     revision,
     updatedAt,
+    changeToken: changeSummary.changeToken,
     schedule: includeRequestDetails && state ? {
       dates: state.dates || [],
       rows: state.rows || [],

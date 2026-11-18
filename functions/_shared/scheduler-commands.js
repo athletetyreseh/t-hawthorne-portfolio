@@ -1,4 +1,4 @@
-import { rolloverMasterState } from "../../portfolio-site/tools/th-operations-scheduler/rollover.js";
+import { removeSchedulerRow, rolloverMasterState } from "../../portfolio-site/tools/th-operations-scheduler/rollover.js";
 
 // Pure command execution for the TH Operations Scheduler.  This module has no
 // request or database dependency so its validation and target resolution can be
@@ -158,6 +158,15 @@ const markAgentChanges = (before, after) => {
       }
     }
   }
+  const beforeArchives = new Set((before.historyRows || []).map((row) => row.archiveId).filter(Boolean));
+  for (const archive of after.historyRows || []) {
+    if (!archive.archiveId || beforeArchives.has(archive.archiveId)) continue;
+    archive.agentTagged = true;
+    const targetRow = { ...archive, id: archive.archivedRowId || archive.id };
+    add(tagged, archive.archivedWeekStart
+      ? tagReportTarget(targetRow, archive.archivedWeekStart, "working")
+      : tagReportTarget(targetRow));
+  }
   if (JSON.stringify(before.staff || []) !== JSON.stringify(after.staff || [])) {
     add(tagged, { scope: "roster" });
   }
@@ -187,7 +196,7 @@ const targetCandidates = (state, rawTarget) => {
     fail("required_field", "target requires rowId or both site and post", { fields: ["target.rowId", "target.site", "target.post"] });
   }
 
-  let rows = Array.isArray(state.rows) ? state.rows.slice() : [];
+  let rows = Array.isArray(state.rows) ? state.rows.filter((row) => row.scope !== "history-only") : [];
   if (rowId) rows = rows.filter((row) => String(row.id) === rowId);
   if (site) rows = rows.filter((row) => key(row.site) === key(site));
   if (post) rows = rows.filter((row) => key(row.post) === key(post));
@@ -283,7 +292,7 @@ const executeOne = (state, command, options = {}) => {
     const destinationDates=weekDates(isoDate(command.destinationDate,"destinationDate"));
     const sourceMode=command.sourceMode||'working', destinationMode=command.destinationMode||'working';
     if(!['working','master'].includes(sourceMode)||!['working','master'].includes(destinationMode)) fail("invalid_field","Modes must be working or master");
-    const rows=state.rows.filter(r=>!command.site||key(r.site)===key(command.site));
+    const rows=state.rows.filter(r=>r.scope!=='history-only'&&(!command.site||key(r.site)===key(command.site)));
     if(!rows.length) fail("target_not_found","No rows match site");
     for(const row of rows){
       const values=sourceDates.map(date=>clone(assignmentAt({row,mode:sourceMode,assignmentKey:sourceMode==='master'?dayFor(date):date},false)));
@@ -320,7 +329,7 @@ const executeOne = (state, command, options = {}) => {
     if (mode !== "working" && mode !== "master") fail("invalid_field", "mode must be working or master", { field: "mode" });
     const site = text(command.site, "site", { max: 200 });
     const dates = mode === "master" ? DAYS : weekDates(date);
-    const rows = state.rows.filter((row) => !site || key(row.site) === key(site));
+    const rows = state.rows.filter((row) => row.scope !== "history-only" && (!site || key(row.site) === key(site)));
     if (!rows.length) fail("target_not_found", "No schedule rows match site", { site }, 404);
     for (const row of rows) {
       const collection = mode === "master" ? (row.master || (row.master = {})) : (row.assignments || (row.assignments = {}));
@@ -330,6 +339,17 @@ const executeOne = (state, command, options = {}) => {
   }
 
   const target = targetCandidates(state, command.target);
+  if (kind === "remove_row") {
+    requireConfirmation(command, "remove_row", options);
+    if (target.row.scope === "history-only") {
+      fail("target_not_found", "History-only rows are not part of the active schedule", { rowId: target.row.id }, 404);
+    }
+    if (target.row.scope === "working-week" && (target.mode === "master" || target.row.weekStart !== mondayFor(target.date))) {
+      fail("target_not_found", "A working-week row can only be removed from its own working week", { rowId: target.row.id, weekStart: target.row.weekStart }, 404);
+    }
+    const deletion = removeSchedulerRow(state, target.row.id, target.mode, weekDates(target.date));
+    return { changed: deletion.removed, result: { kind, ...deletion } };
+  }
   const assignment = assignmentAt(target);
   if(kind==='copy_cell') {
     requireConfirmation(command,'copy_cell',options);
@@ -338,11 +358,6 @@ const executeOne = (state, command, options = {}) => {
     const collection=target.mode==='master'?target.row.master:target.row.assignments;
     collection[target.assignmentKey]=value;
     return {changed:true,result:{kind,...assignmentResult(target,value)}};
-  }
-  if(kind==='remove_row') {
-    requireConfirmation(command,'remove_row',options);
-    state.rows=state.rows.filter(row=>row!==target.row);
-    return {changed:true,result:{kind,rowId:target.row.id}};
   }
   if(kind==='update_row') {
     const patch=command.patch;
@@ -362,19 +377,7 @@ const executeOne = (state, command, options = {}) => {
     return { changed: true, result: { kind, ...publicTarget(target), post } };
   }
   if (kind === "hide_row" || kind === "show_row") {
-    if (target.mode === "master") {
-      target.row.masterHidden = kind === "hide_row";
-    } else {
-      const weekStart = mondayFor(target.date);
-      const hiddenWeeks = new Set(Array.isArray(target.row.hiddenWeeks) ? target.row.hiddenWeeks : []);
-      if (kind === "hide_row") hiddenWeeks.add(weekStart);
-      else hiddenWeeks.delete(weekStart);
-      target.row.hiddenWeeks = [...hiddenWeeks].sort();
-    }
-    const scope=target.mode==='master'?'master':mondayFor(target.date);
-    const legacy=state.hiddenRowsByScope?.[scope];
-    if(legacy && kind==='show_row') {delete legacy[target.row.id];delete legacy[[target.row.site,target.row.shiftName,target.row.post,target.row.shiftCode,target.row.typeNum].join('|')];}
-    return { changed: true, result: { kind, ...publicTarget(target), hidden: kind === "hide_row" } };
+    fail("unsupported_operation", "Hidden-row commands are no longer supported; use remove_row to remove a row from the active schedule.", { kind });
   }
   if (kind === "insert_row") {
     const source = clone(target.row);

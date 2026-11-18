@@ -475,7 +475,7 @@
 
       <h3>Deterministic targets and safety</h3>
       <p>Use <code>rowId</code> when known, or exact <code>site</code> + <code>post</code>, plus <code>shift</code> whenever needed, and an ISO <code>date</code>. Read the current revision first and send it as <code>baseRevision</code>.</p>
-      <p>Ambiguous or missing targets are rejected rather than guessed. Exact routine edits (time, assignment, status, note, normal tagging) need no confirmation. Clearing, blocking, removing a roster entry, clearing a week, rollover, and undo require one explicit <code>confirm: true</code>; a batch-level confirmation covers destructive items inside that batch. Direct changes create recoverable restore points.</p>
+      <p>Ambiguous or missing targets are rejected rather than guessed. Exact routine edits (time, assignment, status, note, normal tagging) need no confirmation. Clearing, blocking, removing a schedule row or roster entry, clearing a week, rollover, and undo require one explicit <code>confirm: true</code>; a batch-level confirmation covers destructive items inside that batch. Direct changes create recoverable restore points.</p>
 
       <h3>Example structured requests</h3>
       <pre class="ai-control-example">POST api/commands

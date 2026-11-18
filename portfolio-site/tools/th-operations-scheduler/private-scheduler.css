@@ -1239,6 +1239,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
 /* Reference desktop assets and the connected Working/date-range frame. */
 .scheduler-icon { display: block; width: 19px; height: 19px; object-fit: contain; pointer-events: none; user-select: none; }
+.redo-icon { transform: scaleX(-1); }
 .dropdown-icon { display: block; width: 9px; height: 6px; object-fit: fill; pointer-events: none; }
 .toolstrip { height: 29px; min-height: 29px; gap: 3px; padding: 2px 7px; background: linear-gradient(#eff3f8, #cad7e8); }
 .toolstrip .toolbtn:not(#tbPrint):not(.ai-control-button):not(.force-cloud-button) {
