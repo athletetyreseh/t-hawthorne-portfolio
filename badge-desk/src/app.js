@@ -15,8 +15,10 @@ const main = document.querySelector("main");
 const basePath = "__BADGE_BASE_PATH__";
 const local = route => basePath + route;
 const path = location.pathname.slice(basePath.length).replace(/\/$/, "") || "/";
-const nav = (href, label, glyph) => '<a href="' + local(href) + '"' + ((path === href || (href === "/" && path.startsWith("/b/"))) ? ' aria-current="page"' : "") + '>' + icon(glyph) + label + '</a>';
-document.querySelector("header").innerHTML = '<div class="head-inner"><a class="brand" href="' + local("/") + '"><img class="brand-logo" src="' + local("/logo/ipsa.png") + '" alt="IPSA Security Services"><span class="brand-title">Badge Desk</span></a><nav aria-label="Main navigation">' + nav("/", "Badge roster", "grid") + nav("/history", "Activity log", "clock") + nav("/sheets", "Print labels", "print") + '</nav></div>';
+const isBadgePage = path.startsWith("/b/");
+const nav = (href, label, glyph) => '<a href="' + local(href) + '"' + ((path === href || (href === "/" && isBadgePage)) ? ' aria-current="page"' : "") + '>' + icon(glyph) + label + '</a>';
+const historyLink = isBadgePage ? "" : nav("/history", "Activity log", "clock");
+document.querySelector("header").innerHTML = '<div class="head-inner"><a class="brand" href="' + local("/") + '"><img class="brand-logo" src="' + local("/logo/ipsa.png") + '" alt="IPSA Security Services"><span class="brand-title">Badge Desk</span></a><nav aria-label="Main navigation">' + nav("/", "Badge roster", "grid") + historyLink + nav("/sheets", "Print labels", "print") + '</nav></div>';
 
 let badges, origin;
 const logoNames = {wab:"Western Alliance Bank", amazon:"Amazon", shred:"Secure Shred", ups:"UPS", fedex:"FedEx"};
@@ -64,7 +66,7 @@ async function roster() {
   }
 }
 function label(badge) {
-  return '<article class="badge-label"><div class="label-top label-' + badge.theme + '"><div class="label-logo">' + logos(badge) + '</div><div class="label-number"><span>BADGE</span><strong>' + String(badge.number).padStart(2,"0") + '</strong></div></div>' +
+  return '<article class="badge-label label-' + badge.theme + '"><div class="label-top"><div class="label-logo">' + logos(badge) + '</div><div class="label-number"><span>BADGE</span><strong>' + String(badge.number).padStart(2,"0") + '</strong></div></div>' +
     '<div class="label-body">' + qr(badge) + '<div class="label-info"><strong>' + badge.code + '</strong><span>SCAN TO CHECK OUT</span>' +
     (badge.theme === "bank" ? '<div class="label-call"><div class="call-instruction"><strong>CALL</strong> BEFORE SENDING UP</div>' + wabCalls + '</div>' : '') + '</div></div></article>';
 }
@@ -226,7 +228,7 @@ try {
   ({badges, origin} = await api("/catalog.json"));
   if (path === "/sheets") printSheets();
   else if (path === "/history") await history();
-  else if (path.startsWith("/b/")) {
+  else if (isBadgePage) {
     const badge = badges.find(item => item.slug === path.slice(3));
     if (badge) await badgePage(badge);
     else main.innerHTML = intro("VISITOR ACCESS", "Badge not found", "Use the badge roster to select a valid card.", '<a class="btn primary" href="' + local("/") + '">Open badge roster</a>');

@@ -96,14 +96,14 @@ input:not([type=file]),select{border:1px solid #b9c9dd;border-radius:8px;backgro
 .paper-head span{font-size:12px;color:#3d516b;margin-top:3px}
 .ruler{flex:none;text-align:center}
 .ruler i{display:block;width:1in;height:7px;border:1px solid #000;border-top:0}
-.print-grid{display:grid;grid-template-columns:repeat(2,2.65in);gap:.16in;justify-content:center}
-.badge-label{width:2.65in;height:1.8in;border:1px dashed #8b98a6;border-radius:4px;overflow:hidden;background:white;color:#101d20;display:grid;grid-template-rows:.515in 1fr}
-.label-top{display:grid;grid-template-columns:minmax(0,1fr) .49in;align-items:center;gap:.08in;border-bottom:1px solid #cbd4df;padding:.075in .10in .035in}
-.label-bank{background:#c3dafa;border-bottom:3px solid #245aa2}
-.label-amazon{background:#ffdcaa;border-bottom:3px solid #f09422}
-.label-shred{background:#c4e4f5;border-bottom:3px solid #255e8c}
-.label-carrier{background:linear-gradient(105deg,#ffdf89 0 23%,#dbc5f4 60%);border-bottom:3px solid #704297}
-.label-misc{background:#cde8dc;border-bottom:3px solid #43846e}
+.print-grid{--label-scale:1.15;--label-width:2.65in;display:grid;grid-template-columns:repeat(2,calc(var(--label-width) * var(--label-scale)));gap:.16in;justify-content:safe center}
+.badge-label{zoom:var(--label-scale);width:var(--label-width);height:1.8in;border:1px dashed #8b98a6;border-radius:4px;overflow:hidden;background:white;color:#101d20;display:grid;grid-template-rows:.515in 1fr}
+.label-top{display:grid;grid-template-columns:minmax(0,1fr) .49in;align-items:center;gap:.08in;border-bottom:3px solid var(--label-rule,#cbd4df);padding:.075in .10in .035in}
+.label-bank{background:#c3dafa;--label-rule:#245aa2}
+.label-amazon{background:#ffdcaa;--label-rule:#f09422}
+.label-shred{background:#c4e4f5;--label-rule:#255e8c}
+.label-carrier{background:linear-gradient(105deg,#ffdf89 0 23%,#dbc5f4 60%);--label-rule:#704297}
+.label-misc{background:#cde8dc;--label-rule:#43846e}
 .label-logo{display:flex;align-items:center;justify-content:flex-start;gap:.065in;min-width:0}
 .label-logo .logo{max-height:.35in;max-width:1.78in}
 .label-logo .ups,.label-logo .fedex{width:auto}
@@ -113,17 +113,17 @@ input:not([type=file]),select{border:1px solid #b9c9dd;border-radius:8px;backgro
 .label-number span{font-size:7px;line-height:1;letter-spacing:.10em;font-weight:750;color:#526478}
 .label-number strong{font-size:21px;line-height:1.04;letter-spacing:-.04em}
 .label-body{display:grid;grid-template-columns:1.13in minmax(0,1fr);gap:.075in;align-items:center;padding:0 .10in .075in}
-.label-body .qr-image{display:block;width:1.13in;height:1.13in}
+.label-body .qr-image{display:block;width:1.13in;height:1.13in;background:#fff}
 .label-info{display:grid;align-content:center;gap:5px;min-width:0;border-left:2px solid #b4c3d2;padding-left:.065in}
 .label-info>strong{font-size:17px;line-height:1.05;letter-spacing:-.015em;color:#172b46}
 .label-info>span{font-size:7px;font-weight:800;letter-spacing:.075em;color:#4a6177}
 .label-call{display:grid;gap:2px;border-top:1px solid #d9c1c3;margin-top:1px;padding-top:5px;line-height:1.12}
-.badge-label:has(.label-amazon) .label-info{border-left-color:#e48819}
-.badge-label:has(.label-shred) .label-info{border-left-color:#3275a4}
-.badge-label:has(.label-carrier) .label-info{border-left-color:#75439d}
-.badge-label:has(.label-misc) .label-info{border-left-color:#4c8c70}
-.badge-label:has(.label-bank) .label-info{border-left-color:#b32b2f;gap:3px}
-.label-bank .label-number,.label-bank .label-number span,.badge-label:has(.label-bank) .label-info>strong,.label-call,.bank-call,.bank-call a{color:#a52225}
+.label-amazon .label-info{border-left-color:#e48819}
+.label-shred .label-info{border-left-color:#3275a4}
+.label-carrier .label-info{border-left-color:#75439d}
+.label-misc .label-info{border-left-color:#4c8c70}
+.label-bank .label-info{border-left-color:#b32b2f;gap:3px}
+.label-bank .label-number,.label-bank .label-number span,.label-bank .label-info>strong,.label-call,.bank-call,.bank-call a{color:#a52225}
 .call-instruction{font-size:7px;letter-spacing:.02em;font-weight:650}
 .call-instruction strong{font-size:8px;font-weight:850}
 .label-call span{font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
@@ -189,7 +189,7 @@ td small{display:block;color:var(--muted);margin-top:3px}
   .badge-tile{padding:7px 5px}.tile-main strong{font-size:12px}
   .checkout-layout{grid-template-columns:1fr}.intro{align-items:start;flex-direction:column}.sheet-controls span{margin-left:0;width:100%}
 }
-@media screen and (max-width:640px){.print-grid{grid-template-columns:2.65in}.paper{padding:16px}}
+@media screen and (max-width:700px){.print-grid{grid-template-columns:calc(var(--label-width) * var(--label-scale))}.paper{padding:16px}}
 
 /* Badge desk layout */
 .roster-page{max-width:1120px;padding-top:42px}
