@@ -174,6 +174,7 @@ const publicRow = (row = {}) => ({
   time: row.time || "",
   scope: row.scope || "",
   weekStart: row.weekStart || "",
+  rolloverWeeks: Array.isArray(row.rolloverWeeks) ? row.rolloverWeeks : [],
   deletedWeeks: Array.isArray(row.deletedWeeks) ? row.deletedWeeks : [],
   hiddenWeeks: Array.isArray(row.hiddenWeeks) ? row.hiddenWeeks : [],
   assignments: publicAssignments(row.assignments)
